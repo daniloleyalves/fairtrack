@@ -11,7 +11,6 @@ import {
   DropdownMenuTrigger,
 } from '@components/ui/dropdown-menu';
 import { routes } from '@/lib/config/routes';
-import { SignOutButton } from './sign-out-button';
 import { UserNavButton } from './user-nav-button';
 import { Skeleton } from '../ui/skeleton';
 import { NavButton } from '../ui/nav-button';
