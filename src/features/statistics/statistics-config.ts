@@ -20,9 +20,9 @@ export const colorClasses = {
 };
 
 export const colorMapping: Record<number, string> = {
-  1: '#446622',
-  2: '#99BB44',
-  3: '#C3D963',
-  4: '#CCDDA2',
-  5: '#D9D9D9',
+  1: '#446622', // dark green
+  2: '#99BB44', // medium green
+  3: '#C3D963', // light green
+  4: '#666666', // dark gray (distinct)
+  5: '#A0A0A0', // medium gray (more contrast)
 };

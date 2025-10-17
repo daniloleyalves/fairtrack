@@ -36,7 +36,7 @@ interface AttributeDistributionChartProps {
   title?: string;
 }
 
-const defaultColor = '#BCBCBC';
+const defaultColor = '#E0E0E0';
 
 // --- The Chart Component ---
 export function AttributeDistributionChart({
