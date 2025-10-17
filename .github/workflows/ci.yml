@@ -223,20 +223,6 @@ jobs:
             .test-results/cypress/
           retention-days: 30
 
-  deployment-gate:
-    name: Deployment Gate
-    runs-on: ubuntu-latest
-    environment: testing
-    needs: [security, lint, test, build, e2e]
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-
-    steps:
-      - name: All checks passed
-        run: |
-          echo "🎉 All quality checks passed!"
-          echo "Vercel will automatically deploy this commit to production."
-          echo "Check your Vercel dashboard for deployment status."
-
   # Test Summary
   test-summary:
     name: Test Summary

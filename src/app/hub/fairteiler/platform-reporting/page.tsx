@@ -16,7 +16,7 @@ export default function FairteilerPlatformReportingPage() {
         >
           Analysiere die gesammelten Daten und verschaffe dir einen Überblick
           über alle relevanten, plattformweiten Statistiken des
-          Fairtrack-Netzwerks.
+          FairTrack-Netzwerks.
         </p>
       </div>
 
