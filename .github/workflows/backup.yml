@@ -8,6 +8,7 @@ on:
 jobs:
   db-backup:
     runs-on: ubuntu-latest
+    environment: backup
 
     env:
       RETENTION: 60
