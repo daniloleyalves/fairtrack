@@ -41,6 +41,12 @@ Wenn du Fragen zum Beitragsprozess oder zur Codebase hast:
 - **E-Mail**: Für private Anfragen an
   [admin@fairteiler-tracker.de](mailto:admin@fairteiler-tracker.de)
 
+## 🗺️ Roadmap
+
+Schau dir unsere
+[Trello Roadmap](https://trello.com/b/O5HeoQ4N/fairtrack-roadmap) an, um zu
+sehen, was geplant ist und woran wir arbeiten.
+
 ## 🎓 Für Studierende
 
 Als Projekt mit Ursprung an der HDM Stuttgart begrüßen wir besonders Beiträge

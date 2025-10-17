@@ -3,6 +3,7 @@ import { Copyright } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@components/ui/button';
+import { CookieConsentComponent } from '../cookie-consent';
 
 export function Footer() {
   return (
@@ -46,6 +47,8 @@ export function Footer() {
                 <h6>Datenschutz</h6>
               </Link>
             </Button>
+            <span>|</span>
+            <CookieConsentComponent />
           </div>
         </div>
       </footer>

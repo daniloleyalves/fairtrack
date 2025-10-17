@@ -1,6 +1,7 @@
 {
   "name": "fairtrack",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -81,7 +82,6 @@
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.64.0",
     "react-map-gl": "^8.0.4",
-    "react-scan": "^0.4.3",
     "recharts": "3.2.1",
     "require-in-the-middle": "^7.5.2",
     "resend": "^6.1.2",
@@ -92,6 +92,7 @@
     "tailwind-merge": "^3.3.1",
     "tinymce": "^8.1.2",
     "uuid": "^13.0.0",
+    "vanilla-cookieconsent": "^3.1.0",
     "vaul": "^1.1.2",
     "zod": "^4.1.11"
   },

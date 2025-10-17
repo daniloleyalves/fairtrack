@@ -1,4 +1,3 @@
-import { ReactScan } from '@components/react-scan';
 import { Toaster } from '@components/ui/sonner';
 import { ErrorBoundary } from '@components/error-boundary';
 import type { Metadata } from 'next';
@@ -55,7 +54,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en' suppressHydrationWarning data-scroll-behavior='smooth'>
-      <ReactScan />
       <body
         className={`${geistSans.variable} ${londrinaSolid.variable} flex min-h-screen flex-col font-sans antialiased`}
       >

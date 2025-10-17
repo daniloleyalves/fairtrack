@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://fairteiler-tracker.de/logo.svg" alt="FairTrack Logo" width="200"/>
+  <img src="https://fairteiler-tracker.de/logo.svg" alt="FairTrack Logo" width="400"/>
 </div>
 
 > **Behalte den Überblick über deinen Foodsharing-Beitrag und trage aktiv zu
@@ -74,6 +74,11 @@ Blob, [Resend](https://www.resend.com)
 [Sentry](https://www.sentry.io)
 
 **Testing:** Vitest, Cypress, ESLint, Prettier, Husky
+
+## 🗺️ Roadmap
+
+Geplante Features und aktuelle Entwicklung findest du auf unserer
+[Trello Roadmap](https://trello.com/b/O5HeoQ4N/fairtrack-roadmap).
 
 ## 🙏 Danke an
 
