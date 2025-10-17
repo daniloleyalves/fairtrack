@@ -20,13 +20,14 @@ const londrinaSolid = Londrina_Solid({
 });
 
 export const metadata: Metadata = {
-  title: 'Fairtrack',
-  description: 'FairTrack App',
+  title: 'FairTrack',
+  description:
+    'Behalte den Überblick über deinen Foodsharing-Beitrag und trage aktiv zu einer Wirkungsmessung der Foodsharing-Bewegung bei',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Fairtrack',
+    title: 'FairTrack',
   },
   formatDetection: {
     telephone: false,

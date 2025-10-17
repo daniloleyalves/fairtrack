@@ -26,6 +26,7 @@ import { LoadingBar } from '@components/ui/loading-bar';
 import { UserAvatar } from '../user-avatar';
 import { handleAsyncAction } from '@/lib/client-error-handling';
 import { User } from '@/server/db/db-types';
+import { authClient } from '@/lib/auth/auth-client';
 
 // --- 1. The Main Orchestrator Component ---
 export function NavUser({ user, routeKey }: { user: User; routeKey: string }) {
@@ -142,8 +143,9 @@ function UserMenuLink({
 }
 
 // --- 4. The Sign Out Item Component ---
-function SignOutMenuItem() {
+export function SignOutMenuItem() {
   const [isPending, startTransition] = useTransition();
+  const { refetch } = authClient.useSession();
   const router = useRouter();
 
   const handleSignOut = () => {
@@ -153,6 +155,7 @@ function SignOutMenuItem() {
         onSuccess: (result) => {
           if (result.data?.redirectTo) {
             router.push(result.data.redirectTo);
+            refetch();
           }
         },
       });

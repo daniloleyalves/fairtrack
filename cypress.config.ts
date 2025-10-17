@@ -41,7 +41,7 @@ export default defineConfig({
     html: true,
     json: true,
     charts: true,
-    reportPageTitle: 'Fairtrack E2E Test Report',
+    reportPageTitle: 'FairTrack E2E Test Report',
     embeddedScreenshots: true,
     inlineAssets: true,
   },

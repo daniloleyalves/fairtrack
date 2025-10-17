@@ -15,10 +15,10 @@ import { SignOutButton } from './sign-out-button';
 import { UserNavButton } from './user-nav-button';
 import { Skeleton } from '../ui/skeleton';
 import { NavButton } from '../ui/nav-button';
+import { SignOutMenuItem } from '../sidebar/nav-user';
 
 export function HeaderAuth() {
   const { user, session, isLoading } = useSession();
-
   if (isLoading) {
     return <Skeleton className='h-8 w-[153px] bg-secondary' />;
   }
@@ -100,7 +100,7 @@ function UserMenu({
               ))}
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <SignOutButton />
+          <SignOutMenuItem />
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
