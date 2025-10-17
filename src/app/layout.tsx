@@ -31,6 +31,10 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon-180x180.png',
+  },
 };
 
 export const viewport = {
