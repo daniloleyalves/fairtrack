@@ -29,9 +29,8 @@ jobs:
           sudo apt install -y postgresql-${{ env.PG_VERSION }}
 
       - name: Set PostgreSQL binary path
-        run:
-          echo "POSTGRES=/usr/lib/postgresql/${{ env.PG_VERSION }}/bin" >>
-          $GITHUB_ENV
+        run: |
+          echo "POSTGRES=/usr/lib/postgresql/${{ env.PG_VERSION }}/bin" >> $GITHUB_ENV
 
       - name: Configure AWS CLI for Cloudflare R2
         run: |
@@ -43,7 +42,7 @@ jobs:
       - name: Set file, folder and path variables
         run: |
           GZIP_NAME="$(date +'%B-%d-%Y@%H:%M:%S').sql.gz"
-          FOLDER_NAME="${{ github.workflow }}" | tr ' ' '-'
+          FOLDER_NAME=$(echo "${{ github.workflow }}" | tr ' ' '-')
           UPLOAD_PATH="${FOLDER_NAME}/${GZIP_NAME}"
 
           echo "GZIP_NAME=${GZIP_NAME}" >> $GITHUB_ENV
@@ -52,20 +51,85 @@ jobs:
 
       - name: Run pg_dump
         run: |
-          $POSTGRES/pg_dump ${{ env.DATABASE_URL }} | gzip > "${{ env.GZIP_NAME }}"
+          echo "Starting database backup..."
+
+          # Run pg_dump with error checking
+          if ! $POSTGRES/pg_dump "${{ env.DATABASE_URL }}" | gzip > "${{ env.GZIP_NAME }}"; then
+            echo "ERROR: pg_dump failed!"
+            exit 1
+          fi
+
+          # Check if file was created
+          if [ ! -f "${{ env.GZIP_NAME }}" ]; then
+            echo "ERROR: Backup file was not created!"
+            exit 1
+          fi
+
+          # Check if file has content (is not empty)
+          if [ ! -s "${{ env.GZIP_NAME }}" ]; then
+            echo "ERROR: Backup file is empty!"
+            exit 1
+          fi
+
+          # Display file size
+          FILE_SIZE=$(du -h "${{ env.GZIP_NAME }}" | cut -f1)
+          echo "✓ Backup created successfully: ${{ env.GZIP_NAME }} (${FILE_SIZE})"
 
       - name: Delete old files (older than retention)
         run: |
-          aws s3api list-objects \
+          echo "Checking for old backups to delete (older than ${{ env.RETENTION }} days)..."
+
+          OLD_FILES=$(aws s3api list-objects \
             --bucket ${{ env.R2_BUCKET_NAME }} \
             --endpoint-url ${{ env.R2_ENDPOINT }} \
             --prefix "${{ env.FOLDER_NAME }}/" \
             --query "Contents[?LastModified<'$(date -d "-${{ env.RETENTION }} days" --utc +%Y-%m-%dT%H:%M:%SZ)'].Key" \
-            --output text | while read -r file; do
-              [ -n "$file" ] && aws s3 rm "s3://${{ env.R2_BUCKET_NAME }}/${file}" --endpoint-url ${{ env.R2_ENDPOINT }}
+            --output text 2>&1)
+
+          # Check if command succeeded
+          if [ $? -ne 0 ]; then
+            echo "WARNING: Failed to list old files. Error: $OLD_FILES"
+            echo "Continuing with upload..."
+          elif [ -n "$OLD_FILES" ] && [ "$OLD_FILES" != "None" ]; then
+            echo "Found old files to delete:"
+            echo "$OLD_FILES" | tr '\t' '\n' | while read -r file; do
+              if [ -n "$file" ]; then
+                echo "Deleting: $file"
+                if aws s3 rm "s3://${{ env.R2_BUCKET_NAME }}/${file}" --endpoint-url ${{ env.R2_ENDPOINT }}; then
+                  echo "✓ Deleted: $file"
+                else
+                  echo "WARNING: Failed to delete: $file"
+                fi
+              fi
             done
+          else
+            echo "No old files to delete"
+          fi
 
       - name: Upload to Cloudflare R2
         run: |
-          aws s3 cp "${{ env.GZIP_NAME }}" "s3://${{ env.R2_BUCKET_NAME }}/${{ env.UPLOAD_PATH }}" \
-            --endpoint-url ${{ env.R2_ENDPOINT }}
+          echo "Uploading backup to R2: ${{ env.UPLOAD_PATH }}"
+
+          if aws s3 cp "${{ env.GZIP_NAME }}" "s3://${{ env.R2_BUCKET_NAME }}/${{ env.UPLOAD_PATH }}" \
+            --endpoint-url ${{ env.R2_ENDPOINT }}; then
+            echo "✓ Successfully uploaded backup to R2"
+          else
+            echo "ERROR: Failed to upload backup to R2"
+            exit 1
+          fi
+
+          # Verify upload
+          if aws s3 ls "s3://${{ env.R2_BUCKET_NAME }}/${{ env.UPLOAD_PATH }}" \
+            --endpoint-url ${{ env.R2_ENDPOINT }} > /dev/null 2>&1; then
+            echo "✓ Verified: Backup exists in R2"
+          else
+            echo "WARNING: Could not verify backup in R2"
+          fi
+
+      - name: Cleanup local backup file
+        if: always()
+        run: |
+          if [ -f "${{ env.GZIP_NAME }}" ]; then
+            rm "${{ env.GZIP_NAME }}"
+            echo "✓ Cleaned up local backup file"
+          fi
