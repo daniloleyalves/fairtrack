@@ -289,7 +289,7 @@ export function SuggestCompanyForm({
     const newSuggestion: GenericItem = {
       id: uuidv4(),
       name: newCompanyText.trim(),
-      status: 'pending',
+      status: 'active',
     };
 
     try {
@@ -310,7 +310,7 @@ export function SuggestCompanyForm({
     <div>
       {pendingCompanies && pendingCompanies.length > 0 && (
         <div className='mb-4'>
-          <h4 className='text-sm font-medium text-foreground dark:text-gray-100'>
+          <h4 className='text-sm font-medium text-foreground'>
             Bisherige Vorschläge
           </h4>
           <div className='mt-2 flex flex-wrap gap-2'>

@@ -43,7 +43,7 @@ export function middleware(request: NextRequest) {
       '/hub/fairteiler/preferences',
     ];
 
-    if (restrictedGuestRoutes.some((route) => pathname.startsWith(route))) {
+    if (restrictedGuestRoutes.some((route) => pathname.includes(route))) {
       return NextResponse.redirect(
         new URL('/hub/fairteiler/contribution', request.url),
       );
@@ -58,7 +58,7 @@ export function middleware(request: NextRequest) {
       '/hub/fairteiler/preferences',
     ];
 
-    if (restrictedEmployeeRoutes.some((route) => pathname.startsWith(route))) {
+    if (restrictedEmployeeRoutes.some((route) => pathname.includes(route))) {
       return NextResponse.redirect(
         new URL('/hub/fairteiler/dashboard', request.url),
       );

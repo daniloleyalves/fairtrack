@@ -291,7 +291,7 @@ export function SuggestCategoryForm({
     const newSuggestion: GenericItem = {
       id: uuidv4(),
       name: newCategoryText.trim(),
-      status: 'pending',
+      status: 'active',
     };
 
     try {
@@ -312,7 +312,7 @@ export function SuggestCategoryForm({
     <div>
       {pendingCategories && pendingCategories.length > 0 && (
         <div className='mb-4'>
-          <h4 className='text-sm font-medium text-foreground dark:text-gray-100'>
+          <h4 className='text-sm font-medium text-foreground'>
             Bisherige Vorschläge
           </h4>
           <div className='mt-2 flex flex-wrap gap-2'>
