@@ -162,7 +162,7 @@ export default function Datenschutz() {
 
                 <p>
                   <small>
-                    Quelle:
+                    Quelle:{' '}
                     <Link
                       href='https://www.mein-datenschutzbeauftragter.de'
                       target='_blank'
