@@ -1,0 +1,1 @@
+ALTER TABLE "fairteiler_tutorial_step" RENAME COLUMN "image" TO "media";

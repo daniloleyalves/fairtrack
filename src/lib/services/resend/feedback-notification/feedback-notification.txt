@@ -1,0 +1,16 @@
+Hallo Admin-Team,
+
+ein neues Feedback wurde über die FairTrack-Plattform eingereicht:
+
+Kategorie: {{ categoryLabel }}
+Von: {{ userName }} ({{ userEmail }}){{ fairteilerInfo }}
+Eingereicht: {{ submittedAt }}
+
+Nachricht:
+{{ message }}
+
+---
+
+Diese E-Mail wurde automatisch generiert. Bitte antworten Sie direkt an die E-Mail-Adresse des Benutzers, falls eine Rückmeldung erforderlich ist.
+
+FairTrack - Fairteiler Management Platform

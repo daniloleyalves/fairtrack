@@ -1,0 +1,42 @@
+{
+  "validUser": {
+    "name": "Max Mustermann ",
+    "firstName": "Max",
+    "lastName": "Mustermann",
+    "email": "max.mustermann@example.com",
+    "password": "SecurePass123!",
+    "isFirstLogin": false,
+    "isAnonymous": false
+  },
+  "existingUser": {
+    "name": "Anna Schmidt",
+    "firstName": "Anna",
+    "lastName": "Schmidt",
+    "email": "anna.schmidt@example.com",
+    "password": "SecurePass123!",
+    "isFirstLogin": false,
+    "isAnonymous": false
+  },
+  "invalidUser": {
+    "name": "a",
+    "firstName": "a",
+    "lastName": "b",
+    "email": "invalid-email",
+    "password": "Secur",
+    "isFirstLogin": false,
+    "isAnonymous": false
+  },
+  "invitedUser": {
+    "name": "Invited User",
+    "firstName": "Invited",
+    "lastName": "User",
+    "email": "invited-user@example.com",
+    "password": "SecurePass123!",
+    "isFirstLogin": false,
+    "isAnonymous": false
+  },
+  "testCredentials": {
+    "email": "test@example.com",
+    "password": "SecurePass123!"
+  }
+}

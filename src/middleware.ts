@@ -1,0 +1,88 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getSessionCookie } from 'better-auth/cookies';
+import { Session, User } from 'better-auth';
+
+export function middleware(request: NextRequest) {
+  const sessionCookie = getSessionCookie(request);
+  const sessionDataToken = request.cookies.get(
+    'better-auth.session_data',
+  )?.value;
+
+  let decodedSession = null;
+  if (sessionDataToken) {
+    try {
+      // Decode base64 string
+      const decoded = Buffer.from(sessionDataToken, 'base64').toString('utf-8');
+      decodedSession = JSON.parse(decoded) as {
+        session: { session: Session; user: User };
+      };
+    } catch (error) {
+      console.error('Failed to decode session:', error);
+    }
+  }
+
+  // No session cookie → redirect to sign-in
+  if (!sessionCookie) {
+    const signInUrl = new URL('/sign-in', request.url);
+    signInUrl.searchParams.set('callbackUrl', request.url);
+    return NextResponse.redirect(signInUrl);
+  }
+
+  // Get user email for role-based restrictions
+  const userEmail = decodedSession?.session?.user?.email?.toLowerCase() ?? '';
+  const isGuest = userEmail.includes('guest');
+  const isEmployee = userEmail.includes('employee');
+  const pathname = request.nextUrl.pathname;
+
+  // Guest restrictions
+  if (isGuest) {
+    const restrictedGuestRoutes = [
+      '/hub/fairteiler/dashboard',
+      '/hub/fairteiler/profile',
+      '/hub/fairteiler/members',
+      '/hub/fairteiler/preferences',
+    ];
+
+    if (restrictedGuestRoutes.some((route) => pathname.startsWith(route))) {
+      return NextResponse.redirect(
+        new URL('/hub/fairteiler/contribution', request.url),
+      );
+    }
+  }
+
+  // Employee restrictions
+  if (isEmployee) {
+    const restrictedEmployeeRoutes = [
+      '/hub/fairteiler/profile',
+      '/hub/fairteiler/members',
+      '/hub/fairteiler/preferences',
+    ];
+
+    if (restrictedEmployeeRoutes.some((route) => pathname.startsWith(route))) {
+      return NextResponse.redirect(
+        new URL('/hub/fairteiler/dashboard', request.url),
+      );
+    }
+  }
+
+  // Handle other specific redirects if the user is authenticated
+  if (request.url === `${process.env.NEXT_PUBLIC_ENV_URL}/hub`) {
+    return NextResponse.redirect(new URL('/hub/user/dashboard', request.url));
+  }
+  if (request.url === `${process.env.NEXT_PUBLIC_ENV_URL}/hub/fairteiler`) {
+    // Guests should go to contribution, others to dashboard
+    const redirectPath = isGuest
+      ? '/hub/fairteiler/contribution'
+      : '/hub/fairteiler/dashboard';
+    return NextResponse.redirect(new URL(redirectPath, request.url));
+  }
+  if (request.url === `${process.env.NEXT_PUBLIC_ENV_URL}/hub/user`) {
+    return NextResponse.redirect(new URL('/hub/user/dashboard', request.url));
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ['/hub/:path*'],
+};

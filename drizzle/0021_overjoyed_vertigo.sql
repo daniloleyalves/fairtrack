@@ -1,0 +1,2 @@
+CREATE TYPE "public"."form_table_view" AS ENUM('fast', 'wizard');--> statement-breakpoint
+ALTER TABLE "auth"."user_preferences" ADD COLUMN "form_table_view" "form_table_view" DEFAULT 'wizard' NOT NULL;

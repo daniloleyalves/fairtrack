@@ -1,0 +1,10 @@
+Hallo,
+
+du erhältst diese E-Mail, weil du zum FairTeiler **{{ fairteilerName }}** eingeladen wurdest!  
+Um die Einladung anzunehmen, folge bitte dem Link:  
+**{{ url }}**
+
+Wenn du diese Einladung nicht erwartest oder nicht annehmen möchtest, kannst du diese E-Mail einfach ignorieren.
+
+Viele Grüße  
+Dein FairTeiler-Team

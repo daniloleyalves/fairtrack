@@ -1,0 +1,10 @@
+node_modules/
+build/
+dist/
+
+.next
+.husky
+.vercel
+.test-results
+
+drizzle

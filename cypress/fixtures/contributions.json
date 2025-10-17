@@ -1,0 +1,209 @@
+{
+  "validContributions": [
+    {
+      "id": "test-contrib-1",
+      "foodId": "test-food-1",
+      "quantity": 5,
+      "title": "Frische Äpfel",
+      "categoryId": "803e0b43-6bd7-4b7d-9a49-8d5316b2cf9c",
+      "originId": "1db6c487-6c91-4d1a-b41a-6628be30c72c",
+      "companyId": "e53be2f4-8a98-4022-bc6b-f48c5d490585",
+      "company": null,
+      "cool": false,
+      "shelfLife": "2024-12-31T00:00:00.000Z",
+      "allergens": "Keine",
+      "comment": "Sehr gute Qualität"
+    },
+    {
+      "id": "test-contrib-2",
+      "foodId": "test-food-2",
+      "quantity": 3,
+      "title": "Bio Bananen",
+      "categoryId": "f5ae71f7-e8a2-4867-9bb9-e146460d6e45",
+      "originId": "dea63001-bc5e-4af8-8ff6-9b7919c234fd",
+      "companyId": null,
+      "company": "Alnatura",
+      "cool": false,
+      "shelfLife": "2024-12-25T00:00:00.000Z",
+      "allergens": null,
+      "comment": "Perfekt reif"
+    },
+    {
+      "id": "test-contrib-3",
+      "foodId": "test-food-3",
+      "quantity": 1,
+      "title": "Vollkornbrot",
+      "categoryId": "71b61524-4332-4e71-94b5-ceca7a92df1b",
+      "originId": "dade7265-e5c9-4c85-8ec0-2cc2854ca67b",
+      "companyId": null,
+      "company": "Lokale Bäckerei",
+      "cool": false,
+      "shelfLife": "2024-12-28T00:00:00.000Z",
+      "allergens": "Gluten",
+      "comment": "Frisch gebacken heute morgen"
+    }
+  ],
+  "fastModeContributions": [
+    {
+      "id": "fast-1",
+      "foodId": "fast-food-1",
+      "quantity": 3,
+      "title": "Karotten",
+      "categoryId": "f5ae71f7-e8a2-4867-9bb9-e146460d6e45",
+      "originId": "1db6c487-6c91-4d1a-b41a-6628be30c72c",
+      "companyId": "97979131-c498-4722-8527-fb6f21dc7aa8",
+      "company": null,
+      "cool": true,
+      "shelfLife": null,
+      "allergens": null,
+      "comment": null
+    },
+    {
+      "id": "fast-2",
+      "foodId": "fast-food-2",
+      "quantity": 0.8,
+      "title": "Joghurt",
+      "categoryId": "71b61524-4332-4e71-94b5-ceca7a92df1b",
+      "originId": "1db6c487-6c91-4d1a-b41a-6628be30c72c",
+      "companyId": "e53be2f4-8a98-4022-bc6b-f48c5d490585",
+      "company": null,
+      "cool": true,
+      "shelfLife": "2024-12-30T00:00:00.000Z",
+      "allergens": "Milch",
+      "comment": "Kurz vor Ablauf"
+    }
+  ],
+  "wizardModeContributions": [
+    {
+      "id": "wizard-1",
+      "foodId": "wizard-food-1",
+      "quantity": 4,
+      "title": "Tomaten",
+      "categoryId": "f5ae71f7-e8a2-4867-9bb9-e146460d6e45",
+      "originId": "dea63001-bc5e-4af8-8ff6-9b7919c234fd",
+      "companyId": null,
+      "company": "Restaurant Musterhaus",
+      "cool": false,
+      "shelfLife": "2024-12-27T00:00:00.000Z",
+      "allergens": null,
+      "comment": "Leicht überreif aber noch gut"
+    },
+    {
+      "id": "wizard-2",
+      "foodId": "wizard-food-2",
+      "quantity": 1.5,
+      "title": "Käse",
+      "categoryId": "71b61524-4332-4e71-94b5-ceca7a92df1b",
+      "originId": "dea63001-bc5e-4af8-8ff6-9b7919c234fd",
+      "companyId": null,
+      "company": "Restaurant Musterhaus",
+      "cool": true,
+      "shelfLife": "2025-01-05T00:00:00.000Z",
+      "allergens": "Milch",
+      "comment": "Verschiedene Sorten gemischt"
+    }
+  ],
+  "invalidContributions": [
+    {
+      "id": "invalid-1",
+      "foodId": "invalid-food-1",
+      "quantity": 0,
+      "title": "",
+      "categoryId": "",
+      "originId": "",
+      "companyId": null,
+      "company": null,
+      "cool": false,
+      "shelfLife": null,
+      "allergens": null,
+      "comment": null
+    },
+    {
+      "id": "invalid-2",
+      "foodId": "invalid-food-2",
+      "quantity": -1,
+      "title": "Test",
+      "categoryId": "803e0b43-6bd7-4b7d-9a49-8d5316b2cf9c",
+      "originId": "1db6c487-6c91-4d1a-b41a-6628be30c72c",
+      "companyId": null,
+      "company": null,
+      "cool": false,
+      "shelfLife": "2023-01-01T00:00:00.000Z",
+      "allergens": null,
+      "comment": null
+    }
+  ],
+  "edgeCaseContributions": [
+    {
+      "id": "edge-1",
+      "foodId": "test-food-1",
+      "quantity": 0.1,
+      "title": "A",
+      "categoryId": "f5ae71f7-e8a2-4867-9bb9-e146460d6e45",
+      "originId": "dea63001-bc5e-4af8-8ff6-9b7919c234fd",
+      "companyId": null,
+      "company": "Very Long Custom Company Name That Tests Maximum Length Limits",
+      "cool": true,
+      "shelfLife": null,
+      "allergens": "Gluten, Nüsse, Milch, Eier, Soja, Sesam, Senf, Sellerie, Lupinen, Weichtiere, Schwefeldioxid",
+      "comment": "This is a very long comment that tests the maximum character limit for comments in the contribution form to ensure proper validation and handling of edge cases. It should be exactly at or near the 400 character limit to test boundary conditions properly and make sure the form validation works as expected in all scenarios."
+    },
+    {
+      "id": "edge-2",
+      "foodId": "edge-food-2",
+      "quantity": 999.99,
+      "title": "Maximal lange Produktbezeichnung für Tests",
+      "categoryId": "f5ae71f7-e8a2-4867-9bb9-e146460d6e45",
+      "originId": "dea63001-bc5e-4af8-8ff6-9b7919c234fd",
+      "companyId": null,
+      "company": null,
+      "cool": false,
+      "shelfLife": "2030-12-31T00:00:00.000Z",
+      "allergens": null,
+      "comment": null
+    }
+  ],
+  "testCategories": [
+    {
+      "id": "803e0b43-6bd7-4b7d-9a49-8d5316b2cf9c",
+      "name": "Obst",
+      "image": "https://mmm5u4fjrhaoeehc.public.blob.vercel-storage.com/category_icons/icon_obst.png"
+    },
+    {
+      "id": "f5ae71f7-e8a2-4867-9bb9-e146460d6e45",
+      "name": "Backwaren",
+      "image": "https://mmm5u4fjrhaoeehc.public.blob.vercel-storage.com/category_icons/icon_backwaren-salzig.png"
+    },
+    {
+      "id": "71b61524-4332-4e71-94b5-ceca7a92df1b",
+      "name": "Milchprodukte",
+      "image": "https://mmm5u4fjrhaoeehc.public.blob.vercel-storage.com/category_icons/icon_kuehlprodukte.png"
+    }
+  ],
+  "testOrigins": [
+    {
+      "id": "1db6c487-6c91-4d1a-b41a-6628be30c72c",
+      "name": "Supermarkt"
+    },
+    {
+      "id": "dade7265-e5c9-4c85-8ec0-2cc2854ca67b",
+      "name": "Bäckerei"
+    },
+    {
+      "id": "dea63001-bc5e-4af8-8ff6-9b7919c234fd",
+      "name": "Gastronomie"
+    }
+  ],
+  "testCompanies": [
+    {
+      "id": "97979131-c498-4722-8527-fb6f21dc7aa8",
+      "name": "REWE",
+      "originId": "1db6c487-6c91-4d1a-b41a-6628be30c72c"
+    },
+    {
+      "id": "e53be2f4-8a98-4022-bc6b-f48c5d490585",
+      "name": "Edeka",
+      "originId": "1db6c487-6c91-4d1a-b41a-6628be30c72c"
+    }
+  ]
+}
