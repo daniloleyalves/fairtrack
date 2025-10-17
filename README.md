@@ -1,6 +1,9 @@
-<div align="center">
+<div align="center" >
   <img src="https://fairteiler-tracker.de/logo.svg" alt="FairTrack Logo" width="400"/>
 </div>
+
+<br>
+<br>
 
 > **Behalte den Überblick über deinen Foodsharing-Beitrag und trage aktiv zu
 > einer Wirkungsmessung der Foodsharing-Bewegung bei**

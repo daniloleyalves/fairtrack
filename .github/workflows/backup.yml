@@ -42,7 +42,7 @@ jobs:
       - name: Set file, folder and path variables
         run: |
           GZIP_NAME="$(date +'%B-%d-%Y@%H:%M:%S').sql.gz"
-          FOLDER_NAME="${{ github.workflow }}"
+          FOLDER_NAME="${{ github.workflow }}" | tr ' ' '-'
           UPLOAD_PATH="${FOLDER_NAME}/${GZIP_NAME}"
 
           echo "GZIP_NAME=${GZIP_NAME}" >> $GITHUB_ENV
