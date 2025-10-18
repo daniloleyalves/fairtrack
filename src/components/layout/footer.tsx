@@ -35,7 +35,7 @@ export function Footer() {
             <span>FairTrack</span>
           </h1>
 
-          <div className='flex items-center justify-center gap-2'>
+          <div className='flex flex-wrap items-center justify-center gap-2'>
             <Button asChild variant='link' className='h-4 p-1 text-white'>
               <Link href='/impressum'>
                 <h6>Impressum</h6>
@@ -47,7 +47,7 @@ export function Footer() {
                 <h6>Datenschutz</h6>
               </Link>
             </Button>
-            <span>|</span>
+            <div className='hidden xs:block'>|</div>
             <CookieConsentComponent />
           </div>
         </div>

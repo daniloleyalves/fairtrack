@@ -16,7 +16,7 @@ export default function NotFound() {
         width={694}
       />
 
-      <p className='text-xl font-semibold'>
+      <p className='text-center text-xl font-semibold'>
         Diese Seite existiert nicht oder wurde verschoben
       </p>
 

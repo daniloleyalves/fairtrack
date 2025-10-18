@@ -28,7 +28,6 @@ export function NumberTicker({
   const motionValue = useMotionValue(direction === 'down' ? value : startValue);
 
   // Calculate damping and stiffness based on desired duration
-  // Longer duration = lower stiffness and higher damping
   const stiffness = 100 / duration;
   const damping = 20 + duration * 5;
 
@@ -60,13 +59,19 @@ export function NumberTicker({
     [springValue, decimalPlaces],
   );
 
+  // Format the initial value
+  const formattedStartValue = Intl.NumberFormat('de-DE', {
+    minimumFractionDigits: decimalPlaces,
+    maximumFractionDigits: decimalPlaces,
+  }).format(Number(startValue.toFixed(decimalPlaces)));
+
   return (
     <span
       ref={ref}
       className={cn('inline-block tracking-wider tabular-nums', className)}
       {...props}
     >
-      {startValue}
+      {formattedStartValue}
     </span>
   );
 }
