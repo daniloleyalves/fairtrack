@@ -55,7 +55,7 @@ Open-Source-Lösung steht FairTrack allen Fairteiler-Stationen zur Verfügung.
 
 **Für Fairteiler-Betreiber:**
 
-- **Fairteiler-Profile** mit Beschreibungen und Kontaktdaten
+- **Fairteiler-Profile**
 - **Anleitung erstellen** für korrekte Lebensmittelabgabe und -handhabung
 - **Team-Management** mit flexiblen Berechtigungen
 - **Rollenbasierte Zugriffsprofile** für Standort-Zugänge (Gast, Mitarbeitende)
