@@ -14,7 +14,7 @@ export const initialContributionQuantity = 70000; // kg
 
 export const defaultDateRange = {
   from: new Date(2023, 0, 1),
-  to: new Date(new Date().getFullYear(), 11, 31, 23, 59, 59),
+  to: new Date(),
 };
 
 export const STANDARD_PASSWORD = 'standard';

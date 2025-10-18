@@ -66,22 +66,14 @@ export function getPlatformVolumeTrendData(
 
   const chartData = Array.from(dailyTotals.entries())
     .map(([dateKey, quantity]) => {
-      const date = new Date(dateKey);
-      const formattedDate = date.toLocaleDateString('de-DE', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        timeZone: 'UTC',
-      });
       return {
-        date: formattedDate,
-        originalDate: date,
+        date: dateKey, // Keep raw date as YYYY-MM-DD
         quantity: parseFloat(quantity.toFixed(2)),
       };
     })
-    .sort((a, b) => a.originalDate.getTime() - b.originalDate.getTime());
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  return chartData.map(({ date, quantity }) => ({ date, quantity }));
+  return chartData;
 }
 
 export function getPlatformContributionsByCategory(

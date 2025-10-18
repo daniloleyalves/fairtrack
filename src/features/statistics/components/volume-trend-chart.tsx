@@ -8,14 +8,13 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  CustomTooltipProps,
 } from '@/components/ui/chart';
 import { DownloadButton } from './chart-download-button';
 import { colorClasses } from '../statistics-config';
 import { useIsMobile } from '@/lib/hooks/use-devices';
 
 export interface VolumeDataPoint {
-  date: string;
+  date: string; // Raw date in YYYY-MM-DD format
   quantity: number;
 }
 
@@ -56,18 +55,27 @@ export function VolumeTrendChart({
 
   const getTickFormatter = (dataLength: number) => {
     return (value: string) => {
+      const date = new Date(value);
+
       if (dataLength <= 30) {
-        // Remove year for short ranges: "13. Okt. 2024" -> "13. Okt."
-        return value.replace(/\d{4}/, '').trim();
+        // For short ranges, show day and month without year
+        return date.toLocaleDateString('de-DE', {
+          month: 'short',
+          day: 'numeric',
+          timeZone: 'UTC',
+        });
       }
 
-      // Extract month and optionally year
-      const parts = value.split(' ');
-      const month = parts[1]?.replace('.', '') || '';
+      // For longer ranges, show month and optionally year
+      const month = date.toLocaleDateString('de-DE', {
+        month: 'short',
+        timeZone: 'UTC',
+      });
 
       // Add year to January
-      if (month === 'Jan' && parts[2]) {
-        return `${month} '${parts[2].slice(-2)}`;
+      if (date.getMonth() === 0) {
+        const year = date.getFullYear().toString().slice(-2);
+        return `${month} '${year}`;
       }
 
       return month;
@@ -107,8 +115,24 @@ export function VolumeTrendChart({
               />
               <ChartTooltip
                 cursor={false}
-                content={(props: CustomTooltipProps) => (
-                  <ChartTooltipContent {...props} indicator='dot' />
+                content={(props) => (
+                  <ChartTooltipContent
+                    {...props}
+                    indicator='dot'
+                    labelFormatter={(label) => {
+                      if (typeof label === 'string') {
+                        const date = new Date(label);
+                        return date.toLocaleDateString('de-DE', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          timeZone: 'UTC',
+                        });
+                      }
+                      return String(label);
+                    }}
+                  />
                 )}
               />
               <Bar

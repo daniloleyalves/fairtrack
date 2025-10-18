@@ -22,8 +22,6 @@ export default function FairteilerReportingWrapper() {
     revalidateOnMount: false,
   });
 
-  console.log(data);
-
   return (
     <SWRConfig
       value={{

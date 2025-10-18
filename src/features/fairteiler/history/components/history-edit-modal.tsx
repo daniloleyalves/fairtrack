@@ -50,7 +50,7 @@ import * as z from 'zod';
 import { HistoryVersionHistory } from './history-version-history';
 import { vContribution } from '@/server/db/db-types';
 import { editContributionFormSchema } from '@/features/contribution/schemas/contribution-schema';
-import { useHistoryData } from '../use-history-pagination';
+import { useHistoryData } from '../use-history-data';
 
 export type EditContributionFormValues = z.infer<
   typeof editContributionFormSchema

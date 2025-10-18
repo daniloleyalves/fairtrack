@@ -66,21 +66,14 @@ export function getVolumeTrendData(
   const chartData = Array.from(dailyTotals.entries())
     .map(([dateKey, quantity]) => {
       const date = new Date(dateKey);
-      // Format the date for display on the chart's X-axis
-      const formattedDate = date.toLocaleDateString('de-DE', {
-        month: 'short',
-        day: 'numeric',
-        timeZone: 'UTC',
-      });
       return {
-        date: formattedDate,
-        originalDate: date,
+        date: date.toISOString().split('T')[0], // Keep raw date as YYYY-MM-DD
         quantity: parseFloat(quantity.toFixed(2)),
       };
     })
-    .sort((a, b) => a.originalDate.getTime() - b.originalDate.getTime());
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  return chartData.map(({ date, quantity }) => ({ date, quantity }));
+  return chartData;
 }
 
 // --- B. Variety & Sourcing Converters ---
