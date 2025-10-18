@@ -112,22 +112,24 @@ async function FairteilerCard({ fairteiler }: { fairteiler: FairteilerType }) {
         )}
       </CardHeader>
       <CardContent className='mt-auto flex flex-col items-start'>
-        <div className='flex w-full items-center'>
-          <MapPin className='mr-2 size-3.5' />
-          {fairteiler.geoLink ? (
-            <Button asChild className='h-8 p-0' variant='link'>
-              <Link
-                href={fairteiler.geoLink}
-                target='_blank'
-                className='truncate'
-              >
-                {fairteiler.address}
-              </Link>
-            </Button>
-          ) : (
-            <span className='truncate text-sm'>{fairteiler.address}</span>
-          )}
-        </div>
+        {(fairteiler.geoLink ?? fairteiler.address) && (
+          <div className='flex w-full items-center'>
+            <MapPin className='mr-2 size-3.5' />
+            {fairteiler.geoLink ? (
+              <Button asChild className='h-8 p-0' variant='link'>
+                <Link
+                  href={fairteiler.geoLink}
+                  target='_blank'
+                  className='truncate'
+                >
+                  {fairteiler.address}
+                </Link>
+              </Button>
+            ) : (
+              <span className='truncate text-sm'>{fairteiler.address}</span>
+            )}
+          </div>
+        )}
         {fairteiler.website && (
           <div className='flex w-full items-center'>
             <Globe className='mr-2 size-3' />
