@@ -38,14 +38,13 @@ export function TimespanPicker({
   const [tempRange, setTempRange] = useState<DateRange>(dateRange);
 
   const today = new Date();
-  const currentYear = today.getFullYear();
 
   const quickOptions = [
     {
       label: 'Gesamter Zeitraum',
       range: {
         from: new Date(2023, 0, 1),
-        to: new Date(currentYear, 11, 31, 23, 59, 59),
+        to: today,
       },
     },
     {

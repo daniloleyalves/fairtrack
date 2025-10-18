@@ -1,7 +1,7 @@
 import { DataErrorBoundary } from '@/components/error-boundary';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import FairteilerHistoryWrapper from '@/features/fairteiler/history/components/history-table-wrapper';
+import { FairteilerHistoryWrapper } from '@/features/fairteiler/history/components/history-table-wrapper';
 import { Suspense } from 'react';
 
 export default function FairteilerHistoryPage() {

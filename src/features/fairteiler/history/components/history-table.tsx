@@ -26,26 +26,22 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { DataFilter } from '../../../statistics/components/data-filter';
 import { columns } from '../history-table-config';
-import { usePaginationState } from '../use-history-pagination';
 
 interface DataTableProps<TData> {
   data: TData[];
-  loadingControls?: React.ReactNode;
+  loadingControls?: ReactNode;
 }
 
 export function HistoryTable({
   data,
   loadingControls,
 }: DataTableProps<vContribution>) {
-  const isTablet = useIsTablet();
+  'use no memo';
 
-  // Separate pagination state management
-  const { pageIndex, pageSize, setPageIndex, setPageSize } =
-    usePaginationState();
+  const isTablet = useIsTablet();
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -53,6 +49,10 @@ export function HistoryTable({
     category: false,
   });
   const [rowSelection, setRowSelection] = useState({});
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
   const table = useReactTable({
     data,
@@ -62,37 +62,19 @@ export function HistoryTable({
       columnFilters,
       columnVisibility,
       rowSelection,
-      pagination: { pageIndex, pageSize }, // Controlled pagination state
+      pagination,
     },
-
-    // Pagination configuration
-    onPaginationChange: (updater) => {
-      if (typeof updater === 'function') {
-        const newState = updater({ pageIndex, pageSize });
-        setPageIndex(newState.pageIndex);
-        setPageSize(newState.pageSize);
-      } else {
-        setPageIndex(updater.pageIndex);
-        setPageSize(updater.pageSize);
-      }
-    },
-
-    // Other table configuration
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-
-    // Core models
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(), // Client-side pagination
-    getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-
-    // Manual control
-    manualPagination: false, // Client-side pagination
   });
 
   const categoryOptions = () => {
@@ -218,8 +200,8 @@ export function HistoryTable({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
+            {table.getPaginationRowModel().rows.length ? (
+              table.getPaginationRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
