@@ -89,7 +89,7 @@ function SuccessDisplay({ checkins }: { checkins: RecentCheckin[] }) {
       description='Das Retteformular wurde erfolgreich ausgefüllt.'
     >
       <div className='w-full space-y-3'>
-        <Button asChild className='w-full bg-transparent' size='lg'>
+        <Button asChild className='w-full' size='lg'>
           <Link href='/hub/fairteiler/contribution'>
             <ClipboardList className='mr-2 size-4' />
             Formular erneut ausfüllen
@@ -150,20 +150,15 @@ function NotFoundDisplay() {
     >
       <div className='w-full space-y-3'>
         <Button asChild className='w-full' size='lg'>
-          <Link href='/hub/fairteiler/dashboard'>
-            <ArrowRight className='mr-2 size-4' />
-            Weiter zum Dashboard
-          </Link>
-        </Button>
-        <Button
-          asChild
-          variant='outline'
-          className='w-full bg-transparent'
-          size='lg'
-        >
           <Link href='/hub/fairteiler/contribution'>
             <ClipboardList className='mr-2 size-4' />
             Erneut versuchen
+          </Link>
+        </Button>
+        <Button asChild variant='outline' className='w-full' size='lg'>
+          <Link href='/hub/fairteiler/dashboard'>
+            <ArrowRight className='mr-2 size-4' />
+            Weiter zum Dashboard
           </Link>
         </Button>
       </div>
