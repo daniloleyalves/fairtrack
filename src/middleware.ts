@@ -4,9 +4,9 @@ import { Session, User } from 'better-auth';
 
 export function middleware(request: NextRequest) {
   const sessionCookie = getSessionCookie(request);
-  const sessionDataToken = request.cookies.get(
-    'better-auth.session_data',
-  )?.value;
+  const sessionDataToken =
+    request.cookies.get('__Secure-better-auth.session_data')?.value ??
+    request.cookies.get('better-auth.session_data')?.value;
 
   let decodedSession = null;
   if (sessionDataToken) {
