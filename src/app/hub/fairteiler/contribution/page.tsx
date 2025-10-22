@@ -3,12 +3,15 @@ import { ContributionContent } from '@/features/contribution/components/contribu
 import { Suspense } from 'react';
 import { Skeleton } from '@ui/skeleton';
 import { UserPreferencesProvider } from '@/lib/services/preferences-service';
+import { headers } from 'next/headers';
+import { getSession } from '@/server/dto';
 
-export default function FairteilerContributionPage() {
+export default async function FairteilerContributionPage() {
+  const session = await getSession(await headers());
   return (
     <Suspense fallback={<ContributionPageSkeleton />}>
       <UserPreferencesProvider>
-        <ContributionProvider>
+        <ContributionProvider user={session ? session.user : null}>
           <ContributionContent />
         </ContributionProvider>
       </UserPreferencesProvider>

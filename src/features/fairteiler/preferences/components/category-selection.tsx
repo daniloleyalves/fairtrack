@@ -5,23 +5,25 @@ import {
   CATEGORY_KEY,
 } from '@/lib/config/api-routes';
 import useSWRSuspense from '@/lib/services/swr';
-import { ConfirmModal } from '@components/confirm-modal';
 import {
   addFairteilerCategoryAction,
   removeFairteilerCategoryAction,
   suggestNewCategoryAction,
+  updateCategoryAction,
 } from '@server/actions';
 import { GenericItem } from '@server/db/db-types';
 import { Badge } from '@ui/badge';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { ScrollArea } from '@ui/scroll-area';
-import { Loader2, Plus, X } from 'lucide-react';
+import { Loader2, Plus, Pencil } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import useSWRMutation from 'swr/mutation';
 import { FormSelectionItem } from './form-selection-item';
 import { v4 as uuidv4 } from 'uuid';
+import { EditItemDialog } from './edit-item-dialog';
+import { useSWRConfig } from 'swr';
 
 // --- Main Component ---
 
@@ -47,8 +49,9 @@ function CategorySelection({
   allCategories: GenericItem[];
   chosenCategories: GenericItem[];
 }) {
-  // --- Mutations ---
+  const { mutate } = useSWRConfig();
 
+  // --- Mutations ---
   const { trigger: addFairteilerCategoryTrigger, isMutating: isAdding } =
     useSWRMutation(
       CATEGORIES_BY_FAIRTEILER_KEY,
@@ -89,10 +92,40 @@ function CategorySelection({
         },
         revalidate: false,
         rollbackOnError: true,
+        onSuccess: () => {
+          toast.success('Kategorie erfolgreich entfernt');
+        },
         onError: () =>
           toast.error(
             'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen',
           ),
+      },
+    );
+
+  const { trigger: updateCategoryTrigger, isMutating: isUpdating } =
+    useSWRMutation(
+      CATEGORIES_BY_FAIRTEILER_KEY,
+      (_key, { arg }: { arg: GenericItem }) => updateCategoryAction(arg),
+      {
+        populateCache: (
+          updatedCategory: GenericItem,
+          currentCategories: GenericItem[] = [],
+        ) => {
+          return currentCategories.map((c) =>
+            c.id === updatedCategory.id ? updatedCategory : c,
+          );
+        },
+        revalidate: false,
+        rollbackOnError: true,
+        onSuccess: () => {
+          mutate(CATEGORY_KEY);
+          toast.success('Kategorie erfolgreich aktualisiert');
+        },
+        onError: () => {
+          return toast.error(
+            'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen',
+          );
+        },
       },
     );
 
@@ -110,6 +143,16 @@ function CategorySelection({
     removeFairteilerCategoryTrigger(categoryToRemove, {
       optimisticData: (currentChosen: GenericItem[] = []) => {
         return currentChosen.filter((c) => c.id !== categoryToRemove.id);
+      },
+    });
+  };
+
+  const handleUpdateCategory = (categoryToUpdate: GenericItem) => {
+    updateCategoryTrigger(categoryToUpdate, {
+      optimisticData: (currentCategories: GenericItem[] = []) => {
+        return currentCategories.map((c) =>
+          c.id === categoryToUpdate.id ? categoryToUpdate : c,
+        );
       },
     });
   };
@@ -141,8 +184,10 @@ function CategorySelection({
               </p>
               <ChosenCategories
                 categories={chosenCategories}
-                onRemove={handleRemoveCategory}
+                onRemoveAction={handleRemoveCategory}
+                onUpdateAction={handleUpdateCategory}
                 isRemoving={isRemoving}
+                isUpdating={isUpdating}
               />
             </div>
 
@@ -190,31 +235,28 @@ function CategorySelection({
 
 export function ChosenCategories({
   categories,
-  onRemove,
+  onRemoveAction,
+  onUpdateAction,
   isRemoving,
+  isUpdating,
 }: {
   categories: GenericItem[];
-  onRemove: (category: GenericItem) => void;
+  onRemoveAction: (category: GenericItem) => void;
+  onUpdateAction: (category: GenericItem) => void;
   isRemoving: boolean;
+  isUpdating: boolean;
 }) {
-  const [categoryToRemove, setCategoryToRemove] = useState<GenericItem | null>(
+  const [categoryToEdit, setCategoryToEdit] = useState<GenericItem | null>(
     null,
   );
 
-  const handleConfirmRemove = () => {
-    if (!categoryToRemove) return;
-    try {
-      onRemove(categoryToRemove);
-    } catch (e) {
-      console.error('Removal failed', e);
-    } finally {
-      setCategoryToRemove(null);
-    }
+  const handleEditClick = (category: GenericItem) => {
+    setCategoryToEdit(category);
   };
 
-  const handleModalOpenChange = (open: boolean) => {
+  const handleDialogOpenChange = (open: boolean) => {
     if (!open) {
-      setCategoryToRemove(null);
+      setCategoryToEdit(null);
     }
   };
 
@@ -230,10 +272,10 @@ export function ChosenCategories({
                 variant='ghost'
                 size='sm'
                 className='size-4 p-0 hover:bg-white/30 hover:text-white'
-                onClick={() => setCategoryToRemove(category)}
-                aria-label={`Remove ${category.name}`}
+                onClick={() => handleEditClick(category)}
+                aria-label={`Edit ${category.name}`}
               >
-                <X className='size-3' />
+                <Pencil className='size-3' />
               </Button>
             </Badge>
           ))
@@ -243,23 +285,15 @@ export function ChosenCategories({
           </p>
         )}
       </div>
-      <ConfirmModal
-        open={!!categoryToRemove}
-        onOpenChange={handleModalOpenChange}
-        title='Kategorie entfernen?'
-        description={
-          <>
-            Bist du sicher, dass du die Kategorie{' '}
-            <strong className='font-semibold'>{categoryToRemove?.name}</strong>{' '}
-            aus dem Formular und der Auswertung dieses Fairteilers entfernen
-            möchtest?
-          </>
-        }
-        onConfirm={handleConfirmRemove}
-        isPending={isRemoving}
-        actionTitle='Entfernen'
-        actionVariant='destructive'
-        useTrigger={false}
+      <EditItemDialog
+        item={categoryToEdit}
+        open={!!categoryToEdit}
+        onOpenChange={handleDialogOpenChange}
+        onUpdate={onUpdateAction}
+        onDelete={onRemoveAction}
+        isUpdating={isUpdating}
+        isDeleting={isRemoving}
+        itemType='Kategorie'
       />
     </>
   );

@@ -23,13 +23,37 @@ import {
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { TutorialCarousel } from '../tutorial/components/tutorial-carousel';
 import { FairteilerTutorialWithSteps } from '@/server/db/db-types';
+import {
+  ACCESS_VIEW_ROLES,
+  MemberRolesEnum,
+} from '@/lib/auth/auth-permissions';
+import { AccessViewSelector } from './access-view-selector';
+import { useSubmissionSelection } from '../hooks/use-submission-selection';
 
 export function ContributionContent() {
   const [openContributionInstructions, setOpenContributionInstructions] =
     useState(false);
   const [openContributionInfos, setOpenContributionInfos] = useState(false);
 
-  const { fairteiler, tutorial } = useContribution();
+  const { fairteilerWithMembers, tutorial, user } = useContribution();
+  const isMobile = useIsMobile();
+
+  // Get current user's member record
+  const currentMemberRecord = fairteilerWithMembers?.members.find(
+    (member) => member.user.id === user?.id,
+  );
+  const isOwner = currentMemberRecord?.role === MemberRolesEnum.OWNER;
+
+  // Get access views (employee/guest roles that are not disabled)
+  const accessViews = (fairteilerWithMembers?.members || []).filter(
+    (member) =>
+      ACCESS_VIEW_ROLES.has(member.role as MemberRolesEnum) &&
+      member.role !== 'disabled',
+  );
+
+  // Manage submission selection with localStorage
+  const [selectedAccessViewId, setSelectedAccessViewId] =
+    useSubmissionSelection(fairteilerWithMembers.id);
 
   const pathname = usePathname();
   const isUserContext = pathname.includes('/hub/user/');
@@ -38,19 +62,21 @@ export function ContributionContent() {
   const defaultConfig = () => {
     if (isUserContext) {
       return {
-        fairteilerId: fairteiler.id,
+        fairteilerId: fairteilerWithMembers.id,
         successRedirect: '/hub/user/contribution/success',
         revalidatePaths: ['/hub/user/dashboard'],
         cacheKeys: [USER_DASHBOARD_KEY],
         context: 'user' as const,
+        submitAsAccessViewId: isOwner ? selectedAccessViewId : undefined,
       };
     } else {
       return {
-        fairteilerId: fairteiler.id,
+        fairteilerId: fairteilerWithMembers.id,
         successRedirect: '/hub/fairteiler/contribution/success',
         revalidatePaths: ['/hub/fairteiler/dashboard'],
         cacheKeys: [FAIRTEILER_DASHBOARD_KEY, USER_DASHBOARD_KEY],
         context: 'fairteiler' as const,
+        submitAsAccessViewId: isOwner ? selectedAccessViewId : undefined,
       };
     }
   };
@@ -58,12 +84,21 @@ export function ContributionContent() {
   return (
     <>
       <div className='mx-2 mt-8 mb-64 flex flex-col gap-3 sm:mx-8'>
-        <div className='mb-4 flex flex-col items-center gap-2 text-center text-white sm:flex-row sm:justify-between sm:text-start'>
+        <div className='mb-4 flex flex-col items-center gap-2 text-center text-white lg:flex-row lg:justify-between lg:text-start'>
           <h2 className='font-londrina text-4xl font-bold tracking-wider'>
             Retteformular
           </h2>
 
-          <div className='mt-2 flex flex-wrap gap-2 self-center sm:self-start md:mt-0'>
+          <div className='mt-2 flex flex-wrap gap-2 self-center md:mt-0 lg:self-start'>
+            {/* Access View Selector - Only for owners with access views */}
+            {isOwner && accessViews.length > 0 && (
+              <AccessViewSelector
+                accessViews={accessViews}
+                selectedAccessViewId={selectedAccessViewId}
+                onSelectionChange={setSelectedAccessViewId}
+              />
+            )}
+
             {tutorial?.steps &&
               tutorial.steps.length > 0 &&
               tutorial.isActive && (
@@ -72,7 +107,15 @@ export function ContributionContent() {
                   onClick={() => setOpenContributionInstructions(true)}
                 >
                   <HelpCircle className='size-5' />
-                  Anleitung
+                  <span
+                    className={
+                      isMobile && !(!isOwner || accessViews.length === 0)
+                        ? 'sr-only'
+                        : undefined
+                    }
+                  >
+                    Anleitung
+                  </span>
                 </Button>
               )}
             <Button

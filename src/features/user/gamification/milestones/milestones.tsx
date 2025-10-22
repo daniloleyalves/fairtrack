@@ -17,7 +17,7 @@ export function Milestones({
 }) {
   return (
     <>
-      {milestoneData?.nextMilestone && (
+      {milestoneData && (
         <div className='h-max w-full rounded-lg bg-white px-2 py-4 shadow-sm'>
           <div
             className={cn(

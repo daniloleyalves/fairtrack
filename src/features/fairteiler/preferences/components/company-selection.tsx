@@ -4,15 +4,15 @@ import {
   addFairteilerCompanyAction,
   removeFairteilerCompanyAction,
   suggestNewCompanyAction,
+  updateCompanyAction,
 } from '@server/actions';
 import { GenericItem } from '@server/db/db-types';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import useSWRMutation from 'swr/mutation';
 import { Badge } from '@ui/badge';
-import { Loader2, Plus, X } from 'lucide-react';
+import { Loader2, Plus, Pencil } from 'lucide-react';
 import { Button } from '@ui/button';
-import { ConfirmModal } from '@components/confirm-modal';
 import { ScrollArea } from '@ui/scroll-area';
 import { FormSelectionItem } from './form-selection-item';
 import { Input } from '@ui/input';
@@ -22,6 +22,8 @@ import {
   COMPANY_KEY,
 } from '@/lib/config/api-routes';
 import { v4 as uuidv4 } from 'uuid';
+import { EditItemDialog } from './edit-item-dialog';
+import { useSWRConfig } from 'swr';
 
 // --- Main Component ---
 
@@ -47,8 +49,9 @@ function CompanySelection({
   allCompanies: GenericItem[];
   chosenCompanies: GenericItem[];
 }) {
-  // --- Mutations  ---
+  const { mutate } = useSWRConfig();
 
+  // --- Mutations  ---
   const { trigger: addFairteilerCompanyTrigger, isMutating: isAdding } =
     useSWRMutation(
       COMPANIES_BY_FAIRTEILER_KEY,
@@ -88,6 +91,36 @@ function CompanySelection({
         },
         revalidate: false,
         rollbackOnError: true,
+        onSuccess: () => {
+          toast.success('Betrieb erfolgreich entfernt');
+        },
+        onError: () => {
+          return toast.error(
+            'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen',
+          );
+        },
+      },
+    );
+
+  const { trigger: updateCompanyTrigger, isMutating: isUpdating } =
+    useSWRMutation(
+      COMPANIES_BY_FAIRTEILER_KEY,
+      (_key, { arg }: { arg: GenericItem }) => updateCompanyAction(arg),
+      {
+        populateCache: (
+          updatedCompany: GenericItem,
+          currentCompanies: GenericItem[] = [],
+        ) => {
+          return currentCompanies.map((c) =>
+            c.id === updatedCompany.id ? updatedCompany : c,
+          );
+        },
+        revalidate: false,
+        rollbackOnError: true,
+        onSuccess: () => {
+          mutate(COMPANY_KEY);
+          toast.success('Betrieb erfolgreich aktualisiert');
+        },
         onError: () => {
           return toast.error(
             'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen',
@@ -110,6 +143,16 @@ function CompanySelection({
     removeFairteilerCompanyTrigger(companyToRemove, {
       optimisticData: (currentChosen: GenericItem[] = []) => {
         return currentChosen.filter((c) => c.id !== companyToRemove.id);
+      },
+    });
+  };
+
+  const handleUpdateCompany = (companyToUpdate: GenericItem) => {
+    updateCompanyTrigger(companyToUpdate, {
+      optimisticData: (currentCompanies: GenericItem[] = []) => {
+        return currentCompanies.map((c) =>
+          c.id === companyToUpdate.id ? companyToUpdate : c,
+        );
       },
     });
   };
@@ -139,8 +182,10 @@ function CompanySelection({
               </p>
               <ChosenCompanies
                 companies={chosenCompanies}
-                onRemove={handleRemoveCompany}
+                onRemoveAction={handleRemoveCompany}
+                onUpdateAction={handleUpdateCompany}
                 isRemoving={isRemoving}
+                isUpdating={isUpdating}
               />
             </div>
 
@@ -188,31 +233,26 @@ function CompanySelection({
 
 export function ChosenCompanies({
   companies,
-  onRemove,
+  onRemoveAction,
+  onUpdateAction,
   isRemoving,
+  isUpdating,
 }: {
   companies: GenericItem[];
-  onRemove: (company: GenericItem) => void;
+  onRemoveAction: (company: GenericItem) => void;
+  onUpdateAction: (company: GenericItem) => void;
   isRemoving: boolean;
+  isUpdating: boolean;
 }) {
-  const [companyToRemove, setCompanyToRemove] = useState<GenericItem | null>(
-    null,
-  );
+  const [companyToEdit, setCompanyToEdit] = useState<GenericItem | null>(null);
 
-  const handleConfirmRemove = () => {
-    if (!companyToRemove) return;
-    try {
-      onRemove(companyToRemove);
-    } catch (e) {
-      console.error('Removal failed', e);
-    } finally {
-      setCompanyToRemove(null);
-    }
+  const handleEditClick = (company: GenericItem) => {
+    setCompanyToEdit(company);
   };
 
-  const handleModalOpenChange = (open: boolean) => {
+  const handleDialogOpenChange = (open: boolean) => {
     if (!open) {
-      setCompanyToRemove(null);
+      setCompanyToEdit(null);
     }
   };
 
@@ -228,10 +268,10 @@ export function ChosenCompanies({
                 variant='ghost'
                 size='sm'
                 className='size-4 p-0 hover:bg-white/30 hover:text-white'
-                onClick={() => setCompanyToRemove(company)}
-                aria-label={`Remove ${company.name}`}
+                onClick={() => handleEditClick(company)}
+                aria-label={`Edit ${company.name}`}
               >
-                <X className='size-3' />
+                <Pencil className='size-3' />
               </Button>
             </Badge>
           ))
@@ -241,23 +281,15 @@ export function ChosenCompanies({
           </p>
         )}
       </div>
-      <ConfirmModal
-        open={!!companyToRemove}
-        onOpenChange={handleModalOpenChange}
-        title='Betrieb entfernen?'
-        description={
-          <>
-            Bist du sicher, dass du den Betrieb{' '}
-            <strong className='font-semibold'>{companyToRemove?.name}</strong>{' '}
-            aus dem Formular und der Auswertung dieses Fairteilers entfernen
-            möchtest?
-          </>
-        }
-        onConfirm={handleConfirmRemove}
-        isPending={isRemoving}
-        actionTitle='Entfernen'
-        actionVariant='destructive'
-        useTrigger={false}
+      <EditItemDialog
+        item={companyToEdit}
+        open={!!companyToEdit}
+        onOpenChange={handleDialogOpenChange}
+        onUpdate={onUpdateAction}
+        onDelete={onRemoveAction}
+        isUpdating={isUpdating}
+        isDeleting={isRemoving}
+        itemType='Betrieb'
       />
     </>
   );
