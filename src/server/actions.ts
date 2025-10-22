@@ -28,6 +28,9 @@ import {
   removeFairteilerTutorialStep,
   addFairteilerTutorialStep,
   updateFairteilerTutorialStep,
+  updateOrigin,
+  updateCategory,
+  updateCompany,
 } from './dal';
 import {
   contributionEditSchema,
@@ -166,6 +169,40 @@ export async function removeFairteilerOriginAction(
   }
 }
 
+export async function updateOriginAction(
+  originToUpdate: GenericItem,
+): Promise<GenericItem> {
+  try {
+    const nextHeaders = await headers();
+    const session = await loadAuthenticatedSession(nextHeaders);
+    const fairteilerId = session.session.activeOrganizationId;
+    if (!fairteilerId) {
+      throw new AuthError('No active organization');
+    }
+
+    const permissionResult = await checkPermissionOnServer(nextHeaders, {
+      preferences: ['update'],
+    });
+
+    if (!permissionResult.success) {
+      throw new PermissionError(
+        'Du bist nicht befugt diese Aktion auszuführen',
+      );
+    }
+
+    const updatedOrigin = await updateOrigin(originToUpdate);
+
+    if (!updatedOrigin) {
+      throw new NotFoundError('Origin to update');
+    }
+
+    return originToUpdate;
+  } catch (error) {
+    console.error('Error in updateOriginAction:', error);
+    throw error;
+  }
+}
+
 // CATEGORY SELECTION
 
 export const suggestNewCategoryAction = createAction({
@@ -274,6 +311,40 @@ export async function removeFairteilerCategoryAction(
   }
 }
 
+export async function updateCategoryAction(
+  categoryToUpdate: GenericItem,
+): Promise<GenericItem> {
+  try {
+    const nextHeaders = await headers();
+    const session = await loadAuthenticatedSession(nextHeaders);
+    const fairteilerId = session.session.activeOrganizationId;
+    if (!fairteilerId) {
+      throw new AuthError('No active organization');
+    }
+
+    const permissionResult = await checkPermissionOnServer(nextHeaders, {
+      preferences: ['update'],
+    });
+
+    if (!permissionResult.success) {
+      throw new PermissionError(
+        'Du bist nicht befugt diese Aktion auszuführen',
+      );
+    }
+
+    const updatedCategory = await updateCategory(categoryToUpdate);
+
+    if (!updatedCategory) {
+      throw new NotFoundError('Category to update');
+    }
+
+    return categoryToUpdate;
+  } catch (error) {
+    console.error('Error in updateCategoryAction:', error);
+    throw error;
+  }
+}
+
 // COMPANY SELECTION
 
 export const suggestNewCompanyAction = createAction({
@@ -378,6 +449,40 @@ export async function removeFairteilerCompanyAction(
     return companyToRemove;
   } catch (error) {
     console.error('Error in removeFairteilerCompanyAction:', error);
+    throw error;
+  }
+}
+
+export async function updateCompanyAction(
+  companyToUpdate: GenericItem,
+): Promise<GenericItem> {
+  try {
+    const nextHeaders = await headers();
+    const session = await loadAuthenticatedSession(nextHeaders);
+    const fairteilerId = session.session.activeOrganizationId;
+    if (!fairteilerId) {
+      throw new AuthError('No active organization');
+    }
+
+    const permissionResult = await checkPermissionOnServer(nextHeaders, {
+      preferences: ['update'],
+    });
+
+    if (!permissionResult.success) {
+      throw new PermissionError(
+        'Du bist nicht befugt diese Aktion auszuführen',
+      );
+    }
+
+    const updatedCompany = await updateCompany(companyToUpdate);
+
+    if (!updatedCompany) {
+      throw new NotFoundError('Company to update');
+    }
+
+    return companyToUpdate;
+  } catch (error) {
+    console.error('Error in updateCompanyAction:', error);
     throw error;
   }
 }

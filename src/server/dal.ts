@@ -299,6 +299,18 @@ export async function removeFairteilerOrigin(
   return data;
 }
 
+export async function updateOrigin(originToUpdate: GenericItem) {
+  const [error, data] = await attempt(
+    db
+      .update(origin)
+      .set({ name: originToUpdate.name })
+      .where(eq(origin.id, originToUpdate.id))
+      .returning(),
+  );
+  if (error) handleDatabaseError(error, 'updateOrigin');
+  return data;
+}
+
 // --- 4. Category Management ---
 
 export async function loadCategories() {
@@ -356,6 +368,18 @@ export async function removeFairteilerCategory(
       .returning(),
   );
   if (error) handleDatabaseError(error, 'removeFairteilerCategory');
+  return data;
+}
+
+export async function updateCategory(categoryToUpdate: GenericItem) {
+  const [error, data] = await attempt(
+    db
+      .update(category)
+      .set({ name: categoryToUpdate.name })
+      .where(eq(category.id, categoryToUpdate.id))
+      .returning(),
+  );
+  if (error) handleDatabaseError(error, 'updateCategory');
   return data;
 }
 
@@ -419,6 +443,18 @@ export async function removeFairteilerCompany(
       .returning(),
   );
   if (error) handleDatabaseError(error, 'removeFairteilerCompany');
+  return data;
+}
+
+export async function updateCompany(companyToUpdate: GenericItem) {
+  const [error, data] = await attempt(
+    db
+      .update(company)
+      .set({ name: companyToUpdate.name })
+      .where(eq(company.id, companyToUpdate.id))
+      .returning(),
+  );
+  if (error) handleDatabaseError(error, 'updateCompany');
   return data;
 }
 

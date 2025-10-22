@@ -89,6 +89,9 @@ function AttributeDistributionChartContent({
   onFilter,
 }: AttributeDistributionChartContentProps) {
   const chartData = attributeDistribution.data;
+  const MAX_VISIBLE_ITEMS = 7;
+  const displayData = chartData.slice(0, MAX_VISIBLE_ITEMS);
+  const remainingCount = chartData.length - MAX_VISIBLE_ITEMS;
 
   const chartConfig: Record<string, { label: string; color: string }> = {};
   chartData.forEach((item) => {
@@ -160,7 +163,7 @@ function AttributeDistributionChartContent({
       )}
 
       <ul className='col-span-12 grid w-full grid-flow-col grid-rows-4 justify-center gap-x-4 gap-y-2 xs:col-span-8 xs:justify-start'>
-        {chartData.map((item) => (
+        {displayData.map((item) => (
           <button
             type='button'
             onClick={() => onFilter?.(item.description)}
@@ -178,6 +181,14 @@ function AttributeDistributionChartContent({
             </span>
           </button>
         ))}
+        {remainingCount > 0 && (
+          <li className='flex items-center gap-2'>
+            <span className='h-4 w-2 shrink-0 rounded-lg bg-muted' />
+            <span className='text-sm font-medium text-muted-foreground/80'>
+              +{remainingCount} weitere
+            </span>
+          </li>
+        )}
       </ul>
     </div>
   );

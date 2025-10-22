@@ -2,23 +2,25 @@
 
 import { ORIGIN_KEY, ORIGINS_BY_FAIRTEILER_KEY } from '@/lib/config/api-routes';
 import useSWRSuspense from '@/lib/services/swr';
-import { ConfirmModal } from '@components/confirm-modal';
 import {
   addFairteilerOriginAction,
   removeFairteilerOriginAction,
   suggestNewOriginAction,
+  updateOriginAction,
 } from '@server/actions';
 import { GenericItem } from '@server/db/db-types';
 import { Badge } from '@ui/badge';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { ScrollArea } from '@ui/scroll-area';
-import { Loader2, Plus, X } from 'lucide-react';
+import { Loader2, Plus, Pencil } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import useSWRMutation from 'swr/mutation';
 import { FormSelectionItem } from './form-selection-item';
 import { v4 as uuidv4 } from 'uuid';
+import { EditItemDialog } from './edit-item-dialog';
+import { useSWRConfig } from 'swr';
 
 // --- Main Component ---
 
@@ -41,8 +43,9 @@ function OriginSelection({
   allOrigins: GenericItem[];
   chosenOrigins: GenericItem[];
 }) {
-  // --- Mutations  ---
+  const { mutate } = useSWRConfig();
 
+  // --- Mutations  ---
   const { trigger: addFairteilerOriginTrigger, isMutating: isAdding } =
     useSWRMutation(
       ORIGINS_BY_FAIRTEILER_KEY,
@@ -80,6 +83,36 @@ function OriginSelection({
         },
         revalidate: false,
         rollbackOnError: true,
+        onSuccess: () => {
+          toast.success('Änderung erfolgreich gespeichert.');
+        },
+        onError: () => {
+          return toast.error(
+            'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen',
+          );
+        },
+      },
+    );
+
+  const { trigger: updateOriginTrigger, isMutating: isUpdating } =
+    useSWRMutation(
+      ORIGINS_BY_FAIRTEILER_KEY,
+      (_key, { arg }: { arg: GenericItem }) => updateOriginAction(arg),
+      {
+        populateCache: (
+          updatedOrigin: GenericItem,
+          currentOrigins: GenericItem[] = [],
+        ) => {
+          return currentOrigins.map((o) =>
+            o.id === updatedOrigin.id ? updatedOrigin : o,
+          );
+        },
+        revalidate: false,
+        rollbackOnError: true,
+        onSuccess: () => {
+          mutate(ORIGIN_KEY);
+          toast.success('Änderung erfolgreich gespeichert.');
+        },
         onError: () => {
           return toast.error(
             'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen',
@@ -102,6 +135,16 @@ function OriginSelection({
     removeFairteilerOriginTrigger(originToRemove, {
       optimisticData: (currentChosen: GenericItem[] = []) => {
         return currentChosen.filter((o) => o.id !== originToRemove.id);
+      },
+    });
+  };
+
+  const handleUpdateOrigin = (originToUpdate: GenericItem) => {
+    updateOriginTrigger(originToUpdate, {
+      optimisticData: (currentOrigins: GenericItem[] = []) => {
+        return currentOrigins.map((o) =>
+          o.id === originToUpdate.id ? originToUpdate : o,
+        );
       },
     });
   };
@@ -132,8 +175,10 @@ function OriginSelection({
               </p>
               <ChosenOrigins
                 origins={chosenOrigins}
-                onRemove={handleRemoveOrigin}
+                onRemoveAction={handleRemoveOrigin}
+                onUpdateAction={handleUpdateOrigin}
                 isRemoving={isRemoving}
+                isUpdating={isUpdating}
               />
             </div>
 
@@ -181,31 +226,26 @@ function OriginSelection({
 
 export function ChosenOrigins({
   origins,
-  onRemove,
+  onRemoveAction,
+  onUpdateAction,
   isRemoving,
+  isUpdating,
 }: {
   origins: GenericItem[];
-  onRemove: (origin: GenericItem) => void;
+  onRemoveAction: (origin: GenericItem) => void;
+  onUpdateAction: (origin: GenericItem) => void;
   isRemoving: boolean;
+  isUpdating: boolean;
 }) {
-  const [originToRemove, setOriginToRemove] = useState<GenericItem | null>(
-    null,
-  );
+  const [originToEdit, setOriginToEdit] = useState<GenericItem | null>(null);
 
-  const handleConfirmRemove = () => {
-    if (!originToRemove) return;
-    try {
-      onRemove(originToRemove);
-    } catch (e) {
-      console.error('Removal failed', e);
-    } finally {
-      setOriginToRemove(null);
-    }
+  const handleEditClick = (origin: GenericItem) => {
+    setOriginToEdit(origin);
   };
 
-  const handleModalOpenChange = (open: boolean) => {
+  const handleDialogOpenChange = (open: boolean) => {
     if (!open) {
-      setOriginToRemove(null);
+      setOriginToEdit(null);
     }
   };
 
@@ -221,10 +261,10 @@ export function ChosenOrigins({
                 variant='ghost'
                 size='sm'
                 className='size-4 p-0 hover:bg-white/30 hover:text-white'
-                onClick={() => setOriginToRemove(origin)}
-                aria-label={`Remove ${origin.name}`}
+                onClick={() => handleEditClick(origin)}
+                aria-label={`Edit ${origin.name}`}
               >
-                <X className='size-3' />
+                <Pencil className='size-3' />
               </Button>
             </Badge>
           ))
@@ -234,23 +274,15 @@ export function ChosenOrigins({
           </p>
         )}
       </div>
-      <ConfirmModal
-        open={!!originToRemove}
-        onOpenChange={handleModalOpenChange}
-        title='Herkunft entfernen?'
-        description={
-          <>
-            Bist du sicher, dass du die Herkunft{' '}
-            <strong className='font-semibold'>{originToRemove?.name}</strong>{' '}
-            aus dem Formular und der Auswertung dieses Fairteilers entfernen
-            möchtest?
-          </>
-        }
-        onConfirm={handleConfirmRemove}
-        isPending={isRemoving}
-        actionTitle='Entfernen'
-        actionVariant='destructive'
-        useTrigger={false}
+      <EditItemDialog
+        item={originToEdit}
+        open={!!originToEdit}
+        onOpenChange={handleDialogOpenChange}
+        onUpdate={onUpdateAction}
+        onDelete={onRemoveAction}
+        isUpdating={isUpdating}
+        isDeleting={isRemoving}
+        itemType='Herkunft'
       />
     </>
   );

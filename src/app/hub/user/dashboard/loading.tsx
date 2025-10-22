@@ -23,7 +23,6 @@ export default function UserDashboardSkeleton() {
               className='flex h-32 w-full flex-col items-center justify-center p-4'
             >
               <Skeleton className='size-12 rounded-full bg-secondary' />
-              <Skeleton className='mt-2 h-4 w-1/2 rounded-md bg-secondary' />
               <Skeleton className='mt-1 h-6 w-3/4 rounded-md bg-secondary' />
             </Card>
           ))}
@@ -32,10 +31,10 @@ export default function UserDashboardSkeleton() {
         {/* Milestones */}
         <div className='order-2 col-span-12 md:order-3 md:col-span-2 lg:col-span-1'>
           <Card className='h-full p-4'>
-            <Skeleton className='h-6 w-3/4 rounded-md bg-secondary' />
+            <Skeleton className='h-6 rounded-md bg-secondary' />
             <div className='mt-4 space-y-3'>
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className='flex items-center gap-2'>
+                <div key={i} className='flex flex-col items-center gap-2'>
                   <Skeleton className='size-8 rounded-full bg-secondary' />
                   <Skeleton className='h-4 w-full rounded-md bg-secondary' />
                 </div>
@@ -46,17 +45,11 @@ export default function UserDashboardSkeleton() {
 
         {/* Distribution Charts */}
         <div className='order-3 col-span-12 w-full md:order-2 md:col-span-10 lg:col-span-7'>
-          <Card className='h-full flex-col gap-4 rounded-lg bg-white p-4 md:gap-0 md:py-2'>
-            <div className='flex-1 space-y-4'>
-              <Skeleton className='h-6 w-1/2 rounded-md bg-secondary' />
-              <Skeleton className='h-32 w-full rounded-md bg-secondary' />
-            </div>
+          <Card className='h-full flex-col justify-between gap-4 rounded-lg bg-white p-4 md:gap-0 md:py-2'>
+            <Skeleton className='my-auto h-36 w-full rounded-md bg-secondary' />
             <div className='hidden h-px w-full bg-border md:block' />
             <div className='h-full w-px bg-border md:hidden' />
-            <div className='flex-1 space-y-4'>
-              <Skeleton className='h-6 w-1/2 rounded-md bg-secondary' />
-              <Skeleton className='h-32 w-full rounded-md bg-secondary' />
-            </div>
+            <Skeleton className='my-auto h-36 w-full rounded-md bg-secondary' />
           </Card>
         </div>
 
