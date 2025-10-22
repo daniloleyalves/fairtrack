@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useContribution } from '../context/contribution-context';
 
 export function ContributionHeader() {
-  const { fairteiler } = useContribution();
+  const { fairteilerWithMembers } = useContribution();
 
   return (
     <div className='flex items-center gap-3 rounded-b-lg border-b bg-card p-4 sm:gap-4'>
@@ -28,8 +28,9 @@ export function ContributionHeader() {
         </h1>
         <div className='flex items-center gap-1 text-xs text-muted-foreground sm:text-sm'>
           <MapPin className='size-3' />
-          {fairteiler.name}
-          {fairteiler.address && ` • ${fairteiler.address}`}
+          {fairteilerWithMembers.name}
+          {fairteilerWithMembers.address &&
+            ` • ${fairteilerWithMembers.address}`}
         </div>
       </div>
       <LocationIndicator />
