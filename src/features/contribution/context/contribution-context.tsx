@@ -8,9 +8,10 @@ import {
   type Coordinates,
 } from '@/lib/geo';
 import {
-  Fairteiler,
   GenericItem,
   FairteilerTutorialWithSteps,
+  FairteilerWithMembers,
+  User,
 } from '@/server/db/db-types';
 import useSWRSuspense from '@/lib/services/swr';
 import {
@@ -29,7 +30,7 @@ export type LocationStatus =
   | 'error';
 
 interface FairteilerData {
-  fairteiler: Fairteiler;
+  fairteilerWithMembers: FairteilerWithMembers;
   origins: GenericItem[];
   categories: GenericItem[];
   companies: GenericItem[];
@@ -38,11 +39,14 @@ interface FairteilerData {
 
 interface ContributionContextValue {
   // Fairteiler data
-  fairteiler: Fairteiler;
+  fairteilerWithMembers: FairteilerWithMembers;
   origins: GenericItem[];
   categories: (GenericItem & { image?: string })[];
   companies: (GenericItem & { originId?: string })[];
   tutorial?: FairteilerTutorialWithSteps;
+
+  // User data
+  user: User | null;
 
   // Location authentication
   locationStatus: LocationStatus;
@@ -62,12 +66,14 @@ interface ContributionProviderProps {
   children: React.ReactNode;
   initialData?: FairteilerData;
   trackUserLocation?: boolean;
+  user: User | null;
 }
 
 export function ContributionProvider({
   children,
   initialData,
   trackUserLocation = false,
+  user,
 }: ContributionProviderProps) {
   const { coordinates, error, loading, permissionDenied } = useUserLocation({
     enabled: trackUserLocation,
@@ -77,9 +83,10 @@ export function ContributionProvider({
     useState<LocationStatus>('loading');
 
   // Client-side SWR hooks (only active in client mode)
-  const { data: swrFairteiler } = useSWRSuspense<Fairteiler>(
-    !initialData ? ACTIVE_FAIRTEILER_KEY : undefined,
-  );
+  const { data: swrFairteilerWithMembers } =
+    useSWRSuspense<FairteilerWithMembers>(
+      !initialData ? ACTIVE_FAIRTEILER_KEY : undefined,
+    );
   const { data: swrOrigins } = useSWRSuspense<GenericItem[]>(
     !initialData ? ORIGINS_BY_FAIRTEILER_KEY : undefined,
   );
@@ -94,14 +101,14 @@ export function ContributionProvider({
   );
 
   // Data resolution based on mode
-  let fairteiler: Fairteiler;
+  let fairteilerWithMembers: FairteilerWithMembers;
   let origins: GenericItem[];
   let categories: (GenericItem & { image?: string })[];
   let companies: (GenericItem & { originId?: string })[];
   let tutorial: FairteilerTutorialWithSteps | undefined;
 
   if (initialData) {
-    fairteiler = initialData.fairteiler;
+    fairteilerWithMembers = initialData.fairteilerWithMembers;
     origins = initialData.origins;
     categories = initialData.categories as (GenericItem & { image?: string })[];
     companies = initialData.companies as (GenericItem & {
@@ -109,7 +116,7 @@ export function ContributionProvider({
     })[];
     tutorial = initialData.tutorial;
   } else {
-    fairteiler = swrFairteiler!;
+    fairteilerWithMembers = swrFairteilerWithMembers!;
     origins = swrOrigins!;
     categories = swrCategories!;
     companies = swrCompanies!;
@@ -117,8 +124,8 @@ export function ContributionProvider({
   }
 
   const fairteilerCoords: Coordinates = {
-    latitude: parseFloat(fairteiler.geoLat),
-    longitude: parseFloat(fairteiler.geoLng),
+    latitude: parseFloat(fairteilerWithMembers.geoLat),
+    longitude: parseFloat(fairteilerWithMembers.geoLng),
   };
 
   const isLocationVerified =
@@ -160,10 +167,11 @@ export function ContributionProvider({
   };
 
   const value: ContributionContextValue = {
-    fairteiler,
+    fairteilerWithMembers,
     origins,
     categories,
     companies,
+    user,
     tutorial,
     locationStatus,
     coordinates,

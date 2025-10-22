@@ -571,9 +571,28 @@ export const submitContributionAction = createAction({
       throw new ValidationError('Keine Einträge gefunden.');
     }
 
+    // Determine which user ID to use for contribution
+    let contributingUserId = session.user.id;
+
+    // If submitAsAccessViewId is provided, verify owner permissions and get the access view user
+    if (input.config.submitAsAccessViewId) {
+      // Verify that the current user is an owner
+      const permissionResult = await checkPermissionOnServer(headers, {
+        member: ['create'], // Only owners have member create permission
+      });
+
+      if (!permissionResult.success) {
+        throw new PermissionError(
+          'Nur Inhaber:innen dürfen Beiträge im Namen von Zugangsprofile einreichen.',
+        );
+      }
+
+      contributingUserId = input.config.submitAsAccessViewId;
+    }
+
     await checkinContribution(
       input.config.fairteilerId,
-      session.user.id,
+      contributingUserId,
       input.contributions,
     );
 

@@ -54,6 +54,7 @@ export const contributionFormSchema = z.object({
     successRedirect: z.string().optional(),
     revalidatePaths: z.array(z.string()).optional(),
     context: z.enum(['fairteiler', 'user', 'admin']).optional(),
+    submitAsAccessViewId: z.string().nullable().optional(),
   }),
 });
 
