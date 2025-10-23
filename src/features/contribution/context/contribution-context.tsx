@@ -12,6 +12,7 @@ import {
   FairteilerTutorialWithSteps,
   FairteilerWithMembers,
   User,
+  Fairteiler,
 } from '@/server/db/db-types';
 import useSWRSuspense from '@/lib/services/swr';
 import {
@@ -30,7 +31,7 @@ export type LocationStatus =
   | 'error';
 
 interface FairteilerData {
-  fairteilerWithMembers: FairteilerWithMembers;
+  fairteiler: Fairteiler | FairteilerWithMembers;
   origins: GenericItem[];
   categories: GenericItem[];
   companies: GenericItem[];
@@ -39,7 +40,7 @@ interface FairteilerData {
 
 interface ContributionContextValue {
   // Fairteiler data
-  fairteilerWithMembers: FairteilerWithMembers;
+  fairteiler: Fairteiler | FairteilerWithMembers;
   origins: GenericItem[];
   categories: (GenericItem & { image?: string })[];
   companies: (GenericItem & { originId?: string })[];
@@ -66,14 +67,14 @@ interface ContributionProviderProps {
   children: React.ReactNode;
   initialData?: FairteilerData;
   trackUserLocation?: boolean;
-  user: User | null;
+  user?: User | null;
 }
 
 export function ContributionProvider({
   children,
   initialData,
   trackUserLocation = false,
-  user,
+  user = null,
 }: ContributionProviderProps) {
   const { coordinates, error, loading, permissionDenied } = useUserLocation({
     enabled: trackUserLocation,
@@ -101,14 +102,14 @@ export function ContributionProvider({
   );
 
   // Data resolution based on mode
-  let fairteilerWithMembers: FairteilerWithMembers;
+  let fairteiler: Fairteiler | FairteilerWithMembers;
   let origins: GenericItem[];
   let categories: (GenericItem & { image?: string })[];
   let companies: (GenericItem & { originId?: string })[];
   let tutorial: FairteilerTutorialWithSteps | undefined;
 
   if (initialData) {
-    fairteilerWithMembers = initialData.fairteilerWithMembers;
+    fairteiler = initialData.fairteiler;
     origins = initialData.origins;
     categories = initialData.categories as (GenericItem & { image?: string })[];
     companies = initialData.companies as (GenericItem & {
@@ -116,7 +117,7 @@ export function ContributionProvider({
     })[];
     tutorial = initialData.tutorial;
   } else {
-    fairteilerWithMembers = swrFairteilerWithMembers!;
+    fairteiler = swrFairteilerWithMembers!;
     origins = swrOrigins!;
     categories = swrCategories!;
     companies = swrCompanies!;
@@ -124,8 +125,8 @@ export function ContributionProvider({
   }
 
   const fairteilerCoords: Coordinates = {
-    latitude: parseFloat(fairteilerWithMembers.geoLat),
-    longitude: parseFloat(fairteilerWithMembers.geoLng),
+    latitude: parseFloat(fairteiler.geoLat),
+    longitude: parseFloat(fairteiler.geoLng),
   };
 
   const isLocationVerified =
@@ -167,7 +168,7 @@ export function ContributionProvider({
   };
 
   const value: ContributionContextValue = {
-    fairteilerWithMembers,
+    fairteiler,
     origins,
     categories,
     companies,

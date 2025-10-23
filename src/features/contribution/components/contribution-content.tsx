@@ -22,7 +22,10 @@ import {
 } from '@/components/ui/drawer';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { TutorialCarousel } from '../tutorial/components/tutorial-carousel';
-import { FairteilerTutorialWithSteps } from '@/server/db/db-types';
+import {
+  FairteilerTutorialWithSteps,
+  FairteilerWithMembers,
+} from '@/server/db/db-types';
 import {
   ACCESS_VIEW_ROLES,
   MemberRolesEnum,
@@ -31,12 +34,13 @@ import { AccessViewSelector } from './access-view-selector';
 import { useSubmissionSelection } from '../hooks/use-submission-selection';
 
 export function ContributionContent() {
+  const isMobile = useIsMobile();
   const [openContributionInstructions, setOpenContributionInstructions] =
     useState(false);
   const [openContributionInfos, setOpenContributionInfos] = useState(false);
 
-  const { fairteilerWithMembers, tutorial, user } = useContribution();
-  const isMobile = useIsMobile();
+  const { fairteiler, tutorial, user } = useContribution();
+  const fairteilerWithMembers = fairteiler as FairteilerWithMembers;
 
   // Get current user's member record
   const currentMemberRecord = fairteilerWithMembers?.members.find(
@@ -53,7 +57,7 @@ export function ContributionContent() {
 
   // Manage submission selection with localStorage
   const [selectedAccessViewId, setSelectedAccessViewId] =
-    useSubmissionSelection(fairteilerWithMembers.id);
+    useSubmissionSelection(fairteiler.id);
 
   const pathname = usePathname();
   const isUserContext = pathname.includes('/hub/user/');
@@ -62,7 +66,7 @@ export function ContributionContent() {
   const defaultConfig = () => {
     if (isUserContext) {
       return {
-        fairteilerId: fairteilerWithMembers.id,
+        fairteilerId: fairteiler.id,
         successRedirect: '/hub/user/contribution/success',
         revalidatePaths: ['/hub/user/dashboard'],
         cacheKeys: [USER_DASHBOARD_KEY],
@@ -71,7 +75,7 @@ export function ContributionContent() {
       };
     } else {
       return {
-        fairteilerId: fairteilerWithMembers.id,
+        fairteilerId: fairteiler.id,
         successRedirect: '/hub/fairteiler/contribution/success',
         revalidatePaths: ['/hub/fairteiler/dashboard'],
         cacheKeys: [FAIRTEILER_DASHBOARD_KEY, USER_DASHBOARD_KEY],
