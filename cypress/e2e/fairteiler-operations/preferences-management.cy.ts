@@ -35,10 +35,14 @@ describe('Preferences Management E2E', () => {
 
       // Find and add an origin from available options
       cy.get('[aria-label="Add Supermarkt"]').click();
-      // Remove the added origin
-      cy.get('[aria-label="Remove Supermarkt"]').click();
 
-      // Confirm removal
+      // Edit the added origin (opens modal)
+      cy.get('[aria-label="Edit Supermarkt"]').click();
+
+      // Click remove button in the edit modal
+      cy.get('button').contains('Entfernen').click();
+
+      // Confirm removal in confirmation dialog
       cy.contains('Herkunft entfernen').should('be.visible');
       cy.get('button').contains('Entfernen').click();
     });
@@ -53,12 +57,16 @@ describe('Preferences Management E2E', () => {
       // Wait for content to load
       cy.contains('Kategorien').should('be.visible');
 
-      //  Find and add an category from available options
+      // Find and add a category from available options
       cy.get('[aria-label="Add Backwaren"]').click();
-      // Remove the added category
-      cy.get('[aria-label="Remove Backwaren"]').click();
 
-      // Confirm removal
+      // Edit the added category (opens modal)
+      cy.get('[aria-label="Edit Backwaren"]').click();
+
+      // Click remove button in the edit modal
+      cy.get('button').contains('Entfernen').click();
+
+      // Confirm removal in confirmation dialog
       cy.contains('Kategorie entfernen').should('be.visible');
       cy.get('button').contains('Entfernen').click();
     });
@@ -73,12 +81,16 @@ describe('Preferences Management E2E', () => {
       // Wait for content to load
       cy.contains('Betriebe').should('be.visible');
 
-      //  Find and add an company from available options
+      // Find and add a company from available options
       cy.get('[aria-label="Add Edeka"]').click();
-      // Remove the added company
-      cy.get('[aria-label="Remove Edeka"]').click();
 
-      // Confirm removal
+      // Edit the added company (opens modal)
+      cy.get('[aria-label="Edit Edeka"]').click();
+
+      // Click remove button in the edit modal
+      cy.get('button').contains('Entfernen').click();
+
+      // Confirm removal in confirmation dialog
       cy.contains('Betrieb entfernen').should('be.visible');
       cy.get('button').contains('Entfernen').click();
     });
