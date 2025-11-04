@@ -152,7 +152,7 @@ export function HistoryTable({
           }
         />
 
-        <div className='flex gap-2'>
+        <div className='flex flex-wrap gap-2'>
           {table.getColumn('category') && (
             <DataFilter
               column={table.getColumn('category')}

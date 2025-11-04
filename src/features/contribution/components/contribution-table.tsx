@@ -123,9 +123,15 @@ export function ContributionRows() {
   const { origins, categories, companies } = useContribution();
 
   const formOptions = {
-    fairteilerOrigins: origins,
-    fairteilerCategories: categories as (GenericItem & { image: string })[],
-    fairteilerCompanies: companies as (GenericItem & { originId: string })[],
+    fairteilerOrigins: [...origins].sort((a, b) =>
+      a.name.localeCompare(b.name),
+    ),
+    fairteilerCategories: [
+      ...(categories as (GenericItem & { image: string })[]),
+    ].sort((a, b) => a.name.localeCompare(b.name)),
+    fairteilerCompanies: [
+      ...(companies as (GenericItem & { originId: string })[]),
+    ].sort((a, b) => a.name.localeCompare(b.name)),
   };
 
   // ---- ROW STATE ----

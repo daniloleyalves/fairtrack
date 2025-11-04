@@ -43,7 +43,10 @@ export function CompanyStep({
         selectedValues.size === 0 || selectedValues.has(company.originId);
       return matchesSearch && matchesOrigin;
     });
-    setFilteredCompanies(filtered);
+    const sortedFiltered = filtered.sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+    setFilteredCompanies(sortedFiltered);
   }, [searchTerm, selectedValues, companies]);
 
   const handleRadioSelect = (companyId: string) => {
@@ -77,10 +80,12 @@ export function CompanyStep({
         </div>
         <SimpleFilter
           title='Herkunft'
-          options={origins.map((origin) => ({
-            title: origin.name,
-            value: origin.id,
-          }))}
+          options={[...origins]
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map((origin) => ({
+              title: origin.name,
+              value: origin.id,
+            }))}
           onChange={setSelectedValues}
         />
       </div>

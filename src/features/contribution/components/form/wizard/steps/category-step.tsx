@@ -25,6 +25,10 @@ export function CategoryStep({
   contributions,
   onSelectCategory,
 }: CategoryStepProps) {
+  const sortedCategories = [...categories].sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+
   return (
     <div className='overflow-y-auto'>
       <DialogHeader className='pt-6'>
@@ -37,7 +41,7 @@ export function CategoryStep({
       <Separator className='my-6' />
 
       <div className='mb-14 grid w-full grid-cols-1 gap-2 sm:grid-cols-2'>
-        {categories.map((category) => {
+        {sortedCategories.map((category) => {
           const contribution = contributions.find(
             (item) => item.categoryId === category.id,
           );

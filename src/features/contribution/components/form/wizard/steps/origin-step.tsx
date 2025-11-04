@@ -22,6 +22,10 @@ export function OriginStep({
   selectedOriginId,
   onSelect,
 }: OriginStepProps) {
+  const sortedOrigins = [...origins].sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+
   return (
     <div className='overflow-y-auto'>
       <DialogHeader className='pt-6'>
@@ -38,7 +42,7 @@ export function OriginStep({
         value={selectedOriginId}
         className='mt-2 grid w-full grid-cols-1 gap-2 sm:grid-cols-2'
       >
-        {origins.map((origin) => (
+        {sortedOrigins.map((origin) => (
           <div
             key={origin.id}
             className={cn(

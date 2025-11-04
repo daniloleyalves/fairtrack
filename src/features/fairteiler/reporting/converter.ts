@@ -157,7 +157,7 @@ export function getContributionsByCompany(
 ): AttributeDataPoint[] {
   const totals = new Map<string, number>();
   filteredData.forEach((c) => {
-    const companyName = c.companyName ?? 'No Company';
+    const companyName = c.companyName ?? 'Nicht angegeben';
     const currentTotal = totals.get(companyName) ?? 0;
     totals.set(companyName, currentTotal + c.quantity);
   });

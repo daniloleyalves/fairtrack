@@ -5,6 +5,7 @@ import type { NextConfig } from 'next';
 import withPlaiceholder from '@plaiceholder/next';
 
 const nextConfig: NextConfig = {
+  productionBrowserSourceMaps: false,
   allowedDevOrigins: ['https://fairtrack.sentry.io'],
   logging: {
     fetches: {

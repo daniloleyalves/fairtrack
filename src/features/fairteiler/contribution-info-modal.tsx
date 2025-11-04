@@ -64,7 +64,7 @@ export function ContributionInfoModal({ item, open, setOpen }: InfoModalProps) {
 
   return (
     <Drawer open={open}>
-      <DrawerContent>
+      <DrawerContent className='mb-8'>
         <DrawerHeader className='text-left'>
           <DrawerTitle className='flex items-center gap-3'>
             {item.categoryImage && (

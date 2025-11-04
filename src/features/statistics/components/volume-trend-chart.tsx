@@ -20,7 +20,7 @@ export interface VolumeDataPoint {
 
 const chartConfig = {
   quantity: {
-    label: 'Quantity (kg)',
+    label: 'Menge (kg)',
     color: colorClasses.primary.hex,
   },
 } satisfies ChartConfig;

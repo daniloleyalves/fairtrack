@@ -20,7 +20,7 @@ export interface CumulativeDataPoint {
 
 const chartConfig = {
   quantity: {
-    label: 'Cumulative (kg)',
+    label: 'Kumulative Menge (kg)',
     color: colorClasses.primary.hex,
   },
 } satisfies ChartConfig;

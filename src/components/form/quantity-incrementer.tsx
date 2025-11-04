@@ -77,7 +77,7 @@ const QuantityIncrementer = forwardRef<HTMLInputElement, NumberInputProps>(
 
     useEffect(() => {
       if (enableSmallIncrements && value?.toString().length > 4) {
-        const roundedValue = parseFloat(value.toFixed(1));
+        const roundedValue = parseFloat(value.toFixed(2));
         if (value !== roundedValue) {
           onChange(roundedValue);
         }
@@ -135,7 +135,7 @@ const QuantityIncrementer = forwardRef<HTMLInputElement, NumberInputProps>(
             variant='outline'
             className='rounded-none border-l-0'
             disabled={value <= 0} // Disable when value is 0 or less
-            onClick={() => handleValueChange(-0.1)}
+            onClick={() => handleValueChange(-0.01)}
           >
             -
           </Button>
@@ -152,11 +152,11 @@ const QuantityIncrementer = forwardRef<HTMLInputElement, NumberInputProps>(
             onFocus={() => setIsInputFocused(true)}
             onBlur={() => setIsInputFocused(false)}
             onKeyDown={restrictNumericInput}
-            step={enableSmallIncrements ? 0.1 : 1}
+            step={enableSmallIncrements ? 0.01 : 1}
             max={maxValue}
             min={0} // Explicitly set min to 0 to prevent negative visual input
             type='number'
-            className='max-w-[100px] min-w-[52px] rounded-none border-x-0 text-center font-medium'
+            className='max-w-[100px] min-w-[55px] rounded-none border-x-0 text-center font-medium'
             style={{
               color:
                 value === 0 && IconComponent && !isInputFocused
@@ -180,7 +180,7 @@ const QuantityIncrementer = forwardRef<HTMLInputElement, NumberInputProps>(
             variant='outline'
             className='rounded-none border-r-0'
             disabled={!!maxValue && value >= maxValue}
-            onClick={() => handleValueChange(0.1)}
+            onClick={() => handleValueChange(0.01)}
           >
             +
           </Button>
