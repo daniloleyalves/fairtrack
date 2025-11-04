@@ -77,9 +77,7 @@ export function RecentContributions({
                       </div>
                     </TableCell>
                     <TableCell className='text-right'>
-                      {contribution.quantity
-                        ? contribution.quantity.toFixed(2)
-                        : '-'}
+                      {contribution.quantity ? contribution.quantity : '-'}
                     </TableCell>
                   </TableRow>
                 ))}
