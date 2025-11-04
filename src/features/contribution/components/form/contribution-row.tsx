@@ -179,7 +179,7 @@ export function EditableContributionRow({
                   <QuantityIncrementer
                     {...field}
                     enableSmallIncrements={true}
-                    inputWidth={60}
+                    inputWidth={80}
                     index={index}
                   />
                 </FormControl>
@@ -187,7 +187,7 @@ export function EditableContributionRow({
             )}
           />
         ) : (
-          <>{quantity ?? '-'}</>
+          <>{quantity ? quantity.toFixed(2) : '-'}</>
         )}
       </TableCell>
       <TableCell className={cn(!showAllColumns && 'hidden', 'sm:table-cell')}>
@@ -202,7 +202,7 @@ export function EditableContributionRow({
                     value={field.value}
                     onChange={field.onChange}
                     iconWhenZero={InfinityIcon}
-                    inputWidth={60}
+                    inputWidth={40}
                     className={
                       fieldState.error
                         ? 'rounded-lg ring-2 ring-destructive ring-offset-2'

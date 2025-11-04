@@ -249,7 +249,7 @@ export function ContributionWizard({
               </CarouselContent>
             </Carousel>
           </div>
-          <DialogFooter className='z-50 flex w-full flex-col border-t px-6 py-4'>
+          <DialogFooter className='z-50 flex w-full flex-col border-t px-6 py-4 xs:flex-row'>
             <Button
               onClick={() => {
                 setPreliminaryFormData([]);
@@ -258,11 +258,11 @@ export function ContributionWizard({
                 onOpenChange(false);
               }}
               variant='outline'
-              className='w-full'
+              className='mr-auto w-full xs:w-auto'
             >
               Abbrechen
             </Button>
-            <div className='flex w-full flex-row justify-between gap-2'>
+            <div className='flex flex-row justify-between gap-2'>
               <Button
                 variant='secondary'
                 onClick={() => api?.scrollPrev()}

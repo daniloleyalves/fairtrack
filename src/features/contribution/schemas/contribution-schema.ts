@@ -6,7 +6,10 @@ export const contributionFormSchema = z.object({
       id: z.string().trim(),
       quantity: z
         .number()
-        .positive({ message: 'Bitte gib an, welche Menge du retten möchtest' }),
+        .positive({ message: 'Bitte gib an, welche Menge du retten möchtest' })
+        .refine((val) => Number(val.toFixed(2)) === val, {
+          message: 'Menge darf maximal 2 Nachkommastellen haben',
+        }),
       foodId: z.string().trim().uuid(),
       title: z
         .string()
@@ -71,5 +74,8 @@ export const editContributionFormSchema = z.object({
   checkinId: z.string().trim(),
   quantity: z
     .number()
-    .positive({ message: 'Die gerettete Menge darf nicht 0 betragen' }),
+    .positive({ message: 'Die gerettete Menge darf nicht 0 betragen' })
+    .refine((val) => Number(val.toFixed(2)) === val, {
+      message: 'Menge darf maximal 2 Nachkommastellen haben',
+    }),
 });

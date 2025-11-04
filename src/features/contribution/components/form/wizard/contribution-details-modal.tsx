@@ -141,6 +141,7 @@ export function ContributionDetailsModal({
               <QuantityIncrementer
                 name='quantity'
                 value={quantity}
+                inputWidth={80}
                 enableSmallIncrements={true}
                 onChange={setQuantity}
               />
