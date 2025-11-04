@@ -249,7 +249,7 @@ export function ContributionWizard({
               </CarouselContent>
             </Carousel>
           </div>
-          <DialogFooter className='z-50 flex w-full flex-row border-t px-6 py-4'>
+          <DialogFooter className='z-50 flex w-full flex-col border-t px-6 py-4'>
             <Button
               onClick={() => {
                 setPreliminaryFormData([]);
@@ -258,39 +258,41 @@ export function ContributionWizard({
                 onOpenChange(false);
               }}
               variant='outline'
-              className='mr-auto'
+              className='w-full'
             >
               Abbrechen
             </Button>
-            <Button
-              variant='secondary'
-              onClick={() => api?.scrollPrev()}
-              className={cn(
-                currentPage <= 0 && 'pointer-events-none opacity-0',
-              )}
-            >
-              <ChevronLeft className='size-4' /> Zurück
-            </Button>
-            {currentPage < 3 ? (
+            <div className='flex w-full flex-row justify-between gap-2'>
               <Button
                 variant='secondary'
-                onClick={() => api?.scrollNext()}
+                onClick={() => api?.scrollPrev()}
                 className={cn(
-                  ((currentPage === 0 && !chosenOriginId) ||
-                    (currentPage === 1 &&
-                      !companySelection.id &&
-                      !companySelection.name) ||
-                    (currentPage === 2 && preliminaryFormData.length === 0)) &&
-                    'pointer-events-none opacity-0',
+                  currentPage <= 0 && 'pointer-events-none opacity-0',
                 )}
               >
-                Weiter <ChevronRight className='size-4' />
+                <ChevronLeft className='size-4' /> Zurück
               </Button>
-            ) : (
-              <Button type='button' onClick={handleSaveAndClose}>
-                <Save className='size-4' /> Speichern
-              </Button>
-            )}
+              {currentPage < 3 ? (
+                <Button
+                  onClick={() => api?.scrollNext()}
+                  className={cn(
+                    ((currentPage === 0 && !chosenOriginId) ||
+                      (currentPage === 1 &&
+                        !companySelection.id &&
+                        !companySelection.name) ||
+                      (currentPage === 2 &&
+                        preliminaryFormData.length === 0)) &&
+                      'pointer-events-none opacity-0',
+                  )}
+                >
+                  Weiter <ChevronRight className='size-4' />
+                </Button>
+              ) : (
+                <Button type='button' onClick={handleSaveAndClose}>
+                  <Save className='size-4' /> Speichern
+                </Button>
+              )}
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

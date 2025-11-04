@@ -9,6 +9,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from '@components/ui/select';
+import React from 'react';
 
 interface FormSelectProps<T extends FieldValues> {
   name: Path<T>;
@@ -30,7 +31,8 @@ export function FormSelect<T extends FieldValues>({
   placeholder,
   cypressIdentifier,
   className,
-}: FormSelectProps<T>) {
+  ref,
+}: FormSelectProps<T> & { ref?: React.Ref<HTMLButtonElement> }) {
   return (
     <FormField
       name={name}
@@ -40,6 +42,7 @@ export function FormSelect<T extends FieldValues>({
           <Select onValueChange={field.onChange} value={field.value ?? ''}>
             <FormControl>
               <SelectTrigger
+                ref={ref}
                 className={className}
                 disabled={isLoading ?? isError}
                 data-cy={cypressIdentifier}

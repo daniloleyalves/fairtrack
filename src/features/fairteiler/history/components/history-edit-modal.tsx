@@ -242,7 +242,7 @@ function EditFormContent({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className='justify-center'>
-                    Neue Menge (kg)
+                    Neue Menge (Kilogramm)
                   </FormLabel>
                   <FormControl>
                     <QuantityIncrementer

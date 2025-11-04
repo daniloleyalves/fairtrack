@@ -41,7 +41,7 @@ export default async function Home() {
 
       <div className='relative mt-10 flex justify-center md:mt-16'>
         <div className='absolute top-1/2 z-10 -translate-y-1/3 text-center font-londrina text-primary'>
-          <h2 className='text-4xl xs:text-5xl sm:text-8xl'>
+          <h2 className='text-5xl sm:text-8xl'>
             <NumberTicker value={totalContributionQuantity} decimalPlaces={2} />
           </h2>
           <Popover>

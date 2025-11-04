@@ -19,7 +19,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { ContributionFormValues } from '@features/contribution/schemas/contribution-schema';
 import { OptionalFieldsModal } from './optional-fields-modal';
@@ -57,6 +57,7 @@ export function EditableContributionRow({
 }: EditableContributionRowProps) {
   // --- FORM HOOKS ---
   const { control, setValue } = useFormContext<ContributionFormValues>();
+  const categorySelectRef = useRef<HTMLButtonElement>(null);
   const [
     categoryId,
     originId,
@@ -88,6 +89,7 @@ export function EditableContributionRow({
         });
       }
     }
+    categorySelectRef.current?.focus();
   }, [categoryId, formOptions.fairteilerCategories, index, setValue]);
 
   // --- DISPLAY LOGIC ---
@@ -110,6 +112,7 @@ export function EditableContributionRow({
       <TableCell>
         {isEditing ? (
           <FormSelect
+            ref={categorySelectRef}
             cypressIdentifier={`category-select-${index}`}
             name={`contributions.${index}.categoryId`}
             control={control}

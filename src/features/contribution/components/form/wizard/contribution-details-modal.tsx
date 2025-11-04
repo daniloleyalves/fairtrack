@@ -134,8 +134,9 @@ export function ContributionDetailsModal({
         <div className='min-h-0 overflow-y-auto'>
           <div className='mt-4 mb-8 flex w-full flex-col items-center justify-center gap-10'>
             <div className='flex flex-col items-center justify-center gap-4'>
-              <Label htmlFor='quantity' className='text-md'>
-                Wie viel hast du gerettet? (kg)
+              <Label htmlFor='quantity' className='text-md text-center'>
+                Wie viel hast du gerettet? <br />
+                (Kilogramm)
               </Label>
               <QuantityIncrementer
                 name='quantity'
