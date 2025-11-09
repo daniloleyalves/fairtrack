@@ -16,8 +16,10 @@ import {
   Tag,
   Thermometer,
   Wheat,
+  Apple,
 } from 'lucide-react';
 import Image from 'next/image';
+import { useState } from 'react';
 
 interface OptionalInfoStepProps {
   contributions: ContributionItem[];
@@ -45,6 +47,11 @@ export function OptionalInfoStep({
   categories,
   onEditInfo,
 }: OptionalInfoStepProps) {
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+
+  const handleImageError = (categoryId: string) => {
+    setImageErrors((prev) => new Set(prev).add(categoryId));
+  };
   return (
     <div className='overflow-y-auto'>
       <DialogHeader className='pt-6'>
@@ -77,12 +84,19 @@ export function OptionalInfoStep({
             >
               {/* Left Side: Main Info */}
               <div className='flex min-w-max flex-wrap items-center gap-3'>
-                <Image
-                  src={category.image}
-                  width={56}
-                  height={56}
-                  alt='category icon'
-                />
+                {imageErrors.has(category.id) || !category.image ? (
+                  <div className='flex size-14 items-center justify-center rounded-md bg-muted'>
+                    <Apple className='size-8 text-muted-foreground' />
+                  </div>
+                ) : (
+                  <Image
+                    src={category.image}
+                    width={56}
+                    height={56}
+                    alt='category icon'
+                    onError={() => handleImageError(category.id)}
+                  />
+                )}
                 <div className='flex flex-col justify-center'>
                   <span className='text-md font-medium md:text-lg'>
                     {contribution.title || category.name}

@@ -37,7 +37,7 @@ export default function ContributionTable() {
 
   const isFormTableViewFast = preferences.formTableView === 'fast';
 
-  const { control } = useFormContext();
+  const { control, trigger } = useFormContext();
   const formState = useFormState({ control });
 
   return (
@@ -64,6 +64,10 @@ export default function ContributionTable() {
                 checked={isFormTableViewFast}
                 onCheckedChange={() => {
                   setEditingIndex(null);
+                  // Trigger validation to show errors for incomplete rows when switching to wizard mode
+                  if (preferences.formTableView === 'fast') {
+                    trigger('contributions');
+                  }
                   updatePreference(
                     'formTableView',
                     preferences.formTableView === 'fast' ? 'wizard' : 'fast',

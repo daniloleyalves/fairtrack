@@ -32,19 +32,30 @@ type RecentCheckin = NonNullable<
 >[number];
 
 // --- 1. Main Page Component (Entry Point) ---
-export default function ContributionSuccessPage() {
+export default function ContributionSuccessPage({
+  searchParams,
+}: {
+  searchParams: { submitAsUserId?: string };
+}) {
   return (
     <Suspense fallback={<ContributionSuccessCardSkeleton />}>
-      <ContributionResult />
+      <ContributionResult searchParams={searchParams} />
     </Suspense>
   );
 }
 
 // --- 2. Data Fetching & Logic Component ---
 // This component's only job is to fetch data and decide which UI to show.
-async function ContributionResult() {
+async function ContributionResult({
+  searchParams,
+}: {
+  searchParams: { submitAsUserId?: string };
+}) {
   const nextHeaders = await headers();
-  const recentCheckins = await getRecentCheckinsWithinLastMinute(nextHeaders);
+  const recentCheckins = await getRecentCheckinsWithinLastMinute(
+    nextHeaders,
+    searchParams.submitAsUserId,
+  );
 
   if (recentCheckins.length === 0) {
     return <NotFoundDisplay />;

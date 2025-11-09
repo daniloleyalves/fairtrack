@@ -38,6 +38,7 @@ async function LayoutMain({ children }: { children: React.ReactNode }) {
           <Dock direction='middle' className='flex gap-4'>
             <DockButton href='/hub/user/dashboard' icon='LayoutDashboard' />
             <DockButton href='/hub/user/fairteiler-finder' icon='Map' />
+            <DockButton href='/hub/user/history' icon='History' />
             <DockButton href='/hub/user/settings' icon='Settings2' />
             {session && (
               <>

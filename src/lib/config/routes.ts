@@ -146,6 +146,13 @@ export const routes: Record<string, Route[]> = {
       reqPermissions: { section: 'user', permissions: ['read', 'update'] },
     },
     {
+      title: 'Meine Beiträge',
+      icon: History,
+      url: `/hub/user/history`,
+      disabled: false,
+      reqPermissions: { section: 'user', permissions: ['read'] },
+    },
+    {
       title: 'Einstellungen',
       icon: Settings2,
       url: `/hub/user/settings`,

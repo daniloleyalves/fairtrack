@@ -34,6 +34,7 @@ import {
   loadMilestonesByUser,
   addMilestoneEvent,
   loadSession,
+  loadUserContributions,
 } from './dal';
 import { MemberRoles } from '@/lib/auth/auth-permissions';
 import {
@@ -297,9 +298,12 @@ export async function getCompaniesByFairteiler(
 
 // CHECKIN SELECTION ----------------------------------------------------------------
 
-export async function getRecentCheckinsWithinLastMinute(headers: Headers) {
+export async function getRecentCheckinsWithinLastMinute(
+  headers: Headers,
+  submitAsUserId?: string,
+) {
   const session = await loadAuthenticatedSession(headers);
-  const userId = session.user.id;
+  const userId = submitAsUserId ?? session.user.id;
   if (!userId) {
     throw new AuthError('No active session');
   }
@@ -478,6 +482,56 @@ export async function getContributions(
         };
       }
       return contribution;
+    });
+
+    return {
+      ...contributions,
+      data: anonymizedData,
+    };
+  }
+
+  return contributions;
+}
+
+export async function getUserContributions(
+  headers: Headers,
+  options?: {
+    dateRange?: {
+      from: Date;
+      to: Date;
+    };
+    limit?: number;
+    offset?: number;
+  },
+) {
+  const session = await loadAuthenticatedSession(headers);
+  const userId = session.user.id;
+
+  // Load user's contributions across all fairteilers
+  const contributions = await loadUserContributions({
+    userId,
+    dateRange: options?.dateRange,
+    limit: options?.limit,
+    offset: options?.offset,
+  });
+
+  // Apply anonymization based on user preferences (for other users' data)
+  if (contributions.data) {
+    const anonymizedData = contributions.data.map((contribution) => {
+      const isAnonymous = contribution.contributorIsAnonymous ?? false;
+      const isOwnContribution = contribution.contributorId === userId;
+
+      // Don't anonymize user's own contributions
+      if (isOwnContribution || !isAnonymous) {
+        return contribution;
+      }
+
+      return {
+        ...contribution,
+        contributorName: ANONYMOUS_USER_NAME,
+        contributorEmail: null,
+        contributorImage: null,
+      };
     });
 
     return {
