@@ -17,6 +17,7 @@ import {
   PlusCircle,
   Save,
   Trash2,
+  Apple,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
@@ -97,6 +98,13 @@ export function EditableContributionRow({
     (c) => c.id === categoryId,
   );
   const origin = formOptions.fairteilerOrigins?.find((o) => o.id === originId);
+
+  // Helper function to check if required fields are missing
+  const hasRequiredFieldErrors = () => ({
+    category: !categoryId,
+    origin: !originId,
+    quantity: !quantity || quantity <= 0,
+  });
   const selectedCompany = formOptions.fairteilerCompanies?.find(
     (c) => c.id === companyId,
   );
@@ -109,7 +117,13 @@ export function EditableContributionRow({
   return (
     <TableRow key={fieldId}>
       {/* Category Cell */}
-      <TableCell>
+      <TableCell
+        className={cn(
+          !isEditing &&
+            hasRequiredFieldErrors().category &&
+            'outline-2 outline-offset-[-6px] outline-destructive',
+        )}
+      >
         {isEditing ? (
           <FormSelect
             ref={categorySelectRef}
@@ -122,15 +136,26 @@ export function EditableContributionRow({
           />
         ) : (
           <div className='flex items-center gap-2'>
-            {category?.image && (
+            {category?.image ? (
               <Image
                 src={category.image}
                 width={36}
                 height={36}
                 alt='category icon'
               />
-            )}
-            <span>{category?.name ?? '-'}</span>
+            ) : category ? (
+              <div className='flex size-9 items-center justify-center rounded-md bg-muted'>
+                <Apple className='size-5 text-muted-foreground' />
+              </div>
+            ) : null}
+            <span
+              className={cn(
+                hasRequiredFieldErrors().category &&
+                  'mx-auto font-medium text-destructive',
+              )}
+            >
+              {category?.name ?? '-'}
+            </span>
           </div>
         )}
       </TableCell>
@@ -139,6 +164,9 @@ export function EditableContributionRow({
         className={cn(
           !showAllColumns && 'hidden',
           'sm:table-cell md:hidden lg:table-cell',
+          !isEditing &&
+            hasRequiredFieldErrors().origin &&
+            'outline-2 outline-offset-[-6px] outline-destructive',
         )}
       >
         {isEditing ? (
@@ -151,7 +179,16 @@ export function EditableContributionRow({
             className='w-full min-w-[180px]'
           />
         ) : (
-          <>{origin?.name ?? '-'}</>
+          <div className='flex items-center gap-2'>
+            <span
+              className={cn(
+                hasRequiredFieldErrors().origin &&
+                  'mx-auto font-medium text-destructive',
+              )}
+            >
+              {origin?.name ?? '-'}
+            </span>
+          </div>
         )}
       </TableCell>
       <TableCell className={cn(!showAllColumns && 'hidden', 'md:table-cell')}>
@@ -168,7 +205,13 @@ export function EditableContributionRow({
           <>{customCompanyName ?? selectedCompany?.name ?? '-'}</>
         )}
       </TableCell>
-      <TableCell>
+      <TableCell
+        className={cn(
+          !isEditing &&
+            hasRequiredFieldErrors().quantity &&
+            'outline-2 outline-offset-[-6px] outline-destructive',
+        )}
+      >
         {isEditing ? (
           <FormField
             name={`contributions.${index}.quantity`}
@@ -187,7 +230,16 @@ export function EditableContributionRow({
             )}
           />
         ) : (
-          <>{quantity ? quantity.toFixed(2) : '-'}</>
+          <div className='flex items-center gap-2'>
+            <span
+              className={cn(
+                hasRequiredFieldErrors().quantity &&
+                  'mx-auto font-medium text-destructive',
+              )}
+            >
+              {quantity ? quantity.toFixed(2) : '-'}
+            </span>
+          </div>
         )}
       </TableCell>
       <TableCell className={cn(!showAllColumns && 'hidden', 'sm:table-cell')}>

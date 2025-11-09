@@ -11,8 +11,9 @@ import { GenericItem } from '@server/db/db-types';
 import type { ContributionItem } from '@features/contribution/models/contribution';
 import { cn, formatNumber } from '@/lib/utils';
 import { differenceInCalendarDays, startOfToday } from 'date-fns';
-import { InfinityIcon } from 'lucide-react';
+import { InfinityIcon, Apple } from 'lucide-react';
 import Image from 'next/image';
+import { useState } from 'react';
 
 interface CategoryStepProps {
   categories: (GenericItem & { image: string })[];
@@ -25,9 +26,15 @@ export function CategoryStep({
   contributions,
   onSelectCategory,
 }: CategoryStepProps) {
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+
   const sortedCategories = [...categories].sort((a, b) =>
     a.name.localeCompare(b.name),
   );
+
+  const handleImageError = (categoryId: string) => {
+    setImageErrors((prev) => new Set(prev).add(categoryId));
+  };
 
   return (
     <div className='overflow-y-auto'>
@@ -58,14 +65,21 @@ export function CategoryStep({
                 )}
                 onClick={() => onSelectCategory(category)}
               >
-                <Image
-                  src={category.image}
-                  width={56}
-                  height={56}
-                  alt='category icon'
-                  loading='eager'
-                  decoding='sync'
-                />
+                {imageErrors.has(category.id) || !category.image ? (
+                  <div className='flex size-14 items-center justify-center rounded-md bg-muted'>
+                    <Apple className='size-8 text-muted-foreground' />
+                  </div>
+                ) : (
+                  <Image
+                    src={category.image}
+                    width={56}
+                    height={56}
+                    alt='category icon'
+                    loading='eager'
+                    decoding='sync'
+                    onError={() => handleImageError(category.id)}
+                  />
+                )}
                 <Label>{category.name}</Label>
               </button>
               {contribution && (

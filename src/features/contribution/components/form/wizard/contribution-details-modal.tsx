@@ -16,7 +16,7 @@ import {
 import { Label } from '@components/ui/label';
 import type { ContributionItem } from '@features/contribution/models/contribution';
 import { GenericItem } from '@server/db/db-types';
-import { InfinityIcon } from 'lucide-react';
+import { InfinityIcon, Apple } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -42,6 +42,7 @@ export function ContributionDetailsModal({
   // This avoids modifying the parent's state directly.
   const [quantity, setQuantity] = useState(0);
   const [shelfLife, setShelfLife] = useState<Date | null>(null);
+  const [imageError, setImageError] = useState(false);
 
   // When the `contribution` prop changes (i.e., a new item is selected),
   // reset the internal form state.
@@ -59,6 +60,7 @@ export function ContributionDetailsModal({
   useEffect(() => {
     if (!contribution) {
       setIsInitialized(false);
+      setImageError(false);
     }
   }, [contribution]);
 
@@ -116,14 +118,21 @@ export function ContributionDetailsModal({
       >
         <DialogHeader>
           <DialogTitle className='flex items-center justify-center gap-2 text-2xl'>
-            <Image
-              src={contribution.category.image}
-              width={40}
-              height={40}
-              alt='category icon'
-              loading='eager'
-              decoding='sync'
-            />
+            {imageError || !contribution.category.image ? (
+              <div className='flex size-10 items-center justify-center rounded-md bg-muted'>
+                <Apple className='size-6 text-muted-foreground' />
+              </div>
+            ) : (
+              <Image
+                src={contribution.category.image}
+                width={40}
+                height={40}
+                alt='category icon'
+                loading='eager'
+                decoding='sync'
+                onError={() => setImageError(true)}
+              />
+            )}
             {contribution.category.name}
           </DialogTitle>
           <DialogDescription className='text-center'>

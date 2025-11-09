@@ -603,8 +603,15 @@ export const submitContributionAction = createAction({
     // Use config overrides or defaults based on context
     const revalidatePaths =
       input.config?.revalidatePaths ?? defaultRevalidatePaths;
-    const successRedirect =
+    let successRedirect =
       input.config?.successRedirect ?? defaultSuccessRedirect;
+
+    // Add submitAsAccessViewId as query parameter if provided
+    if (input.config?.submitAsAccessViewId) {
+      const url = new URL(successRedirect, process.env.NEXT_PUBLIC_ENV_URL);
+      url.searchParams.set('submitAsUserId', input.config.submitAsAccessViewId);
+      successRedirect = url.pathname + url.search;
+    }
 
     return {
       message: 'Lebensmittel erfolgreich beigetragen!',

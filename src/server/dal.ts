@@ -665,11 +665,13 @@ export async function loadUserCalendarData(userId: string) {
 
 export async function loadUserContributions({
   fairteilerId,
+  userId,
   dateRange,
   limit,
   offset,
 }: {
   fairteilerId?: string | null;
+  userId?: string;
   dateRange?: { from: Date; to: Date };
   limit?: number;
   offset?: number;
@@ -677,6 +679,7 @@ export async function loadUserContributions({
   const conditions = [];
   if (fairteilerId)
     conditions.push(eq(vContributions.fairteilerId, fairteilerId));
+  if (userId) conditions.push(eq(vContributions.userId, userId));
   if (dateRange) {
     conditions.push(gte(vContributions.contributionDate, dateRange.from));
     conditions.push(lte(vContributions.contributionDate, dateRange.to));
