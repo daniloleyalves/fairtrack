@@ -191,12 +191,12 @@ describe('User Login E2E', () => {
             isFirstLogin: false,
             isAnonymous: false,
           }).then((existingUser) => {
-            cy.task('addUserToFairteiler', {
-              userId: existingUser.id,
-              fairteilerId: fairteiler.id,
-              role: 'owner',
-            });
             if (existingUser) {
+              cy.task('addUserToFairteiler', {
+                userId: existingUser.id,
+                fairteilerId: fairteiler.id,
+                role: 'owner',
+              });
               cy.createTestUser({
                 email: validUser.email,
                 firstName: 'User',
