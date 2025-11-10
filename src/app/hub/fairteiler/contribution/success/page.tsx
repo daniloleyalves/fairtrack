@@ -32,14 +32,16 @@ type RecentCheckin = NonNullable<
 >[number];
 
 // --- 1. Main Page Component (Entry Point) ---
-export default function ContributionSuccessPage({
+export default async function ContributionSuccessPage({
   searchParams,
 }: {
-  searchParams: { submitAsUserId?: string };
+  searchParams: Promise<{ submitAsUserId?: string }>;
 }) {
+  const params = await searchParams;
+
   return (
     <Suspense fallback={<ContributionSuccessCardSkeleton />}>
-      <ContributionResult searchParams={searchParams} />
+      <ContributionResult searchParams={params} />
     </Suspense>
   );
 }
