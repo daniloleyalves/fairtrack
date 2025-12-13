@@ -1,0 +1,1 @@
+ALTER TABLE "auth"."user" RENAME COLUMN "release_notifications_consent" TO "notifications_consent";

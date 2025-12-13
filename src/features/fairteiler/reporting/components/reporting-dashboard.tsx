@@ -16,13 +16,16 @@ import {
   getCoolingRequirements,
   getKeyFigures,
   getVolumeTrendData,
+  getCalendarData,
 } from '../converter';
 import { ChartFilter } from '../../../statistics/components/chart-filter';
 import { VolumeTrendChart } from '../../../statistics/components/volume-trend-chart';
 import { ReportFilters, StringFilterKeys } from '@/features/statistics/types';
 import { applyFilters } from '@/features/statistics/reporting-helpers';
 import { CumulativeTrendChart } from '@/features/statistics/components/cumulative-trend-chart';
+import { TimeNormalizedMomentumChart } from '@/features/statistics/components/time-normalized-momentum-chart';
 import { ExportButton } from '@/features/statistics/components/data-export-button';
+import { DataCalendar } from '@/features/fairteiler/dashboard/components/contribution-calendar';
 
 interface ReportingDashboardProps {
   data: vContribution[];
@@ -42,6 +45,7 @@ export function ReportingDashboard({ data }: ReportingDashboardProps) {
   const categoryData = getContributionsByCategory(filteredData);
   const companyData = getContributionsByCompany(filteredData);
   const coolingData = getCoolingRequirements(filteredData);
+  const calendarData = getCalendarData(filteredData);
 
   // --- Handlers to update the filter state ---
   const handleAttributeDistributionFilter = (
@@ -71,6 +75,7 @@ export function ReportingDashboard({ data }: ReportingDashboardProps) {
       <div className='flex items-center justify-center sm:justify-end'>
         <ExportButton filters={filters} scope='fairteiler' />
       </div>
+
       {/* Active Filters Display */}
       <Card className='flex flex-col py-0 lg:flex-row'>
         <CardContent className='flex flex-wrap items-center justify-center gap-x-4 gap-y-2 py-4 sm:justify-start'>
@@ -226,6 +231,15 @@ export function ReportingDashboard({ data }: ReportingDashboardProps) {
         </BlurFade>
       </div>
 
+      {/* Time Normalized Momentum Chart */}
+      <BlurFade delay={0.25} duration={0.2}>
+        <TimeNormalizedMomentumChart
+          data={volumeTrendData}
+          title='Momentum'
+          dateRange={filters.dateRange}
+        />
+      </BlurFade>
+
       {/* Volume Trend Section */}
       <BlurFade delay={0.1} duration={0.2}>
         <VolumeTrendChart
@@ -240,6 +254,18 @@ export function ReportingDashboard({ data }: ReportingDashboardProps) {
           data={volumeTrendData}
           title='Gerettete Lebensmittel über Zeit (Kumulativ)'
         />
+      </BlurFade>
+
+      {/* Calendar */}
+      <BlurFade delay={0.3} duration={0.2}>
+        <div className='max-w-xl'>
+          <DataCalendar
+            data={calendarData}
+            unit='kg'
+            enableExport={true}
+            exportFilename='fairteiler-kalender'
+          />
+        </div>
       </BlurFade>
     </>
   );

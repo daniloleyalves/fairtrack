@@ -246,6 +246,20 @@
       "when": 1760382422298,
       "tag": "0034_sour_vertigo",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1765645094328,
+      "tag": "0035_loose_gargoyle",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1765645777981,
+      "tag": "0036_outgoing_daimon_hellstrom",
+      "breakpoints": true
     }
   ]
 }

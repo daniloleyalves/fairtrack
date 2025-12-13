@@ -52,7 +52,12 @@ export function FairteilerDashboard({ data }: { data: DashboardData }) {
           <RecentContributions recentContributions={data.recentContributions} />
         </BlurFade>
         <BlurFade delay={0.25} className='w-full'>
-          <DataCalendar data={data.calendarData} unit='kg' />
+          <DataCalendar
+            data={data.calendarData}
+            unit='kg'
+            enableExport={true}
+            exportFilename='fairteiler-kalender'
+          />
         </BlurFade>
       </div>
     </div>

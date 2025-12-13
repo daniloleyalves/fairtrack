@@ -1,0 +1,1 @@
+ALTER TABLE "auth"."user" ADD COLUMN "release_notifications_consent" boolean DEFAULT false NOT NULL;

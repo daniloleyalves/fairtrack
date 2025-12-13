@@ -15,6 +15,7 @@ import {
   getPlatformContributionsByOrigin,
   getPlatformContributionsByCompany,
   getPlatformContributionsByFairteiler,
+  getPlatformCalendarData,
 } from '../converter';
 import { PlatformFairteilerMap } from '../../../statistics/components/platform-fairteiler-map';
 import { ChartFilter } from '@/features/statistics/components/chart-filter';
@@ -22,8 +23,10 @@ import { VolumeTrendChart } from '@/features/statistics/components/volume-trend-
 import { Fairteiler, vContribution } from '@/server/db/db-types';
 import { ReportFilters, StringFilterKeys } from '@/features/statistics/types';
 import { CumulativeTrendChart } from '@/features/statistics/components/cumulative-trend-chart';
+import { TimeNormalizedMomentumChart } from '@/features/statistics/components/time-normalized-momentum-chart';
 import { ExportButton } from '@/features/statistics/components/data-export-button';
 import { applyFilters } from '@/features/statistics/reporting-helpers';
+import { DataCalendar } from '@/features/fairteiler/dashboard/components/contribution-calendar';
 
 interface PlatformReportingDashboardProps {
   data: vContribution[];
@@ -48,6 +51,7 @@ export function PlatformReportingDashboard({
   const companyData = getPlatformContributionsByCompany(filteredData);
   const fairteilerContributionsData =
     getPlatformContributionsByFairteiler(filteredData);
+  const calendarData = getPlatformCalendarData(filteredData);
 
   // Handlers to update the filter state
   const handleAttributeDistributionFilter = (
@@ -232,6 +236,19 @@ export function PlatformReportingDashboard({
         </BlurFade>
       </div>
 
+      {/* Geographic Map */}
+      <BlurFade delay={0.35} duration={0.2}>
+        <PlatformFairteilerMap fairteilers={fairteilers} />
+      </BlurFade>
+
+      {/* Time Normalized Momentum Chart */}
+      <BlurFade delay={0.25} duration={0.2}>
+        <TimeNormalizedMomentumChart
+          title='Monatliches Momentum (kontinuierlich)'
+          data={volumeTrendData}
+        />
+      </BlurFade>
+
       {/* Volume Trend Section */}
       <BlurFade delay={0.1} duration={0.2}>
         <VolumeTrendChart
@@ -248,9 +265,17 @@ export function PlatformReportingDashboard({
         />
       </BlurFade>
 
-      {/* Geographic Map */}
-      <BlurFade delay={0.2} duration={0.2}>
-        <PlatformFairteilerMap fairteilers={fairteilers} />
+      {/* Calendar */}
+      <BlurFade delay={0.3} duration={0.2}>
+        <div className='max-w-xl'>
+          <DataCalendar
+            data={calendarData}
+            unit='kg'
+            enableExport={true}
+            exportFilename='platform-kalender'
+            exportTitle='Plattform'
+          />
+        </div>
       </BlurFade>
     </>
   );

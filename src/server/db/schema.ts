@@ -110,6 +110,9 @@ export const user = authSchema.table(
     secure: boolean('secure').notNull().default(true),
     isFirstLogin: boolean('is_first_login').notNull().default(true),
     isAnonymous: boolean('is_anonymous').notNull().default(false),
+    notificationsConsent: boolean('notifications_consent')
+      .notNull()
+      .default(false),
   },
   (table) => [uniqueIndex('user_email_idx').on(table.email)],
 );

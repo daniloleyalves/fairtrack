@@ -170,3 +170,28 @@ export function getContributionsByCompany(
       description,
     }));
 }
+
+export interface CalendarDataPoint {
+  value: string;
+  quantity: number;
+}
+
+export function getCalendarData(
+  filteredData: vContribution[],
+): CalendarDataPoint[] {
+  const dailyTotals = new Map<string, number>();
+
+  filteredData.forEach((contribution) => {
+    const date = new Date(contribution.contributionDate);
+    const dateKey = date.toISOString().split('T')[0];
+    const currentTotal = dailyTotals.get(dateKey) ?? 0;
+    dailyTotals.set(dateKey, currentTotal + contribution.quantity);
+  });
+
+  return Array.from(dailyTotals.entries())
+    .map(([dateKey, quantity]) => ({
+      value: dateKey,
+      quantity: parseFloat(quantity.toFixed(2)),
+    }))
+    .sort((a, b) => new Date(a.value).getTime() - new Date(b.value).getTime());
+}

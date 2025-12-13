@@ -252,6 +252,10 @@ export const auth = betterAuth({
         type: 'boolean',
         required: true,
       },
+      notificationsConsent: {
+        type: 'boolean',
+        required: false,
+      },
     },
     deleteUser: {
       enabled: true,

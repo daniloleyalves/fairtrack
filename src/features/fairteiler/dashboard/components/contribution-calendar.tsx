@@ -1,7 +1,6 @@
 'use client';
 
-import * as React from 'react';
-import { ComponentProps } from 'react';
+import { ComponentProps, useRef } from 'react';
 import { DayPicker, type DayButtonProps } from 'react-day-picker';
 import { cn, formatNumber } from '@/lib/utils';
 import {
@@ -20,6 +19,7 @@ import { Calendar } from '../../../../components/ui/calendar';
 import { useIsTablet } from '@/lib/hooks/use-devices';
 import { formatDate } from 'date-fns';
 import { CalendarDays } from 'lucide-react';
+import { DownloadButton } from '@/features/statistics/components/chart-download-button';
 
 interface DataPoint {
   value: string;
@@ -126,14 +126,19 @@ interface DataCalendarProps
   extends Omit<ComponentProps<typeof DayPicker>, 'selected' | 'mode'> {
   data: DataPoint[];
   unit?: string;
+  enableExport?: boolean;
+  exportFilename?: string;
 }
 
 export function DataCalendar({
   className,
   data,
   unit,
+  enableExport = false,
+  exportFilename = 'kalender',
   ...props
 }: DataCalendarProps) {
+  const calendarRef = useRef<HTMLDivElement>(null);
   const dataMap = new Map<string, DataPoint>();
   for (const item of data) {
     const key = item.value.split('T')[0];
@@ -148,12 +153,22 @@ export function DataCalendar({
     <div className='w-full'>
       <Card>
         <CardHeader className='px-4 xs:px-6'>
-          <CardTitle className='flex items-center gap-2'>
-            <CalendarDays className='size-5' />
-            Kalender
+          <CardTitle className='flex items-center justify-between'>
+            <div className='flex items-center gap-2'>
+              <CalendarDays className='size-5' />
+              Kalender
+            </div>
+            {enableExport && (
+              <div className='flex items-center gap-2'>
+                <DownloadButton
+                  elementRef={calendarRef}
+                  filename={exportFilename}
+                />
+              </div>
+            )}
           </CardTitle>
         </CardHeader>
-        <CardContent className='px-2 xs:px-6'>
+        <CardContent className='px-2 xs:px-6' ref={calendarRef}>
           <Calendar
             mode='multiple'
             selected={selectedDates}

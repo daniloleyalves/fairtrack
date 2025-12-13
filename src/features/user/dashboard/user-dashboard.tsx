@@ -63,7 +63,13 @@ export function UserDashboard({
               />
             </BlurFade>
             <BlurFade delay={0.25} className='w-full'>
-              <DataCalendar data={dashboardData.calendarData} unit='kg' />
+              <DataCalendar
+                data={dashboardData.calendarData}
+                unit='kg'
+                enableExport={true}
+                exportFilename='meine-beitraege-kalender'
+                exportTitle='Meine Beiträge'
+              />
             </BlurFade>
           </div>
         </>

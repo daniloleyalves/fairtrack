@@ -43,6 +43,7 @@ export const signUpSchema = z
       .refine((val) => val === true, {
         message: 'Bitte aktzeptiere die Nutzungsbedingungen.',
       }),
+    notificationsConsent: z.boolean(),
   })
   .superRefine(({ passwordConfirm, password }, ctx) => {
     if (passwordConfirm !== password) {

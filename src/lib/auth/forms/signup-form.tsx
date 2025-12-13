@@ -24,7 +24,7 @@ import { authClient } from '../auth-client';
 import { getErrorMessage } from '../auth-helpers';
 import { toast } from 'sonner';
 import { handleClientOperation, noop } from '@/lib/client-error-handling';
-import { signUpSchema } from '../schemas';
+import { SignUpFormValues, signUpSchema } from '../schemas';
 import { checkInvitationAndUserAction } from '../auth-actions';
 
 export function SignUpForm({
@@ -48,7 +48,7 @@ export function SignUpForm({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const form = useForm<z.infer<typeof signUpSchema>>({
+  const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
       firstName: '',
@@ -57,6 +57,7 @@ export function SignUpForm({
       password: '',
       passwordConfirm: '',
       tos: false,
+      notificationsConsent: false,
     },
   });
 
@@ -106,6 +107,7 @@ export function SignUpForm({
           password: values.password,
           isFirstLogin: true,
           isAnonymous: false,
+          notificationsConsent: values.notificationsConsent,
         },
         {
           onRequest: () => {
@@ -350,6 +352,31 @@ export function SignUpForm({
                     Auswertung einer Wirkungsmessung verwendet werden dürfen.
                     Persönliche Daten werden bei der Wirkungsmessung nicht
                     berücksichtigt und auch nicht an Dritte weitergegeben.
+                  </FormDescription>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className='rounded-lg border p-4'>
+          <FormField
+            control={form.control}
+            name='notificationsConsent'
+            render={({ field }) => (
+              <FormItem>
+                <div className='flex gap-3'>
+                  <FormControl>
+                    <Checkbox
+                      size='28px'
+                      checked={field.value}
+                      onCheckedChange={(checked) => field.onChange(checked)}
+                    />
+                  </FormControl>
+                  <FormDescription className='text-start'>
+                    Ich möchte über neue Funktionen und Verbesserungen der
+                    Plattform informiert werden (keine Werbung).
                   </FormDescription>
                 </div>
                 <FormMessage />
