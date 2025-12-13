@@ -386,7 +386,11 @@ export async function updateCategory(categoryToUpdate: GenericItem) {
 // --- 5. Company Management ---
 
 export async function loadCompanies() {
-  const [error, data] = await attempt(db.query.company.findMany());
+  const [error, data] = await attempt(
+    db.query.company.findMany({
+      with: { origin: true },
+    }),
+  );
   if (error) handleDatabaseError(error, 'loadCompanies');
   return data;
 }
@@ -446,11 +450,21 @@ export async function removeFairteilerCompany(
   return data;
 }
 
-export async function updateCompany(companyToUpdate: GenericItem) {
+export async function updateCompany(
+  companyToUpdate: GenericItem & { originId?: string | null },
+) {
+  const updateData: { name: string; originId?: string | null } = {
+    name: companyToUpdate.name,
+  };
+
+  if ('originId' in companyToUpdate) {
+    updateData.originId = companyToUpdate.originId;
+  }
+
   const [error, data] = await attempt(
     db
       .update(company)
-      .set({ name: companyToUpdate.name })
+      .set(updateData)
       .where(eq(company.id, companyToUpdate.id))
       .returning(),
   );

@@ -58,6 +58,11 @@ export interface GenericItem {
 
 export type Company = InferInsertModel<typeof company>;
 
+export interface CompanyWithOrigin extends GenericItem {
+  originId: string | null;
+  originName?: string | null;
+}
+
 export type Food = InferInsertModel<typeof food>;
 export type Checkin = InferInsertModel<typeof checkin>;
 
