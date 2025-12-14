@@ -261,9 +261,6 @@ importers:
       babel-plugin-react-compiler:
         specifier: latest
         version: 1.0.0
-      baseline-browser-mapping:
-        specifier: ^2.9.7
-        version: 2.9.7
       concurrently:
         specifier: ^9.2.1
         version: 9.2.1
