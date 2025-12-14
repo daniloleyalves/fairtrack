@@ -1,7 +1,6 @@
 import { Dock } from '@/components/ui/dock';
 import { DockButton } from '@/components/ui/dock-button';
 import { Separator } from '@/components/ui/separator';
-import { AuthProvider } from '@/lib/auth/auth-provider';
 import { getSession } from '@/server/dto';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -18,11 +17,7 @@ export default async function UserLayout({
     redirect('/hub/onboarding');
   }
 
-  return (
-    <AuthProvider>
-      <LayoutMain>{children}</LayoutMain>
-    </AuthProvider>
-  );
+  return <LayoutMain>{children}</LayoutMain>;
 }
 
 async function LayoutMain({ children }: { children: React.ReactNode }) {

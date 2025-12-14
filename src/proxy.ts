@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSessionCookie } from 'better-auth/cookies';
 import { Session, User } from 'better-auth';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const sessionCookie = getSessionCookie(request);
   const sessionDataToken =
     request.cookies.get('__Secure-better-auth.session_data')?.value ??

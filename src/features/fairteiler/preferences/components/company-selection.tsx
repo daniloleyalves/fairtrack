@@ -6,7 +6,7 @@ import {
   suggestNewCompanyAction,
   updateCompanyAction,
 } from '@server/actions';
-import { GenericItem } from '@server/db/db-types';
+import { CompanyWithOrigin, GenericItem } from '@server/db/db-types';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import useSWRMutation from 'swr/mutation';
@@ -14,12 +14,21 @@ import { Badge } from '@ui/badge';
 import { Loader2, Plus, Pencil } from 'lucide-react';
 import { Button } from '@ui/button';
 import { ScrollArea } from '@ui/scroll-area';
+
 import { FormSelectionItem } from './form-selection-item';
 import { Input } from '@ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@ui/select';
 import useSWRSuspense from '@/lib/services/swr';
 import {
   COMPANIES_BY_FAIRTEILER_KEY,
   COMPANY_KEY,
+  ORIGIN_KEY,
 } from '@/lib/config/api-routes';
 import { v4 as uuidv4 } from 'uuid';
 import { EditItemDialog } from './edit-item-dialog';
@@ -28,7 +37,9 @@ import { useSWRConfig } from 'swr';
 // --- Main Component ---
 
 export function CompanySelectionWrapper() {
-  const { data: allCompanies } = useSWRSuspense<GenericItem[]>(COMPANY_KEY);
+  const { data: allCompanies } =
+    useSWRSuspense<CompanyWithOrigin[]>(COMPANY_KEY);
+  const { data: allOrigins } = useSWRSuspense<GenericItem[]>(ORIGIN_KEY);
 
   const { data: chosenCompanies } = useSWRSuspense<GenericItem[]>(
     COMPANIES_BY_FAIRTEILER_KEY,
@@ -37,6 +48,7 @@ export function CompanySelectionWrapper() {
   return (
     <CompanySelection
       allCompanies={allCompanies}
+      allOrigins={allOrigins}
       chosenCompanies={chosenCompanies}
     />
   );
@@ -44,9 +56,11 @@ export function CompanySelectionWrapper() {
 
 function CompanySelection({
   allCompanies,
+  allOrigins,
   chosenCompanies,
 }: {
-  allCompanies: GenericItem[];
+  allCompanies: CompanyWithOrigin[];
+  allOrigins: GenericItem[];
   chosenCompanies: GenericItem[];
 }) {
   const { mutate } = useSWRConfig();
@@ -160,10 +174,11 @@ function CompanySelection({
   // --- Derived State  ---
 
   const chosenCompanyIds = new Set(chosenCompanies.map((c) => c.id));
-  const availableCompanies = allCompanies.filter(
-    (company) =>
-      !chosenCompanyIds.has(company.id) && company.status !== 'pending',
-  );
+  const availableCompanies = allCompanies.filter((company) => {
+    const isNotChosen = !chosenCompanyIds.has(company.id);
+    const isNotPending = company.status !== 'pending';
+    return isNotChosen && isNotPending;
+  });
   const pendingCompanies = allCompanies.filter(
     (company) => company.status === 'pending',
   );
@@ -186,6 +201,7 @@ function CompanySelection({
                 onUpdateAction={handleUpdateCompany}
                 isRemoving={isRemoving}
                 isUpdating={isUpdating}
+                allOrigins={allOrigins}
               />
             </div>
 
@@ -195,6 +211,7 @@ function CompanySelection({
                 Wähle einen Betrieb aus der Liste aus, um ihn für diesen
                 Fairteiler zu aktivieren.
               </p>
+
               <ScrollArea className='h-32'>
                 <ul className='space-y-2'>
                   {availableCompanies.length ? (
@@ -204,6 +221,7 @@ function CompanySelection({
                         item={company}
                         onAdd={() => handleAddCompany(company)}
                         isAdding={isAdding}
+                        subtitle={company.originName ?? 'Keine Herkunft'}
                       />
                     ))
                   ) : (
@@ -221,7 +239,10 @@ function CompanySelection({
             <p className='mb-3 text-sm text-muted-foreground'>
               Ist der gewünschte Betrieb nicht dabei? Schlage einen neuen vor.
             </p>
-            <SuggestCompanyForm pendingCompanies={pendingCompanies} />
+            <SuggestCompanyForm
+              pendingCompanies={pendingCompanies}
+              allOrigins={allOrigins}
+            />
           </div>
         </div>
       </div>
@@ -237,12 +258,14 @@ export function ChosenCompanies({
   onUpdateAction,
   isRemoving,
   isUpdating,
+  allOrigins,
 }: {
   companies: GenericItem[];
   onRemoveAction: (company: GenericItem) => void;
   onUpdateAction: (company: GenericItem) => void;
   isRemoving: boolean;
   isUpdating: boolean;
+  allOrigins: GenericItem[];
 }) {
   const [companyToEdit, setCompanyToEdit] = useState<GenericItem | null>(null);
 
@@ -258,7 +281,7 @@ export function ChosenCompanies({
 
   return (
     <>
-      <div className='flex min-h-[2.5rem] flex-wrap items-center gap-2 rounded-lg border p-2'>
+      <div className='flex min-h-10 flex-wrap items-center gap-2 rounded-lg border p-2'>
         {companies.length ? (
           companies.map((company) => (
             <Badge key={company.id} className='flex items-center gap-1 pr-1'>
@@ -290,6 +313,7 @@ export function ChosenCompanies({
         isUpdating={isUpdating}
         isDeleting={isRemoving}
         itemType='Betrieb'
+        allOrigins={allOrigins}
       />
     </>
   );
@@ -297,10 +321,13 @@ export function ChosenCompanies({
 
 export function SuggestCompanyForm({
   pendingCompanies,
+  allOrigins,
 }: {
   pendingCompanies: GenericItem[];
+  allOrigins: GenericItem[];
 }) {
   const [newCompanyText, setNewCompanyText] = useState('');
+  const [selectedOriginId, setSelectedOriginId] = useState<string | null>();
 
   const { trigger: addTrigger, isMutating: isAdding } = useSWRMutation(
     COMPANY_KEY,
@@ -318,10 +345,15 @@ export function SuggestCompanyForm({
       return;
     }
 
-    const newSuggestion: GenericItem = {
+    const newSuggestion: GenericItem & {
+      originId?: string;
+      originName?: string;
+    } = {
       id: uuidv4(),
       name: newCompanyText.trim(),
       status: 'active',
+      originId: selectedOriginId ?? '',
+      originName: allOrigins.find((item) => item.id === selectedOriginId)?.name,
     };
 
     try {
@@ -332,6 +364,7 @@ export function SuggestCompanyForm({
       });
 
       setNewCompanyText('');
+      setSelectedOriginId(null);
     } catch (e) {
       console.error('Failed to suggest company:', e);
       toast.error('Fehlgeschlagen, ' + String(e));
@@ -354,24 +387,45 @@ export function SuggestCompanyForm({
           </div>
         </div>
       )}
-      <form onSubmit={handleAddCompany} className='flex gap-2'>
-        <Input
-          type='text'
-          value={newCompanyText}
-          onChange={(e) => setNewCompanyText(e.target.value)}
-          placeholder='Name des neuen Betriebs...'
-          disabled={isAdding}
-        />
-        <Button
-          size='icon'
-          type='submit'
-          variant='outline'
-          disabled={isAdding || newCompanyText.length <= 0}
-          className='shrink-0'
-          aria-label='Suggest new company'
-        >
-          {isAdding ? <Loader2 className='animate-spin' /> : <Plus />}
-        </Button>
+      <form onSubmit={handleAddCompany} className='space-y-3'>
+        <div className='flex flex-col items-end gap-2 sm:flex-row'>
+          <Input
+            type='text'
+            value={newCompanyText}
+            onChange={(e) => setNewCompanyText(e.target.value)}
+            placeholder='Name des neuen Betriebs...'
+            disabled={isAdding}
+          />
+          <div className='flex gap-2'>
+            <Select
+              value={selectedOriginId ?? ''}
+              onValueChange={(value) => setSelectedOriginId(value)}
+              disabled={isAdding}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder='Herkunft auswählen...' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='none'>Keine Herkunft</SelectItem>
+                {allOrigins.map((origin) => (
+                  <SelectItem key={origin.id} value={origin.id}>
+                    {origin.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              size='icon'
+              type='submit'
+              variant='outline'
+              disabled={isAdding || newCompanyText.length <= 0}
+              className='shrink-0'
+              aria-label='Suggest new company'
+            >
+              {isAdding ? <Loader2 className='animate-spin' /> : <Plus />}
+            </Button>
+          </div>
+        </div>
       </form>
     </div>
   );

@@ -598,7 +598,10 @@ export const company = pgTable(
 );
 
 export const companyRelations = relations(company, ({ many, one }) => ({
-  origin: one(origin),
+  origin: one(origin, {
+    fields: [company.originId],
+    references: [origin.id],
+  }),
   fairteilerCompany: many(fairteilerCompany),
 }));
 

@@ -273,7 +273,6 @@ export function PlatformReportingDashboard({
             unit='kg'
             enableExport={true}
             exportFilename='platform-kalender'
-            exportTitle='Plattform'
           />
         </div>
       </BlurFade>

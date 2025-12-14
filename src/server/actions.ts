@@ -67,6 +67,7 @@ const genericItemSchema = z.object({
   id: z.string(),
   name: z.string().min(1, 'Name ist erforderlich'),
   status: z.enum(['active', 'pending', 'disabled']).optional(),
+  originId: z.string().nullable().optional(),
 });
 
 export const suggestNewOriginAction = createAction({
@@ -454,7 +455,7 @@ export async function removeFairteilerCompanyAction(
 }
 
 export async function updateCompanyAction(
-  companyToUpdate: GenericItem,
+  companyToUpdate: GenericItem & { originId?: string | null },
 ): Promise<GenericItem> {
   try {
     const nextHeaders = await headers();

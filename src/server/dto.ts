@@ -38,6 +38,7 @@ import {
 } from './dal';
 import { MemberRoles } from '@/lib/auth/auth-permissions';
 import {
+  CompanyWithOrigin,
   ExperienceLevel,
   Fairteiler,
   FairteilerWithMembers,
@@ -265,7 +266,7 @@ export async function getCategoriesByFairteiler(
 
 // COMPANY SELECTION ----------------------------------------------------------------
 
-export async function getCompanies(): Promise<GenericItem[]> {
+export async function getCompanies(): Promise<CompanyWithOrigin[]> {
   const companies = await loadCompanies();
   if (!companies) {
     throw new NotFoundError('companies');
@@ -275,6 +276,8 @@ export async function getCompanies(): Promise<GenericItem[]> {
     id: company.id,
     name: company.name,
     status: company.status,
+    originId: company.originId,
+    originName: company.origin?.name ?? null,
   }));
 }
 

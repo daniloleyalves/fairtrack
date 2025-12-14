@@ -35,18 +35,15 @@ export const getDatabaseURL = (environment: Environment): string => {
       return getEnvVariable('DATABASE_DEMO_URL');
     }
     default:
-      throw new Error(
-        `Unknown environment: ${environment as string}. Supported environments: production, preview, development, testing, demo`,
-      );
+      throw new Error(`Unknown environment: ${environment as Environment}`);
   }
 };
 
-export const getActiveEnvironment = () => {
+export const getActiveEnvironment = (): Environment => {
   const env = process.env.NEXT_PUBLIC_ENV as Environment;
   if (!env) {
-    throw new Error(`Active Environment could not be found`);
+    throw new Error('Active Environment could not be found');
   }
-  console.log('Active Environment: ' + env);
   return env;
 };
 

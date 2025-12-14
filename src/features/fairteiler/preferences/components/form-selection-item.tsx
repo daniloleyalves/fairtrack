@@ -8,14 +8,21 @@ export function FormSelectionItem({
   item,
   onAdd,
   isAdding,
+  subtitle,
 }: {
   item: GenericItem;
   onAdd: () => void;
   isAdding: boolean;
+  subtitle?: string;
 }) {
   return (
     <li className='flex items-center justify-between gap-4 rounded-lg border p-2'>
-      <span className='text-sm'>{item.name}</span>
+      <div className='flex flex-col'>
+        <span className='text-sm'>{item.name}</span>
+        {subtitle && (
+          <span className='text-xs text-muted-foreground'>{subtitle}</span>
+        )}
+      </div>
       <Button
         variant='outline'
         size='icon'

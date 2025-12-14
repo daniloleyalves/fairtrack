@@ -1,4 +1,3 @@
-import { AuthProvider } from '@/lib/auth/auth-provider';
 import { Breadcrumbs } from '@components/layout/breadcrumbs';
 import { AppSidebar } from '@/components/sidebar/app-sidebar';
 import { Separator } from '@components/ui/separator';
@@ -24,15 +23,13 @@ export default async function FairteilerLayout({
   }
 
   return (
-    <AuthProvider>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset className='flex flex-col overflow-hidden'>
-          <LayoutHeader />
-          <LayoutMain>{children}</LayoutMain>
-        </SidebarInset>
-      </SidebarProvider>
-    </AuthProvider>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset className='flex flex-col overflow-hidden'>
+        <LayoutHeader />
+        <LayoutMain>{children}</LayoutMain>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
 
