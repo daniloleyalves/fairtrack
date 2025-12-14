@@ -68,7 +68,6 @@ export function UserDashboard({
                 unit='kg'
                 enableExport={true}
                 exportFilename='meine-beitraege-kalender'
-                exportTitle='Meine Beiträge'
               />
             </BlurFade>
           </div>
