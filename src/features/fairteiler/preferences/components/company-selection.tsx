@@ -281,7 +281,7 @@ export function ChosenCompanies({
 
   return (
     <>
-      <div className='flex min-h-[2.5rem] flex-wrap items-center gap-2 rounded-lg border p-2'>
+      <div className='flex min-h-10 flex-wrap items-center gap-2 rounded-lg border p-2'>
         {companies.length ? (
           companies.map((company) => (
             <Badge key={company.id} className='flex items-center gap-1 pr-1'>
@@ -388,42 +388,43 @@ export function SuggestCompanyForm({
         </div>
       )}
       <form onSubmit={handleAddCompany} className='space-y-3'>
-        <div className='flex gap-2'>
+        <div className='flex flex-col items-end gap-2 sm:flex-row'>
           <Input
             type='text'
             value={newCompanyText}
             onChange={(e) => setNewCompanyText(e.target.value)}
             placeholder='Name des neuen Betriebs...'
             disabled={isAdding}
-            className='flex-1'
           />
-          <Select
-            value={selectedOriginId ?? ''}
-            onValueChange={(value) => setSelectedOriginId(value)}
-            disabled={isAdding}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder='Herkunft auswählen...' />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='none'>Keine Herkunft</SelectItem>
-              {allOrigins.map((origin) => (
-                <SelectItem key={origin.id} value={origin.id}>
-                  {origin.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            size='icon'
-            type='submit'
-            variant='outline'
-            disabled={isAdding || newCompanyText.length <= 0}
-            className='shrink-0'
-            aria-label='Suggest new company'
-          >
-            {isAdding ? <Loader2 className='animate-spin' /> : <Plus />}
-          </Button>
+          <div className='flex gap-2'>
+            <Select
+              value={selectedOriginId ?? ''}
+              onValueChange={(value) => setSelectedOriginId(value)}
+              disabled={isAdding}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder='Herkunft auswählen...' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='none'>Keine Herkunft</SelectItem>
+                {allOrigins.map((origin) => (
+                  <SelectItem key={origin.id} value={origin.id}>
+                    {origin.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              size='icon'
+              type='submit'
+              variant='outline'
+              disabled={isAdding || newCompanyText.length <= 0}
+              className='shrink-0'
+              aria-label='Suggest new company'
+            >
+              {isAdding ? <Loader2 className='animate-spin' /> : <Plus />}
+            </Button>
+          </div>
         </div>
       </form>
     </div>

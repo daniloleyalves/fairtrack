@@ -2,8 +2,9 @@ import { Illustrations } from '@/lib/assets/illustrations';
 import { Button } from '@components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
-export default function NotFound() {
+function NotFoundContent() {
   return (
     <div className='mt-8 flex flex-col items-center justify-center gap-8'>
       <Image
@@ -24,5 +25,13 @@ export default function NotFound() {
         <Link href='/'>Zur Startseite zurückkehren</Link>
       </Button>
     </div>
+  );
+}
+
+export default function NotFound() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NotFoundContent />
+    </Suspense>
   );
 }

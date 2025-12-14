@@ -82,58 +82,65 @@ export default async function UserHistoryPage() {
 }
 
 function UserHistorySkeleton() {
+  const rowCount = 8;
+  const colCount = 6;
+
   return (
-    <div className='mx-2 mt-8 mb-64 sm:mx-8'>
-      <div className='mb-8 flex items-center justify-between gap-2 md:mb-4 md:flex-row'>
-        <Skeleton className='h-9 w-[280px] bg-white/20' />
-        <div className='hidden gap-2 md:flex'>
-          <Skeleton className='h-9 w-[140px] bg-white/20' />
-          <Skeleton className='h-9 w-[180px] bg-white/20' />
-          <Skeleton className='h-9 w-[40px] bg-white/20' />
-        </div>
-      </div>
+    <Card>
+      <CardContent>
+        <div className='mb-4 flex flex-1 flex-col flex-wrap gap-2 md:flex-row md:items-center md:gap-4'>
+          <Skeleton className='h-9 w-[250px] bg-secondary' />
 
-      <Card>
-        <CardContent className='p-6'>
-          <div className='space-y-4'>
-            {/* Filter controls skeleton */}
-            <div className='flex flex-wrap gap-2'>
-              <Skeleton className='h-9 w-[120px]' />
-              <Skeleton className='h-9 w-[140px]' />
-              <Skeleton className='h-9 w-[100px]' />
-              <Skeleton className='h-9 w-[110px]' />
-            </div>
+          <Skeleton className='h-9 w-[200px] bg-secondary' />
 
-            {/* Table header skeleton */}
-            <div className='grid grid-cols-6 gap-4 border-b pb-2'>
-              <Skeleton className='h-4 w-[60px]' />
-              <Skeleton className='h-4 w-[80px]' />
-              <Skeleton className='h-4 w-[70px]' />
-              <Skeleton className='h-4 w-[90px]' />
-              <Skeleton className='h-4 w-[60px]' />
-              <Skeleton className='h-4 w-[50px]' />
-            </div>
-
-            {/* Table rows skeleton */}
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className='grid grid-cols-6 gap-4 py-2'>
-                <Skeleton className='h-4 w-[50px]' />
-                <Skeleton className='h-4 w-[70px]' />
-                <Skeleton className='h-4 w-[60px]' />
-                <Skeleton className='h-4 w-[80px]' />
-                <Skeleton className='h-4 w-[45px]' />
-                <Skeleton className='h-4 w-[40px]' />
-              </div>
-            ))}
-
-            {/* Loading controls skeleton */}
-            <div className='flex flex-col items-center gap-2 pt-4 sm:flex-row'>
-              <Skeleton className='h-8 w-[100px]' />
-              <Skeleton className='h-4 w-[180px]' />
-            </div>
+          <div className='flex flex-wrap gap-2'>
+            <Skeleton className='h-9 w-[120px] bg-secondary' />
+            <Skeleton className='h-9 w-[100px] bg-secondary' />
+            <Skeleton className='h-9 w-[110px] bg-secondary' />
+            <Skeleton className='h-9 w-[90px] bg-secondary' />
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+
+        <div className='rounded-md border'>
+          <table className='w-full'>
+            <thead>
+              <tr className='border-b'>
+                {Array.from({ length: colCount }).map((_, i) => (
+                  <th
+                    key={i}
+                    className='h-12 px-4 text-left align-middle font-medium text-muted-foreground'
+                  >
+                    <Skeleton className='h-5 w-3/4 bg-secondary' />
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: rowCount }).map((_, rowIndex) => (
+                <tr key={rowIndex} className='border-b transition-colors'>
+                  {Array.from({ length: colCount }).map((_, colIndex) => (
+                    <td key={colIndex} className='p-4 align-middle'>
+                      <Skeleton className='h-6 w-full bg-secondary' />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className='flex flex-col items-center justify-between gap-6 pt-4 sm:flex-row'>
+          <div className='flex items-center gap-2'>
+            <Skeleton className='h-8 w-[100px] bg-secondary' />
+          </div>
+
+          <div className='flex items-center gap-2'>
+            <Skeleton className='h-8 w-[70px] bg-secondary' />
+            <Skeleton className='h-5 w-[120px] bg-secondary' />
+            <Skeleton className='h-8 w-[70px] bg-secondary' />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
