@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { GenericItem } from '@server/db/db-types';
+import { CompanyWithOrigin, GenericItem } from '@server/db/db-types';
 import { Button } from '@ui/button';
 import {
   Dialog,
@@ -16,16 +16,24 @@ import { Label } from '@ui/label';
 import { Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfirmModal } from '@components/confirm-modal';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@ui/select';
 
 interface EditItemDialogProps {
   item: GenericItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (item: GenericItem) => void;
+  onUpdate: (item: GenericItem & { originId?: string | null }) => void;
   onDelete: (item: GenericItem) => void;
   isUpdating: boolean;
   isDeleting: boolean;
   itemType: 'Herkunft' | 'Kategorie' | 'Betrieb';
+  allOrigins?: GenericItem[];
 }
 
 export function EditItemDialog({
@@ -37,19 +45,29 @@ export function EditItemDialog({
   isUpdating,
   isDeleting,
   itemType,
+  allOrigins,
 }: EditItemDialogProps) {
   const [editedName, setEditedName] = useState('');
+  const [selectedOriginId, setSelectedOriginId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Sync editedName when dialog opens or item changes
+  // Sync editedName and selectedOriginId when dialog opens or item changes
   useEffect(() => {
     if (open && item) {
       setEditedName(item.name);
+      // For companies, try to get the current origin
+      if (itemType === 'Betrieb' && 'originId' in item) {
+        const company = item as CompanyWithOrigin;
+        setSelectedOriginId(company.originId);
+      } else {
+        setSelectedOriginId(null);
+      }
     } else if (!open) {
       setEditedName('');
+      setSelectedOriginId(null);
       setShowDeleteConfirm(false);
     }
-  }, [open, item]);
+  }, [open, item, itemType]);
 
   const handleUpdate = () => {
     if (!item) return;
@@ -59,10 +77,15 @@ export function EditItemDialog({
       return;
     }
 
-    const updatedItem: GenericItem = {
+    const updatedItem: GenericItem & { originId?: string | null } = {
       ...item,
       name: editedName.trim(),
     };
+
+    // For companies, include the origin information
+    if (itemType === 'Betrieb') {
+      updatedItem.originId = selectedOriginId;
+    }
 
     onUpdate(updatedItem);
     onOpenChange(false);
@@ -96,8 +119,8 @@ export function EditItemDialog({
               deinem Fairteiler.
             </DialogDescription>
           </DialogHeader>
-          <div className='space-y-4 py-4'>
-            <div className='space-y-2'>
+          <div className='flex gap-4'>
+            <div className='w-full space-y-2'>
               <Label htmlFor='item-name'>Name</Label>
               <Input
                 id='item-name'
@@ -113,6 +136,27 @@ export function EditItemDialog({
                 }}
               />
             </div>
+            {itemType === 'Betrieb' && allOrigins && (
+              <div className='space-y-2'>
+                <Label htmlFor='origin-select'>Herkunft</Label>
+                <Select
+                  value={selectedOriginId ?? ''}
+                  onValueChange={(value) => setSelectedOriginId(value || null)}
+                  disabled={isUpdating || isDeleting}
+                >
+                  <SelectTrigger id='origin-select'>
+                    <SelectValue placeholder='Herkunft auswählen...' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allOrigins.map((origin) => (
+                      <SelectItem key={origin.id} value={origin.id}>
+                        {origin.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           <DialogFooter className='flex-col gap-2 sm:flex-row sm:justify-between'>
             <Button
@@ -146,12 +190,7 @@ export function EditItemDialog({
               <Button
                 type='button'
                 onClick={handleUpdate}
-                disabled={
-                  isUpdating ||
-                  isDeleting ||
-                  editedName?.trim() === item.name ||
-                  !editedName?.trim()
-                }
+                disabled={isUpdating || isDeleting}
               >
                 {isUpdating ? (
                   <>

@@ -13,8 +13,8 @@ const nextConfig: NextConfig = {
       hmrRefreshes: true,
     },
   },
+  reactCompiler: true,
   experimental: {
-    reactCompiler: true,
     ppr: true,
     useCache: true,
     inlineCss: true,

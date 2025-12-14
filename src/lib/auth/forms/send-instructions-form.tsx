@@ -55,7 +55,7 @@ export function SendIntstructionsForm({
   async function onSubmit(values: z.infer<typeof sendInstructionsSchema>) {
     form.clearErrors();
     try {
-      await authClient.forgetPassword(
+      await authClient.requestPasswordReset(
         {
           email: values.email,
           redirectTo: '/reset-password',

@@ -118,11 +118,6 @@ export default function Datenschutz() {
                   Registrierung ablehnen.
                 </p>
                 <p>
-                  Im Falle wichtiger Änderungen, etwa aus technischen Gründen,
-                  informieren wir Sie per E-Mail. Die E-Mail wird an die Adresse
-                  versendet, die bei der Registrierung angegeben wurde.
-                </p>
-                <p>
                   Die Verarbeitung der bei der Registrierung eingegebenen Daten
                   erfolgt auf Grundlage Ihrer Einwilligung (Art. 6 Abs. 1 lit. a
                   DSGVO). Ein Widerruf Ihrer bereits erteilten Einwilligung ist
@@ -136,6 +131,17 @@ export default function Datenschutz() {
                   sind. Ihren Daten werden gelöscht, sollten Sie Ihre
                   Registrierung aufheben. Gesetzliche Aufbewahrungsfristen
                   bleiben unberührt.
+                </p>
+              </div>
+              <div>
+                <h3 className='text-xl font-semibold'>
+                  Informationen zu wichtigen Updates
+                </h3>
+                <p>
+                  Mit Ihrer Einwilligung senden wir Ihnen E-Mails über wichtige
+                  Updates und Funktionsänderungen. Diese Einwilligung können Sie
+                  jederzeit widerrufen. Für den Widerruf genügt eine formlose
+                  Mitteilung per E-Mail.
                 </p>
               </div>
               <div className='flex flex-col gap-1'>
