@@ -18,7 +18,7 @@ import {
 export enum SiteRoutes {
   HOME = 'Home',
   FAIRTEILER = 'Fairteiler',
-  FAQ = 'FAQ',
+  INFO_AND_FAQ = 'Informationen & FAQ',
 }
 
 export interface Route {
@@ -37,8 +37,8 @@ export const siteRoutes: Route[] = [
     disabled: false,
   },
   {
-    title: SiteRoutes.FAQ,
-    url: '/faq',
+    title: SiteRoutes.INFO_AND_FAQ,
+    url: '/info-and-faq',
     disabled: false,
   },
 ];
