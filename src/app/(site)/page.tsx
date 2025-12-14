@@ -31,7 +31,7 @@ export default async function Home() {
             <Link href='/sign-in'>Jetzt mitmachen</Link>
           </Button>
           <Button asChild size='lg' variant='secondary' className='text-md'>
-            <Link href='/faq'>
+            <Link href='/info-and-faq'>
               <Info className='mr-2 size-4' />
               Erfahre mehr
             </Link>
