@@ -23,8 +23,7 @@
       "@server/*": ["./src/server/*"],
       "@components/*": ["./src/components/*"],
       "@ui/*": ["./src/components/ui/*"],
-      "@features/*": ["./src/features/*"],
-      "@shared/*": ["./src/shared/*"]
+      "@features/*": ["./src/features/*"]
     }
   },
   "include": [
