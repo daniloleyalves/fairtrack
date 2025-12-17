@@ -153,13 +153,7 @@ const QuantityIncrementer = forwardRef<HTMLInputElement, NumberInputProps>(
             name={name}
             value={value}
             onChange={handleInputChange}
-            onFocus={(e) => {
-              if (preventAutoFocus) {
-                e.target.blur();
-                return;
-              }
-              setIsInputFocused(true);
-            }}
+            onFocus={() => setIsInputFocused(true)}
             onBlur={() => setIsInputFocused(false)}
             onKeyDown={restrictNumericInput}
             step={enableSmallIncrements ? 0.01 : 1}
@@ -167,6 +161,7 @@ const QuantityIncrementer = forwardRef<HTMLInputElement, NumberInputProps>(
             min={0} // Explicitly set min to 0 to prevent negative visual input
             type='number'
             autoFocus={false}
+            tabIndex={preventAutoFocus ? -1 : undefined}
             className='max-w-[100px] min-w-[55px] rounded-none border-x-0 text-center font-medium'
             style={{
               color:
