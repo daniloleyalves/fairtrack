@@ -46,8 +46,10 @@ const restrictNumericInput = (e: KeyboardEvent<HTMLInputElement>) => {
   }
 };
 
-export interface NumberInputProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value'> {
+export interface NumberInputProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'onChange' | 'value'
+> {
   value: number;
   onChange: (value: number) => void;
   maxValue?: number;
@@ -55,6 +57,7 @@ export interface NumberInputProps
   iconWhenZero?: LucideIcon;
   inputWidth?: number;
   index?: number;
+  preventAutoFocus?: boolean;
 }
 
 const QuantityIncrementer = forwardRef<HTMLInputElement, NumberInputProps>(
@@ -69,6 +72,7 @@ const QuantityIncrementer = forwardRef<HTMLInputElement, NumberInputProps>(
       inputWidth,
       className,
       index,
+      preventAutoFocus = false,
       ...props
     },
     ref,
@@ -156,6 +160,8 @@ const QuantityIncrementer = forwardRef<HTMLInputElement, NumberInputProps>(
             max={maxValue}
             min={0} // Explicitly set min to 0 to prevent negative visual input
             type='number'
+            autoFocus={false}
+            tabIndex={preventAutoFocus ? -1 : undefined}
             className='max-w-[100px] min-w-[55px] rounded-none border-x-0 text-center font-medium'
             style={{
               color:

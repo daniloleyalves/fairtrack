@@ -277,9 +277,6 @@ export function ContributionWizard({
                   onClick={() => api?.scrollNext()}
                   className={cn(
                     ((currentPage === 0 && !chosenOriginId) ||
-                      (currentPage === 1 &&
-                        !companySelection.id &&
-                        !companySelection.name) ||
                       (currentPage === 2 &&
                         preliminaryFormData.length === 0)) &&
                       'pointer-events-none opacity-0',
