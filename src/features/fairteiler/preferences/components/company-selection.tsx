@@ -328,6 +328,7 @@ export function SuggestCompanyForm({
 }) {
   const [newCompanyText, setNewCompanyText] = useState('');
   const [selectedOriginId, setSelectedOriginId] = useState<string | null>();
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
   const { trigger: addTrigger, isMutating: isAdding } = useSWRMutation(
     COMPANY_KEY,
@@ -340,8 +341,15 @@ export function SuggestCompanyForm({
 
   const handleAddCompany = async (e: React.FormEvent) => {
     e.preventDefault();
+    setHasAttemptedSubmit(true);
+
     if (!newCompanyText.trim()) {
       toast.info('Bitte geben Sie einen Namen für den Betrieb ein.');
+      return;
+    }
+
+    if (!selectedOriginId || selectedOriginId === 'none') {
+      toast.error('Bitte wählen Sie eine Herkunft für den Betrieb aus.');
       return;
     }
 
@@ -365,6 +373,7 @@ export function SuggestCompanyForm({
 
       setNewCompanyText('');
       setSelectedOriginId(null);
+      setHasAttemptedSubmit(false);
     } catch (e) {
       console.error('Failed to suggest company:', e);
       toast.error('Fehlgeschlagen, ' + String(e));
@@ -402,7 +411,14 @@ export function SuggestCompanyForm({
               onValueChange={(value) => setSelectedOriginId(value)}
               disabled={isAdding}
             >
-              <SelectTrigger>
+              <SelectTrigger
+                className={
+                  hasAttemptedSubmit &&
+                  (!selectedOriginId || selectedOriginId === 'none')
+                    ? 'border-destructive focus:border-destructive'
+                    : ''
+                }
+              >
                 <SelectValue placeholder='Herkunft auswählen...' />
               </SelectTrigger>
               <SelectContent>
@@ -418,7 +434,12 @@ export function SuggestCompanyForm({
               size='icon'
               type='submit'
               variant='outline'
-              disabled={isAdding || newCompanyText.length <= 0}
+              disabled={
+                isAdding ||
+                newCompanyText.length <= 0 ||
+                !selectedOriginId ||
+                selectedOriginId === 'none'
+              }
               className='shrink-0'
               aria-label='Suggest new company'
             >
