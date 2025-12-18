@@ -224,6 +224,7 @@ export function EditableContributionRow({
                     enableSmallIncrements={true}
                     inputWidth={80}
                     index={index}
+                    preventAutoFocus={true}
                   />
                 </FormControl>
               </FormItem>
