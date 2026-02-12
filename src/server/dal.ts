@@ -791,33 +791,39 @@ export async function loadKeyFigures(
   return data;
 }
 
-export async function loadCategoryDistribution(fairteilerId: string) {
+export async function loadCategoryDistribution(fairteilerId?: string) {
+  const query = db
+    .select({
+      name: vContributions.categoryName,
+      totalQuantity: sum(vContributions.quantity),
+    })
+    .from(vContributions)
+    .groupBy(vContributions.categoryName)
+    .orderBy(desc(sum(vContributions.quantity)));
+
   const [error, data] = await attempt(
-    db
-      .select({
-        name: vContributions.categoryName,
-        totalQuantity: sum(vContributions.quantity),
-      })
-      .from(vContributions)
-      .where(eq(vContributions.fairteilerId, fairteilerId))
-      .groupBy(vContributions.categoryName)
-      .orderBy(desc(sum(vContributions.quantity))),
+    fairteilerId
+      ? query.where(eq(vContributions.fairteilerId, fairteilerId))
+      : query,
   );
   if (error) handleDatabaseError(error, 'loadCategoryDistribution');
   return data;
 }
 
-export async function loadOriginDistribution(fairteilerId: string) {
+export async function loadOriginDistribution(fairteilerId?: string) {
+  const query = db
+    .select({
+      name: vContributions.originName,
+      totalQuantity: sum(vContributions.quantity),
+    })
+    .from(vContributions)
+    .groupBy(vContributions.originName)
+    .orderBy(desc(sum(vContributions.quantity)));
+
   const [error, data] = await attempt(
-    db
-      .select({
-        name: vContributions.originName,
-        totalQuantity: sum(vContributions.quantity),
-      })
-      .from(vContributions)
-      .where(eq(vContributions.fairteilerId, fairteilerId))
-      .groupBy(vContributions.originName)
-      .orderBy(desc(sum(vContributions.quantity))),
+    fairteilerId
+      ? query.where(eq(vContributions.fairteilerId, fairteilerId))
+      : query,
   );
   if (error) handleDatabaseError(error, 'loadOriginDistribution');
   return data;
