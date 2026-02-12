@@ -53,6 +53,7 @@ import { gamificationElements } from '@/features/user/gamification/gamification-
 import { calculateUserAllTimeStreaks } from '@/features/user/gamification/streaks/streak-processor';
 import { transformMilestoneData } from '@/features/user/gamification/milestones/milestone-utils';
 import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
+import { initialContributionQuantity } from '@/lib/config/site-config';
 
 /**
  * The DTO (Data Transfer Object) layer is responsible for loading data
@@ -912,9 +913,13 @@ export async function getPlatformStats() {
       loadFairteilers(),
     ]);
 
+  const totalQuantityInKg =
+    parseFloat(keyFigures?.[0]?.totalQuantity ?? '0') +
+    initialContributionQuantity;
+
   return {
     keyFigures: {
-      totalQuantityInKg: parseFloat(keyFigures?.[0]?.totalQuantity ?? '0'),
+      totalQuantityInKg: totalQuantityInKg.toFixed(2),
       totalContributions: keyFigures?.[0]?.totalContributions ?? 0,
       activeContributors: keyFigures?.[0]?.activeContributors ?? 0,
       totalFairteilers: fairteilers?.length ?? 0,
