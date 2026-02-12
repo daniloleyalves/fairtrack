@@ -4,6 +4,7 @@ import {
   loadCategoryDistribution,
   loadContributions,
   loadContributionVersionHistory,
+  loadFairteilers,
   loadKeyFigures,
   loadLeaderboard,
   loadOriginDistribution,
@@ -24,7 +25,6 @@ import {
   loadFairteilerCategories,
   loadFairteilerCompanies,
   loadFairteilerOrigins,
-  loadFairteilers,
   loadOrigins,
   loadStepFlowProgress,
   loadTagsByFairteiler,
@@ -53,6 +53,7 @@ import { gamificationElements } from '@/features/user/gamification/gamification-
 import { calculateUserAllTimeStreaks } from '@/features/user/gamification/streaks/streak-processor';
 import { transformMilestoneData } from '@/features/user/gamification/milestones/milestone-utils';
 import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
+import { initialContributionQuantity } from '@/lib/config/site-config';
 
 /**
  * The DTO (Data Transfer Object) layer is responsible for loading data
@@ -225,7 +226,7 @@ export async function getOriginsByFairteiler(
   }
 
   return fairteilerOrigins
-    .filter((mapping) => mapping.origin && mapping.origin.status === 'active')
+    .filter((mapping) => mapping.origin?.status === 'active')
     .map((mapping) => mapping.origin as GenericItem);
 }
 
@@ -258,9 +259,7 @@ export async function getCategoriesByFairteiler(
   }
 
   return fairteilerCategories
-    .filter(
-      (mapping) => mapping.category && mapping.category.status === 'active',
-    )
+    .filter((mapping) => mapping.category?.status === 'active')
     .map((mapping) => mapping.category as GenericItem);
 }
 
@@ -295,7 +294,7 @@ export async function getCompaniesByFairteiler(
   }
 
   return fairteilerCompanies
-    .filter((mapping) => mapping.company && mapping.company.status === 'active')
+    .filter((mapping) => mapping.company?.status === 'active')
     .map((mapping) => mapping.company as GenericItem);
 }
 
@@ -899,4 +898,41 @@ export async function getKeyFigures() {
     totalContributions: data.totalContributions,
     totalQuantity: parseFloat(data.totalQuantity ?? ''),
   }))[0];
+}
+
+/**
+ * Public platform stats endpoint - no authentication required.
+ * Returns aggregated key data across all fairteilers.
+ */
+export async function getPlatformStats() {
+  const [keyFigures, categoryDistribution, originDistribution, fairteilers] =
+    await Promise.all([
+      loadKeyFigures(),
+      loadCategoryDistribution(),
+      loadOriginDistribution(),
+      loadFairteilers(),
+    ]);
+
+  const totalQuantityInKg =
+    parseFloat(keyFigures?.[0]?.totalQuantity ?? '0') +
+    initialContributionQuantity;
+
+  return {
+    keyFigures: {
+      totalQuantityInKg: totalQuantityInKg.toFixed(2),
+      totalContributions: keyFigures?.[0]?.totalContributions ?? 0,
+      activeContributors: keyFigures?.[0]?.activeContributors ?? 0,
+      totalFairteilers: fairteilers?.length ?? 0,
+    },
+    categoryDistribution:
+      categoryDistribution?.map((item) => ({
+        name: item.name ?? 'Unkategorisiert',
+        totalQuantityInKg: parseFloat(item.totalQuantity?.toString() ?? '0'),
+      })) ?? [],
+    originDistribution:
+      originDistribution?.map((item) => ({
+        name: item.name ?? 'Unbekannt',
+        totalQuantityInKg: parseFloat(item.totalQuantity?.toString() ?? '0'),
+      })) ?? [],
+  };
 }
