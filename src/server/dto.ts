@@ -920,12 +920,12 @@ export async function getPlatformStats() {
 
   return {
     keyFigures: {
-      totalQuantityInKg: formatNumber(totalQuantityInKg),
+      totalQuantityInKg: formatNumber(totalQuantityInKg, 2),
       totalContributions: formatNumber(
-        Number(keyFigures?.[0]?.totalContributions ?? 0),
+        keyFigures?.[0]?.totalContributions ?? 0,
       ),
       activeContributors: formatNumber(
-        Number(keyFigures?.[0]?.activeContributors ?? 0),
+        keyFigures?.[0]?.activeContributors ?? 0,
       ),
       totalFairteilers: formatNumber(fairteilers?.length ?? 0),
     },
@@ -933,14 +933,16 @@ export async function getPlatformStats() {
       categoryDistribution?.map((item) => ({
         name: item.name ?? 'Unkategorisiert',
         totalQuantityInKg: formatNumber(
-          parseFloat(item.totalQuantity?.toString() ?? '0'),
+          parseFloat(item.totalQuantity ?? '0'),
+          2,
         ),
       })) ?? [],
     originDistribution:
       originDistribution?.map((item) => ({
         name: item.name ?? 'Unbekannt',
         totalQuantityInKg: formatNumber(
-          parseFloat(item.totalQuantity?.toString() ?? '0'),
+          parseFloat(item.totalQuantity ?? '0'),
+          2,
         ),
       })) ?? [],
   };

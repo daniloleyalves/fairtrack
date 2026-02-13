@@ -6,8 +6,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatNumber(number: number) {
-  return new Intl.NumberFormat('de-DE').format(number);
+export function formatNumber(number: number, maximumFractionDigits?: number) {
+  return new Intl.NumberFormat('de-DE', { maximumFractionDigits }).format(
+    number,
+  );
 }
 
 export function getCurrentPageTitle(pathname: string): string {
