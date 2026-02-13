@@ -54,6 +54,7 @@ import { calculateUserAllTimeStreaks } from '@/features/user/gamification/streak
 import { transformMilestoneData } from '@/features/user/gamification/milestones/milestone-utils';
 import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
 import { initialContributionQuantity } from '@/lib/config/site-config';
+import { formatNumber } from '@/lib/utils';
 
 /**
  * The DTO (Data Transfer Object) layer is responsible for loading data
@@ -919,20 +920,28 @@ export async function getPlatformStats() {
 
   return {
     keyFigures: {
-      totalQuantityInKg: totalQuantityInKg.toFixed(2),
-      totalContributions: keyFigures?.[0]?.totalContributions ?? 0,
-      activeContributors: keyFigures?.[0]?.activeContributors ?? 0,
-      totalFairteilers: fairteilers?.length ?? 0,
+      totalQuantityInKg: formatNumber(totalQuantityInKg),
+      totalContributions: formatNumber(
+        Number(keyFigures?.[0]?.totalContributions ?? 0),
+      ),
+      activeContributors: formatNumber(
+        Number(keyFigures?.[0]?.activeContributors ?? 0),
+      ),
+      totalFairteilers: formatNumber(fairteilers?.length ?? 0),
     },
     categoryDistribution:
       categoryDistribution?.map((item) => ({
         name: item.name ?? 'Unkategorisiert',
-        totalQuantityInKg: parseFloat(item.totalQuantity?.toString() ?? '0'),
+        totalQuantityInKg: formatNumber(
+          parseFloat(item.totalQuantity?.toString() ?? '0'),
+        ),
       })) ?? [],
     originDistribution:
       originDistribution?.map((item) => ({
         name: item.name ?? 'Unbekannt',
-        totalQuantityInKg: parseFloat(item.totalQuantity?.toString() ?? '0'),
+        totalQuantityInKg: formatNumber(
+          parseFloat(item.totalQuantity?.toString() ?? '0'),
+        ),
       })) ?? [],
   };
 }
