@@ -216,6 +216,7 @@ export const invitation = authSchema.table('invitation', {
   inviterId: text('inviter_id')
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 export const formTableViewEnum = pgEnum('form_table_view', ['fast', 'wizard']);

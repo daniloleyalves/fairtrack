@@ -430,6 +430,19 @@ describe('Authentication Actions', () => {
       emailVerified: true,
       createdAt: new Date(),
       updatedAt: new Date(),
+      firstName: 'Test',
+      lastName: 'Employee',
+      isFirstLogin: true,
+      isAnonymous: false,
+      role: null,
+      banned: false,
+      banReason: null,
+      banExpires: null,
+      username: null,
+      phone: null,
+      foodsharingId: null,
+      secure: false,
+      notificationsConsent: false,
     };
 
     beforeEach(() => {
@@ -631,6 +644,11 @@ describe('Authentication Actions', () => {
           userId: 'user-123',
           role: 'member',
           createdAt: new Date(),
+          user: {
+            id: 'user-123',
+            email: 'test@example.com',
+            name: 'Test User',
+          },
         },
       });
     });
@@ -697,6 +715,7 @@ describe('Authentication Actions', () => {
         createdAt: new Date(),
         userId: 'user-123',
         user: {
+          id: 'user-123',
           email: 'test@example.com',
           name: 'Test User',
         },
@@ -710,6 +729,9 @@ describe('Authentication Actions', () => {
           name: 'Test User',
           createdAt: new Date(),
           updatedAt: new Date(),
+          banned: false,
+          banReason: null,
+          banExpires: null,
         },
       });
     });
@@ -822,6 +844,7 @@ describe('Authentication Actions', () => {
         status: 'pending',
         inviterId: 'user-123',
         expiresAt: new Date(),
+        createdAt: new Date(),
       });
     });
 
@@ -924,6 +947,11 @@ describe('Authentication Actions', () => {
       vi.mocked(auth.api.banUser).mockResolvedValue({
         user: {
           id: 'user-123',
+          name: 'Test User',
+          email: 'test@example.com',
+          emailVerified: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
           banned: true,
         },
       });
@@ -934,6 +962,7 @@ describe('Authentication Actions', () => {
         createdAt: new Date(),
         userId: 'user-123',
         user: {
+          id: 'user-123',
           email: 'test@example.com',
           name: 'Test User',
         },
@@ -1149,6 +1178,18 @@ describe('Authentication Actions', () => {
             emailVerified: true,
             createdAt: new Date(),
             updatedAt: new Date(),
+            firstName: 'Test',
+            lastName: 'Employee',
+            isFirstLogin: true,
+            isAnonymous: false,
+            role: null,
+            banned: false,
+            banReason: null,
+            banExpires: null,
+            phone: null,
+            foodsharingId: null,
+            secure: false,
+            notificationsConsent: false,
           },
           token: null,
         });
@@ -1182,6 +1223,7 @@ describe('Authentication Actions', () => {
           createdAt: new Date(),
           userId: 'user-123',
           user: {
+            id: 'user-123',
             email: 'test@example.com',
             name: 'Test User',
           },
@@ -1289,6 +1331,18 @@ describe('Authentication Actions', () => {
             emailVerified: true,
             createdAt: new Date(),
             updatedAt: new Date(),
+            firstName: 'Test',
+            lastName: 'Employee',
+            isFirstLogin: true,
+            isAnonymous: false,
+            role: null,
+            banned: false,
+            banReason: null,
+            banExpires: null,
+            phone: null,
+            foodsharingId: null,
+            secure: false,
+            notificationsConsent: false,
           },
           token: null,
         });
@@ -1320,6 +1374,18 @@ describe('Authentication Actions', () => {
             emailVerified: true,
             createdAt: new Date(),
             updatedAt: new Date(),
+            firstName: 'Test',
+            lastName: 'Employee',
+            isFirstLogin: true,
+            isAnonymous: false,
+            role: null,
+            banned: false,
+            banReason: null,
+            banExpires: null,
+            phone: null,
+            foodsharingId: null,
+            secure: false,
+            notificationsConsent: false,
           },
           token: null,
         });

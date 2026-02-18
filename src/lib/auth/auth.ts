@@ -175,6 +175,10 @@ export const auth = betterAuth({
         disabled,
       },
       async sendInvitationEmail(data) {
+        if (process.env.NEXT_PUBLIC_ENV === 'testing') {
+          console.log('Skipping invitation email in test environment');
+          return;
+        }
         const inviteLink = `${process.env.NEXT_PUBLIC_ENV_URL}/sign-up?invitationId=${data.id}`;
         const { error } = await resend.emails.send({
           from: 'support@fairteiler-tracker.de',
@@ -209,6 +213,10 @@ export const auth = betterAuth({
       },
     },
     sendResetPassword: async ({ user, url }) => {
+      if (process.env.NEXT_PUBLIC_ENV === 'testing') {
+        console.log('Skipping reset password email in test environment');
+        return;
+      }
       const { error } = await resend.emails.send({
         from: 'support@fairteiler-tracker.de',
         to: user.email,
