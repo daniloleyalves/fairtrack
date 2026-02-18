@@ -4,6 +4,9 @@ import {
   contributionEditSchema,
 } from '../contribution-schema';
 
+const futureDate = new Date();
+futureDate.setFullYear(futureDate.getFullYear() + 1);
+
 describe('contributionFormSchema', () => {
   // Valid test data factory
   const createValidContribution = (overrides = {}) => ({
@@ -16,7 +19,7 @@ describe('contributionFormSchema', () => {
     companyId: '550e8400-e29b-41d4-a716-446655440003',
     company: 'Test Company',
     cool: false,
-    shelfLife: new Date('2025-12-31'),
+    shelfLife: futureDate,
     allergens: 'Contains nuts',
     comment: 'Test comment',
     ...overrides,
