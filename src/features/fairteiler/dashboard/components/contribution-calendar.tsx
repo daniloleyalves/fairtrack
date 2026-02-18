@@ -122,8 +122,10 @@ function CustomDayButtonComponent({
   );
 }
 
-interface DataCalendarProps
-  extends Omit<ComponentProps<typeof DayPicker>, 'selected' | 'mode'> {
+interface DataCalendarProps extends Omit<
+  ComponentProps<typeof DayPicker>,
+  'selected' | 'mode'
+> {
   data: DataPoint[];
   unit?: string;
   enableExport?: boolean;
