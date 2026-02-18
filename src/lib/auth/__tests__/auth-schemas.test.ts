@@ -125,6 +125,7 @@ describe('signUpSchema', () => {
     password: 'Password123',
     passwordConfirm: 'Password123',
     tos: true,
+    notificationsConsent: false,
     ...overrides,
   });
 

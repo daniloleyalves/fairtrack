@@ -56,6 +56,9 @@ vi.mock('next/headers', () => ({
   headers: vi.fn(),
 }));
 
+const futureDate = new Date();
+futureDate.setFullYear(futureDate.getFullYear() + 1);
+
 describe('Server Actions', () => {
   const mockHeaders = new Headers();
   const mockGenericItem: GenericItem = {
@@ -378,7 +381,7 @@ describe('Server Actions', () => {
             companyId: '550e8400-e29b-41d4-a716-446655440003',
             company: 'Test Company',
             cool: false,
-            shelfLife: new Date('2025-12-31'),
+            shelfLife: futureDate,
             allergens: null,
             comment: 'Test notes',
           },
@@ -575,7 +578,7 @@ describe('Server Actions', () => {
           companyId: '550e8400-e29b-41d4-a716-446655440003',
           company: `Test Company ${i}`,
           cool: i % 2 === 0,
-          shelfLife: new Date('2025-12-31'),
+          shelfLife: futureDate,
           allergens: null,
           comment: `Test notes ${i}`,
         }));
@@ -831,7 +834,7 @@ describe('Server Actions', () => {
               companyId: '550e8400-e29b-41d4-a716-446655440003',
               company: 'Test Company',
               cool: false,
-              shelfLife: new Date('2025-12-31'),
+              shelfLife: futureDate,
               allergens: null,
               comment: 'Test notes',
             },
