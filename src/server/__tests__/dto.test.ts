@@ -329,6 +329,8 @@ describe('DTO Layer', () => {
               id: company.id,
               name: company.name,
               status: company.status,
+              originId: company.originId,
+              originName: null,
             })),
           );
         });

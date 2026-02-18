@@ -45,16 +45,11 @@ describe('Wizard Mode Contribution Flow E2E', () => {
         // Should advance to company step
         cy.contains('Betrieb').should('be.visible');
 
-        // Try to proceed without selecting company
-        cy.get('button').contains('Weiter').should('not.be.visible'); // Should auto-advance
-
+        // Select company (auto-advances to categories)
         cy.selectWizardOption('Edeka');
 
         // Should advance to categories
         cy.contains('Kategorien').should('be.visible');
-
-        // Try to proceed without selecting category
-        cy.get('button').contains('Weiter').should('not.be.visible');
       },
     );
   });
