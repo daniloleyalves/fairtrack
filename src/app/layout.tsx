@@ -6,6 +6,7 @@ import './globals.css';
 import { AuthProvider } from '@/lib/auth/auth-provider';
 import NavigationLoadingIndicator from '@components/navigation-loading-indicator';
 import { Suspense } from 'react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -66,6 +67,7 @@ export default function RootLayout({
           {/* </AuthErrorBoundary> */}
         </Suspense>
         <Toaster />
+        <SpeedInsights />
       </body>
     </html>
   );
