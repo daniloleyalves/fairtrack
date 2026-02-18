@@ -7,7 +7,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint src/",
     "lint-staged": "lint-staged --concurrent false",
     "db:generate": "pnpm drizzle-kit generate --config=./src/server/db/drizzle.config.ts",
     "db:migrate": "pnpm drizzle-kit migrate --config=./src/server/db/drizzle.config.ts",
