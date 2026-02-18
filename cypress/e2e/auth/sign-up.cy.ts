@@ -102,7 +102,7 @@ describe('User Registration E2E', () => {
     cy.get('input[name="email"]').type('test@example.com');
     cy.get('input[name="password"]').type('password123');
     cy.get('input[name="passwordConfirm"]').type('differentpassword');
-    cy.get('button[role="checkbox"]').click();
+    cy.get('button[role="checkbox"]').first().click();
 
     cy.get('button[type="submit"]').click();
 
@@ -157,7 +157,7 @@ describe('User Registration E2E', () => {
             email: 'inviter-user@example.com',
             firstName: 'Inviter',
             lastName: 'User',
-            password: 'randomPassword123!',
+            password: 'randomPassword123',
             isFirstLogin: false,
             isAnonymous: false,
           }).then((inviterUser) => {
@@ -195,7 +195,7 @@ describe('User Registration E2E', () => {
               cy.get('input[name="passwordConfirm"]').type(
                 invitedUser.password,
               );
-              cy.get('button[role="checkbox"]').click();
+              cy.get('button[role="checkbox"]').first().click();
               cy.get('button[type="submit"]').click();
 
               // Should redirect to dashboard

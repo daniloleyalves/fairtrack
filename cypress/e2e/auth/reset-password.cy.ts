@@ -109,7 +109,7 @@ describe('Password Reset E2E', () => {
         cy.contains('Wähle ein neues Passwort').should('be.visible');
 
         // Fill new password
-        const newPassword = 'NewSecurePass123!';
+        const newPassword = 'NewSecurePass123';
         cy.get('input[name="password"]').type(newPassword);
         cy.get('input[name="passwordConfirm"]').type(newPassword);
 
@@ -181,7 +181,7 @@ describe('Password Reset E2E', () => {
     cy.visit('/reset-password');
 
     // Intercept the reset request to return error
-    cy.intercept('POST', '**/forget-password', {
+    cy.intercept('POST', '**/request-password-reset', {
       statusCode: 500,
       body: { error: 'Server error' },
     });

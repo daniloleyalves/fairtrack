@@ -260,6 +260,13 @@
       "when": 1765645777981,
       "tag": "0036_outgoing_daimon_hellstrom",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1771430164265,
+      "tag": "0037_shocking_prodigy",
+      "breakpoints": true
     }
   ]
 }

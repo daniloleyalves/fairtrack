@@ -169,6 +169,15 @@ describe('Preferences Management E2E', () => {
           // Look for input field to suggest new company
           cy.get('input').type('Test Company Suggestion');
 
+          // Select an origin (required for submission)
+          cy.get('[role="combobox"]').click();
+        });
+      cy.get('[role="option"]').contains('Supermarkt').click();
+
+      cy.contains('Betrieb vorschlagen')
+        .parent()
+        .parent()
+        .within(() => {
           // Submit suggestion
           cy.get('[aria-label="Suggest new company"]').click();
         });
