@@ -63,7 +63,7 @@ Cypress.Commands.add('fillRegistrationForm', (userData: TestUser) => {
   cy.get('input[name="passwordConfirm"]').type(userData.password as string);
 
   if (userData.acceptTos !== false) {
-    cy.get('button[role="checkbox"]').click();
+    cy.get('button[role="checkbox"]').first().click();
   }
 });
 

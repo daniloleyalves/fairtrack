@@ -99,7 +99,7 @@ export const databaseTasks = {
         name: `${userData.firstName} ${userData.lastName}`,
         firstName: userData.firstName,
         lastName: userData.lastName,
-        password: userData.password || 'SecurePass123!',
+        password: userData.password || 'SecurePass123',
         isFirstLogin: userData.isFirstLogin,
         isAnonymous: userData.isAnonymous,
       });
