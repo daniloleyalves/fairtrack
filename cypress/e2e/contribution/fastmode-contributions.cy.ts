@@ -103,7 +103,7 @@ describe('Fastmode Contribution Flow E2E', () => {
       cy.addContributionRow();
 
       const quantityInput =
-        'table tbody tr:first-child td:nth-child(4) input[type="number"]';
+        'table tbody tr:first-child td:nth-child(4) input[type="text"]';
 
       // Test zero quantity
       cy.get(quantityInput).clear();
@@ -112,7 +112,7 @@ describe('Fastmode Contribution Flow E2E', () => {
 
       // Test valid decimal quantity
       cy.get(quantityInput).clear().type('2.5');
-      cy.get(quantityInput).should('have.value', '2.50');
+      cy.get(quantityInput).should('have.value', '2.5');
     });
   });
 
@@ -124,7 +124,7 @@ describe('Fastmode Contribution Flow E2E', () => {
       cy.addContributionRow();
 
       const shelfLifeInput =
-        'table tbody tr:first-child td:nth-child(5) input[type="number"]';
+        'table tbody tr:first-child td:nth-child(5) input[type="text"]';
 
       // Test zero (unlimited shelf life)
       cy.get(shelfLifeInput).clear().type('0');
@@ -138,11 +138,11 @@ describe('Fastmode Contribution Flow E2E', () => {
 
       // Test future date
       cy.get(shelfLifeInput).clear().type('7');
-      cy.get(shelfLifeInput).should('have.value', '70');
+      cy.get(shelfLifeInput).should('have.value', '7');
 
       // Test very large number
       cy.get(shelfLifeInput).clear().type('365');
-      cy.get(shelfLifeInput).should('have.value', '3650');
+      cy.get(shelfLifeInput).should('have.value', '365');
     });
   });
 
