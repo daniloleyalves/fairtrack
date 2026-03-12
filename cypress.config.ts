@@ -4,7 +4,7 @@ import { defineConfig } from 'cypress';
 import { databaseTasks } from './cypress/plugins/database-tasks';
 import dotenv from 'dotenv';
 
-dotenv.config({ path: '.vercel/.env.development.local' });
+dotenv.config({ path: '.env.local' });
 
 export default defineConfig({
   e2e: {
