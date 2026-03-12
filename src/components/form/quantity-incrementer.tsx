@@ -41,7 +41,10 @@ const restrictNumericInput = (e: KeyboardEvent<HTMLInputElement>) => {
 
   // Treat comma as decimal separator: prevent if there's already a decimal
   const currentValue = (e.target as HTMLInputElement).value;
-  if ((e.key === '.' || e.key === ',') && (currentValue.includes('.') || currentValue.includes(','))) {
+  if (
+    (e.key === '.' || e.key === ',') &&
+    (currentValue.includes('.') || currentValue.includes(','))
+  ) {
     e.preventDefault();
   }
 };

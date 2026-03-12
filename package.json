@@ -21,10 +21,7 @@
     "db:seed:clean:demo": "tsx src/server/db/seed/index.ts --env=demo --clean",
     "prepare": "husky",
     "test": "vitest",
-    "test:dev": "NEXT_PUBLIC_ENV=testing pnpm dev -p 3001",
-    "test:dev:e2e": "NEXT_PUBLIC_ENV=testing concurrently \"pnpm dev -p 3001\" \"wait-on http://localhost:3001 && cypress open --e2e\" --names \"server,cypress\" --prefix-colors \"blue,green\"",
-    "test:e2e": "NEXT_PUBLIC_ENV=testing cypress run",
-    "test:e2e:headed": "NEXT_PUBLIC_ENV=testing cypress run --headed"
+    "test:e2e": "NEXT_PUBLIC_ENV=testing concurrently \"NEXT_PUBLIC_ENV=testing pnpm dev -p 3001\" \"wait-on http://localhost:3001 && cypress open --e2e\" --names \"server,cypress\" --prefix-colors \"blue,green\""
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
