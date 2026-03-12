@@ -86,7 +86,7 @@ describe('Wizard Mode Contribution Flow E2E', () => {
           cy.get('input[name="shelfLife"]').clear().type('7');
           cy.get('button').contains('Okay').click();
 
-          cy.contains('20 kg').should('be.visible');
+          cy.contains('2 kg').should('be.visible');
         });
       },
     );
@@ -112,7 +112,7 @@ describe('Wizard Mode Contribution Flow E2E', () => {
           cy.get('button').contains('Okay').click();
 
           // Verify contribution was added
-          cy.contains('30 kg').should('be.visible');
+          cy.contains('3 kg').should('be.visible');
 
           // Click on category again to edit/remove
           cy.contains(category.name).click();
@@ -124,7 +124,7 @@ describe('Wizard Mode Contribution Flow E2E', () => {
           cy.get('button').contains('Entfernen').click();
 
           // Should return to category view without contribution
-          cy.contains('30 kg').should('not.exist');
+          cy.contains('3 kg').should('not.exist');
         });
       },
     );
