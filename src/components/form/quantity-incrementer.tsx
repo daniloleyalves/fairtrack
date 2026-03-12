@@ -33,15 +33,15 @@ const restrictNumericInput = (e: KeyboardEvent<HTMLInputElement>) => {
     return;
   }
 
-  // Prevent input if it's not a digit or a decimal point
-  if (!/[0-9.]/.test(e.key)) {
+  // Prevent input if it's not a digit, decimal point, or comma
+  if (!/[0-9.,]/.test(e.key)) {
     e.preventDefault();
     return;
   }
 
-  // Prevent multiple decimal points
+  // Treat comma as decimal separator: prevent if there's already a decimal
   const currentValue = (e.target as HTMLInputElement).value;
-  if (e.key === '.' && currentValue.includes('.')) {
+  if ((e.key === '.' || e.key === ',') && (currentValue.includes('.') || currentValue.includes(','))) {
     e.preventDefault();
   }
 };
@@ -78,6 +78,7 @@ const QuantityIncrementer = forwardRef<HTMLInputElement, NumberInputProps>(
     ref,
   ) => {
     const [isInputFocused, setIsInputFocused] = useState<boolean>(false);
+    const [inputText, setInputText] = useState<string>('');
 
     useEffect(() => {
       if (enableSmallIncrements && value?.toString().length > 4) {
@@ -90,11 +91,15 @@ const QuantityIncrementer = forwardRef<HTMLInputElement, NumberInputProps>(
 
     const IconComponent = iconWhenZero;
 
+    // Format number with comma for display when not focused
+    const displayValue = isInputFocused
+      ? inputText
+      : String(value).replace('.', ',');
+
     const handleValueChange = (adjustment: number) => {
       const currentValue = Number(value) || 0;
       let newValue = parseFloat((currentValue + adjustment).toPrecision(15));
 
-      // Ensure minimum is 0, as we don't want past dates
       if (newValue < 0) {
         newValue = 0;
       }
@@ -108,17 +113,27 @@ const QuantityIncrementer = forwardRef<HTMLInputElement, NumberInputProps>(
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const stringValue = e.target.value;
+      setInputText(stringValue);
+
       if (stringValue === '' || stringValue === '-') {
-        // If input is empty or just '-', treat as 0 for QuantityIncrementer's internal state
-        // The adapter will handle converting 0 days to null for the form.
         onChange(0);
         return;
       }
-      const numValue = parseFloat(stringValue);
+      // Normalize comma to period for parsing
+      const normalized = stringValue.replace(',', '.');
+      const numValue = parseFloat(normalized);
       if (!isNaN(numValue)) {
-        // Ensure manual input also respects the minimum of 0
         onChange(Math.max(0, numValue));
       }
+    };
+
+    const handleFocus = () => {
+      setIsInputFocused(true);
+      setInputText(String(value).replace('.', ','));
+    };
+
+    const handleBlur = () => {
+      setIsInputFocused(false);
     };
 
     return (
@@ -151,15 +166,13 @@ const QuantityIncrementer = forwardRef<HTMLInputElement, NumberInputProps>(
             data-cy={`quantity-incrementer-${index}`}
             ref={ref}
             name={name}
-            value={value}
+            value={displayValue}
             onChange={handleInputChange}
-            onFocus={() => setIsInputFocused(true)}
-            onBlur={() => setIsInputFocused(false)}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
             onKeyDown={restrictNumericInput}
-            step={enableSmallIncrements ? 0.01 : 1}
-            max={maxValue}
-            min={0} // Explicitly set min to 0 to prevent negative visual input
-            type='number'
+            inputMode='decimal'
+            type='text'
             autoFocus={false}
             tabIndex={preventAutoFocus ? -1 : undefined}
             className='max-w-[100px] min-w-[55px] rounded-none border-x-0 text-center font-medium'
