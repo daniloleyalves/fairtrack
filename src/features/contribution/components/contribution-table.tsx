@@ -152,14 +152,14 @@ export function ContributionRows() {
   // ---- Row Actions ----
   const handleAddContribution = () => {
     if (isFastView) {
-      append(createContributionItem());
+      append(createContributionItem(), { shouldFocus: false });
     } else {
       setIsWizardOpen(true);
     }
   };
 
   const handleWizardSave = (newContributions: ContributionItem[]) => {
-    append(newContributions);
+    append(newContributions, { shouldFocus: false });
   };
 
   return (
