@@ -21,9 +21,9 @@ export const fairteilerProfileSchema = z.object({
     .refine((data) => data.length > 0, {
       message: 'Standortkoordinaten erforderlich',
     }),
-  address: z.string().trim().nullable(),
-  geoLink: z.string().trim().nullable(),
-  website: z.string().trim().nullable(),
+  address: z.string().trim().nullable().optional(),
+  geoLink: z.string().trim().nullable().optional(),
+  website: z.string().trim().nullable().optional(),
   thumbnail: z
     .union([z.string(), z.instanceof(File)])
     .nullable()

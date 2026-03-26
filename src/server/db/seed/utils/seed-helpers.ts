@@ -81,6 +81,17 @@ export const cleanDatabase = async (
     await db.delete(schema.session);
     await db.delete(schema.account);
     await db.delete(schema.verification);
+    await db.delete(schema.stepFlowProgress);
+    await db.delete(schema.userPreferences);
+    // Gamification (events first, then reference tables)
+    await db.delete(schema.experiencLevelEvents);
+    await db.delete(schema.questBadgeEvents);
+    await db.delete(schema.milestoneEvents);
+    await db.delete(schema.experienceLevels);
+    await db.delete(schema.quests);
+    await db.delete(schema.milestones);
+    await db.delete(schema.onboardingStepsEvents);
+    await db.delete(schema.onboardingSteps);
     await db.delete(schema.user);
     await db.delete(schema.feedback);
 
