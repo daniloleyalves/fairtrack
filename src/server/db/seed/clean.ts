@@ -24,7 +24,5 @@ const main = async () => {
   }
 };
 
-// Run the seeding script
-if (require.main === module) {
-  main();
-}
+// Run the cleaning script
+main();
