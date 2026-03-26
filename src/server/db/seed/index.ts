@@ -2,7 +2,7 @@
 
 import * as schema from '../schema';
 import { devSeedData } from './data/dev';
-import { demoSeedData } from './data/demo';
+import { demoSeedData, DEMO_PASSWORD_HASH } from './data/demo';
 import {
   getOptionsFromArgs,
   cleanDatabase,
@@ -36,6 +36,55 @@ const getSeedData = (environment: Environment): SeedData => {
 const populateRelationships = (data: SeedData): SeedData => {
   // Create copies to avoid mutating original data
   const populatedData = structuredClone(data) as SeedData;
+
+  // Create account records for demo users (so they can sign in)
+  if (populatedData.accounts !== undefined) {
+    populatedData.accounts = populatedData.users.map((user) => ({
+      id: generateId(),
+      accountId: user.id,
+      providerId: 'credential',
+      userId: user.id,
+      password: DEMO_PASSWORD_HASH,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    }));
+  }
+
+  // Create onboarding progress and preferences for users who completed onboarding
+  if (populatedData.stepFlowProgress !== undefined) {
+    const completedSteps = [
+      'welcome',
+      'how-to',
+      'foodsharing-experience',
+      'enable-gamification',
+      'complete',
+    ];
+    const onboardedUsers = populatedData.users.filter((u) => !u.isFirstLogin);
+    populatedData.stepFlowProgress = onboardedUsers.map((user) => ({
+      id: generateId(),
+      flowId: 'onboarding',
+      userId: user.id,
+      currentStepIndex: completedSteps.length - 1,
+      completedSteps,
+      skippedSteps: [],
+      stepData: {},
+      progress: 100,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    }));
+  }
+
+  if (populatedData.userPreferences !== undefined) {
+    const onboardedUsers = populatedData.users.filter((u) => !u.isFirstLogin);
+    populatedData.userPreferences = onboardedUsers.map((user) => ({
+      id: generateId(),
+      userId: user.id,
+      formTableView: 'wizard' as const,
+      enableStreaks: true,
+      enableQuests: true,
+      enableAIFeedback: true,
+    }));
+  }
 
   // Set company origin references
   if (populatedData.companies.length > 0 && populatedData.origins.length > 0) {
@@ -101,32 +150,84 @@ const populateRelationships = (data: SeedData): SeedData => {
 
   // Create member relationships (users to fairteiler) - each user only in one fairteiler
   populatedData.members = (() => {
-    const shuffledUsers = [...populatedData.users].sort(
-      () => Math.random() - 0.5,
+    const adminUser = populatedData.users.find((u) => u.role === 'admin');
+    const guestUsers = populatedData.users.filter((u) =>
+      u.email.startsWith('guest-'),
     );
-    let userIndex = 0;
+    const employeeUsers = populatedData.users.filter((u) =>
+      u.email.startsWith('employee-'),
+    );
+    const regularUsers = populatedData.users.filter(
+      (u) =>
+        u.role !== 'admin' &&
+        !u.email.startsWith('guest-') &&
+        !u.email.startsWith('employee-'),
+    );
+    const shuffledRegular = [...regularUsers].sort(() => Math.random() - 0.5);
 
-    return populatedData.fairteiler.flatMap((fairteiler, fairteilerIndex) => {
+    const members: typeof populatedData.members = [];
+
+    // Admin is always owner of the first fairteiler
+    if (adminUser && populatedData.fairteiler.length > 0) {
+      members.push({
+        id: generateId(),
+        organizationId: populatedData.fairteiler[0].id,
+        userId: adminUser.id,
+        role: 'owner' as const,
+        createdAt: createTimestamp(Math.floor(Math.random() * 15)),
+      });
+    }
+
+    // Guest users get 'guest' role on the first fairteiler
+    for (const guest of guestUsers) {
+      if (populatedData.fairteiler.length > 0) {
+        members.push({
+          id: generateId(),
+          organizationId: populatedData.fairteiler[0].id,
+          userId: guest.id,
+          role: 'guest' as const,
+          createdAt: createTimestamp(Math.floor(Math.random() * 15)),
+        });
+      }
+    }
+
+    // Employee users get 'employee' role on the first fairteiler
+    for (const employee of employeeUsers) {
+      if (populatedData.fairteiler.length > 0) {
+        members.push({
+          id: generateId(),
+          organizationId: populatedData.fairteiler[0].id,
+          userId: employee.id,
+          role: 'employee' as const,
+          createdAt: createTimestamp(Math.floor(Math.random() * 15)),
+        });
+      }
+    }
+
+    // Distribute remaining regular users across fairteilers
+    let userIndex = 0;
+    for (const fairteiler of populatedData.fairteiler) {
       const usersPerFairteiler = Math.ceil(
-        shuffledUsers.length / populatedData.fairteiler.length,
+        shuffledRegular.length / populatedData.fairteiler.length,
       );
-      const fairteilerUsers = shuffledUsers.slice(
+      const fairteilerUsers = shuffledRegular.slice(
         userIndex,
         userIndex + usersPerFairteiler,
       );
       userIndex += usersPerFairteiler;
 
-      return fairteilerUsers.map((user, localUserIndex) => ({
-        id: generateId(),
-        organizationId: fairteiler.id,
-        userId: user.id,
-        role:
-          fairteilerIndex === 0 && localUserIndex === 0
-            ? ('owner' as const)
-            : ('member' as const),
-        createdAt: createTimestamp(Math.floor(Math.random() * 15)),
-      }));
-    });
+      for (const user of fairteilerUsers) {
+        members.push({
+          id: generateId(),
+          organizationId: fairteiler.id,
+          userId: user.id,
+          role: 'member' as const,
+          createdAt: createTimestamp(Math.floor(Math.random() * 15)),
+        });
+      }
+    }
+
+    return members;
   })();
 
   // Create tags for fairteiler
@@ -262,6 +363,12 @@ const seedDatabase = async (
       logSuccess(`✓ Seeded ${data.users.length} users`);
     }
 
+    logProgress('Seeding accounts...', verbose);
+    if (data.accounts && data.accounts.length > 0) {
+      await db.insert(schema.account).values(data.accounts);
+      logSuccess(`✓ Seeded ${data.accounts.length} accounts`);
+    }
+
     logProgress('Seeding fairteiler...', verbose);
     if (data.fairteiler.length > 0) {
       await db.insert(schema.fairteiler).values(data.fairteiler);
@@ -338,6 +445,32 @@ const seedDatabase = async (
       await db.insert(schema.checkin).values(data.checkins);
       logSuccess(`✓ Seeded ${data.checkins.length} checkins`);
     }
+
+    logProgress('Seeding step flow progress...', verbose);
+    if (data.stepFlowProgress && data.stepFlowProgress.length > 0) {
+      await db.insert(schema.stepFlowProgress).values(data.stepFlowProgress);
+      logSuccess(`✓ Seeded ${data.stepFlowProgress.length} step flow records`);
+    }
+
+    logProgress('Seeding user preferences...', verbose);
+    if (data.userPreferences && data.userPreferences.length > 0) {
+      await db.insert(schema.userPreferences).values(data.userPreferences);
+      logSuccess(
+        `✓ Seeded ${data.userPreferences.length} user preference records`,
+      );
+    }
+
+    logProgress('Seeding experience levels...', verbose);
+    if (data.experienceLevels && data.experienceLevels.length > 0) {
+      await db.insert(schema.experienceLevels).values(data.experienceLevels);
+      logSuccess(`✓ Seeded ${data.experienceLevels.length} experience levels`);
+    }
+
+    logProgress('Seeding milestones...', verbose);
+    if (data.milestones && data.milestones.length > 0) {
+      await db.insert(schema.milestones).values(data.milestones);
+      logSuccess(`✓ Seeded ${data.milestones.length} milestones`);
+    }
   } catch (error) {
     logError('Failed to seed database', error);
     throw error;
@@ -373,6 +506,7 @@ const main = async () => {
     // Summary
     console.log('\n📊 Seeding Summary:');
     console.log(`Users: ${populatedData.users.length}`);
+    console.log(`Accounts: ${populatedData.accounts?.length ?? 0}`);
     console.log(`Fairteiler: ${populatedData.fairteiler.length}`);
     console.log(`Categories: ${populatedData.categories.length}`);
     console.log(`Origins: ${populatedData.origins.length}`);
@@ -381,6 +515,10 @@ const main = async () => {
     console.log(`Tags: ${populatedData.tags.length}`);
     console.log(`Food Items: ${populatedData.food.length}`);
     console.log(`Checkins: ${populatedData.checkins.length}`);
+    console.log(
+      `Experience Levels: ${populatedData.experienceLevels?.length ?? 0}`,
+    );
+    console.log(`Milestones: ${populatedData.milestones?.length ?? 0}`);
     console.log(
       `Junction Tables: ${populatedData.fairteilerOrigins.length + populatedData.fairteilerCategories.length + populatedData.fairteilerCompanies.length}`,
     );
@@ -391,6 +529,4 @@ const main = async () => {
 };
 
 // Run the seeding script
-if (require.main === module) {
-  main();
-}
+main();

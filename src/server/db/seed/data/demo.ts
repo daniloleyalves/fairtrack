@@ -1,5 +1,9 @@
 import type { SeedData } from '../utils/types';
 import { generateId, createTimestamp } from '../utils/seed-helpers';
+import bcrypt from 'bcrypt';
+
+export const DEMO_PASSWORD = 'Demo1234';
+export const DEMO_PASSWORD_HASH = bcrypt.hashSync(DEMO_PASSWORD, 10);
 
 export const demoSeedData: SeedData = {
   users: [
@@ -34,20 +38,6 @@ export const demoSeedData: SeedData = {
     },
     {
       id: generateId(),
-      name: 'David Chen',
-      email: 'david.chen@demo.com',
-      emailVerified: true,
-      image: undefined,
-      createdAt: createTimestamp(30),
-      updatedAt: createTimestamp(3),
-      username: 'davidchen',
-      firstName: 'David',
-      lastName: 'Chen',
-      secure: true,
-      isFirstLogin: false,
-    },
-    {
-      id: generateId(),
       name: 'Emma Rodriguez',
       email: 'emma.rodriguez@demo.com',
       emailVerified: true,
@@ -60,19 +50,81 @@ export const demoSeedData: SeedData = {
       secure: true,
       isFirstLogin: false,
     },
+    {
+      id: generateId(),
+      name: 'Mitarbeitende',
+      email: 'employee-1@stuttgart-mitte.local',
+      emailVerified: true,
+      image: undefined,
+      createdAt: createTimestamp(20),
+      updatedAt: createTimestamp(1),
+      username: undefined,
+      firstName: 'Mitarbeitende',
+      lastName: 'stuttgart-mitte',
+      secure: true,
+      isFirstLogin: false,
+    },
+    {
+      id: generateId(),
+      name: 'Gastzugang',
+      email: 'guest-1@stuttgart-mitte.local',
+      emailVerified: true,
+      image: undefined,
+      createdAt: createTimestamp(10),
+      updatedAt: createTimestamp(1),
+      username: undefined,
+      firstName: 'Gastzugang',
+      lastName: 'stuttgart-mitte',
+      secure: true,
+      isFirstLogin: false,
+    },
+  ],
+
+  experienceLevels: [
+    {
+      id: generateId(),
+      value: 'newcomer',
+      name: 'Neuling',
+      sortIndex: 0,
+      icon: 'star',
+    },
+    {
+      id: generateId(),
+      value: 'experienced',
+      name: 'Erfahren',
+      sortIndex: 1,
+      icon: 'graduated',
+    },
+    {
+      id: generateId(),
+      value: 'expert',
+      name: 'Profi',
+      sortIndex: 2,
+      icon: 'rocket',
+    },
+  ],
+
+  milestones: [
+    { id: generateId(), quantity: 10 },
+    { id: generateId(), quantity: 25 },
+    { id: generateId(), quantity: 50 },
+    { id: generateId(), quantity: 100 },
+    { id: generateId(), quantity: 250 },
+    { id: generateId(), quantity: 500 },
+    { id: generateId(), quantity: 1000 },
   ],
 
   fairteiler: [
     {
       id: generateId(),
-      name: 'Central Community Hub',
-      slug: 'central-community-hub',
+      name: 'Stuttgart-Mitte',
+      slug: 'stuttgart-mitte',
       logo: undefined,
-      address: '789 Community Blvd, City Center',
-      geoLink: 'https://maps.google.com/?q=789+Community+Blvd+City+Center',
-      geoLng: '13.4050',
-      geoLat: '52.5200',
-      website: 'https://central-hub.demo.com',
+      address: 'Königstraße 42, 70173 Stuttgart',
+      geoLink: 'https://maps.google.com/?q=Königstraße+42+Stuttgart',
+      geoLng: '9.1829',
+      geoLat: '48.7758',
+      website: undefined,
       thumbnail:
         'https://mmm5u4fjrhaoeehc.public.blob.vercel-storage.com/fairteiler_thumbnails/raupe_thumbnail-testing.jpg',
       disabled: false,
@@ -85,14 +137,14 @@ export const demoSeedData: SeedData = {
     },
     {
       id: generateId(),
-      name: 'Riverside Food Network',
-      slug: 'riverside-food-network',
+      name: 'Bad Cannstatt',
+      slug: 'bad-cannstatt',
       logo: undefined,
-      address: '321 River St, Riverside District',
-      geoLink: 'https://maps.google.com/?q=321+River+St+Riverside+District',
-      geoLng: '13.3777',
-      geoLat: '52.5162',
-      website: 'https://riverside-network.demo.com',
+      address: 'Marktstraße 18, 70372 Stuttgart',
+      geoLink: 'https://maps.google.com/?q=Marktstraße+18+Bad+Cannstatt',
+      geoLng: '9.2166',
+      geoLat: '48.8043',
+      website: undefined,
       thumbnail: undefined,
       disabled: false,
       createdAt: createTimestamp(35),
@@ -100,18 +152,17 @@ export const demoSeedData: SeedData = {
     },
     {
       id: generateId(),
-      name: 'University Campus Share',
-      slug: 'university-campus-share',
-      address: '555 Campus Dr, University District',
-      geoLink: 'https://maps.google.com/?q=555+Campus+Dr+University+District',
-      geoLng: '13.4194',
-      geoLat: '52.4582',
+      name: 'Vaihingen',
+      slug: 'vaihingen',
+      address: 'Hauptstraße 7, 70563 Stuttgart',
+      geoLink: 'https://maps.google.com/?q=Hauptstraße+7+Stuttgart+Vaihingen',
+      geoLng: '9.1067',
+      geoLat: '48.7278',
       disabled: false,
       createdAt: createTimestamp(25),
       metadata: JSON.stringify({
         capacity: 40,
         openHours: '10-18',
-        studentOnly: false,
       }),
     },
   ],
@@ -119,41 +170,55 @@ export const demoSeedData: SeedData = {
   categories: [
     {
       id: generateId(),
-      name: 'Fresh Produce',
-      description: 'Seasonal fruits, vegetables, and herbs',
-      image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200',
-      status: 'active',
-      createdAt: createTimestamp(40),
-    },
-    {
-      id: generateId(),
-      name: 'Dairy & Eggs',
-      description: 'Milk, cheese, yogurt, eggs and dairy alternatives',
-      image: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=200',
-      status: 'active',
-      createdAt: createTimestamp(40),
-    },
-    {
-      id: generateId(),
-      name: 'Bread & Pastries',
-      description: 'Fresh bread, croissants, muffins and baked goods',
+      name: 'Obst',
+      description: '',
       image:
-        'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200',
+        'https://mmm5u4fjrhaoeehc.public.blob.vercel-storage.com/category_icons/icon_obst.png',
       status: 'active',
       createdAt: createTimestamp(40),
     },
     {
       id: generateId(),
-      name: 'Prepared Foods',
-      description: 'Ready-to-eat meals and prepared dishes',
-      image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200',
+      name: 'Backwaren',
+      description: '',
+      image:
+        'https://mmm5u4fjrhaoeehc.public.blob.vercel-storage.com/category_icons/icon_backwaren-salzig.png',
+      status: 'active',
+      createdAt: createTimestamp(40),
+    },
+    {
+      id: generateId(),
+      name: 'Milchprodukte',
+      description: '',
+      image:
+        'https://mmm5u4fjrhaoeehc.public.blob.vercel-storage.com/category_icons/icon_kuehlprodukte.png',
+      status: 'active',
+      createdAt: createTimestamp(40),
+    },
+    {
+      id: generateId(),
+      name: 'Gemüse',
+      description: '',
+      image:
+        'https://mmm5u4fjrhaoeehc.public.blob.vercel-storage.com/category_icons/icon_gemuese.png',
       status: 'active',
       createdAt: createTimestamp(35),
     },
     {
       id: generateId(),
-      name: 'Pantry Staples',
-      description: 'Canned goods, grains, pasta and non-perishables',
+      name: 'Trockenprodukte',
+      description: '',
+      image:
+        'https://mmm5u4fjrhaoeehc.public.blob.vercel-storage.com/category_icons/icon_trockenprodukte.png',
+      status: 'active',
+      createdAt: createTimestamp(30),
+    },
+    {
+      id: generateId(),
+      name: 'Sonstiges',
+      description: '',
+      image:
+        'https://mmm5u4fjrhaoeehc.public.blob.vercel-storage.com/category_icons/icon_sonstiges.png',
       status: 'active',
       createdAt: createTimestamp(30),
     },
@@ -162,42 +227,43 @@ export const demoSeedData: SeedData = {
   origins: [
     {
       id: generateId(),
-      name: 'Local Organic Farms',
-      description: 'Certified organic farms within 50km radius',
-      image:
-        'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=200',
+      name: 'Supermarkt',
+      description: '',
       status: 'active',
       createdAt: createTimestamp(45),
     },
     {
       id: generateId(),
-      name: 'Supermarket Partners',
-      description: 'Major grocery chains and supermarkets',
-      image:
-        'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=200',
+      name: 'Bäckerei',
+      description: '',
       status: 'active',
       createdAt: createTimestamp(45),
     },
     {
       id: generateId(),
-      name: 'Restaurant Network',
-      description: 'Restaurants, cafes and food service providers',
-      image:
-        'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200',
+      name: 'Gastronomie',
+      description: '',
       status: 'active',
       createdAt: createTimestamp(40),
     },
     {
       id: generateId(),
-      name: 'Community Gardens',
-      description: 'Local community and urban gardens',
+      name: 'Haushalt',
+      description: '',
       status: 'active',
       createdAt: createTimestamp(35),
     },
     {
       id: generateId(),
-      name: 'Food Manufacturers',
-      description: 'Food processing and manufacturing companies',
+      name: 'Wochen-/Großmarkt',
+      description: '',
+      status: 'active',
+      createdAt: createTimestamp(30),
+    },
+    {
+      id: generateId(),
+      name: 'Sonstige',
+      description: '',
       status: 'active',
       createdAt: createTimestamp(30),
     },
@@ -208,8 +274,7 @@ export const demoSeedData: SeedData = {
       id: generateId(),
       name: 'Sunshine Organic Farm',
       description: 'Family-owned organic farm growing seasonal vegetables',
-      image:
-        'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=200',
+      image: undefined,
       status: 'active',
       originId: '', // Will be set after origins are created
       createdAt: createTimestamp(35),
@@ -218,8 +283,7 @@ export const demoSeedData: SeedData = {
       id: generateId(),
       name: 'Metro Fresh Markets',
       description: 'Regional supermarket chain with 15 locations',
-      image:
-        'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=200',
+      image: undefined,
       status: 'active',
       originId: '', // Will be set after origins are created
       createdAt: createTimestamp(30),
@@ -228,8 +292,7 @@ export const demoSeedData: SeedData = {
       id: generateId(),
       name: 'Golden Crust Bakery',
       description: 'Artisanal bakery specializing in sourdough and pastries',
-      image:
-        'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200',
+      image: undefined,
       status: 'active',
       originId: '', // Will be set after origins are created
       createdAt: createTimestamp(25),
@@ -251,6 +314,10 @@ export const demoSeedData: SeedData = {
       createdAt: createTimestamp(15),
     },
   ],
+
+  accounts: [], // Will be populated in populateRelationships with DEMO_PASSWORD_HASH
+  stepFlowProgress: [], // Will be populated for onboarded users
+  userPreferences: [], // Will be populated for onboarded users
 
   fairteilerOrigins: [], // Will be populated after fairteiler and origins are created
   fairteilerCategories: [], // Will be populated after fairteiler and categories are created
