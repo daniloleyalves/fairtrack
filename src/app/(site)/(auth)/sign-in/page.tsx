@@ -1,5 +1,6 @@
 import { Illustrations } from '@/lib/assets/illustrations';
 import { SignInForm } from '@/lib/auth/forms/signin-form';
+import { DemoCredentialsBox } from '@components/demo-credentials-box';
 import { Button } from '@components/ui/button';
 import {
   Card,
@@ -12,9 +13,12 @@ import { ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
+const isDemo = process.env.NEXT_PUBLIC_ENV === 'demo';
+
 export default function SignIn() {
   return (
     <div className='m-2 mb-16 flex h-full max-w-lg flex-col items-center justify-center gap-8 sm:m-8 sm:mx-auto'>
+      {isDemo && <DemoCredentialsBox />}
       <Card className='w-full'>
         <CardContent className='flex flex-col gap-12'>
           <Image

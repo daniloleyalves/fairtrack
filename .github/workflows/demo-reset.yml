@@ -1,0 +1,44 @@
+name: Demo Database Reset
+
+on:
+  schedule:
+    - cron: '0 4 * * 0' # Every Sunday at 4:00 AM UTC
+  workflow_dispatch: # Manual trigger
+
+env:
+  NODE_VERSION: 20
+  PNPM_VERSION: latest
+
+jobs:
+  reset-demo-db:
+    name: Clean & Re-seed Demo Database
+    runs-on: ubuntu-latest
+    environment: preview
+
+    env:
+      DATABASE_DEMO_URL: ${{ secrets.DATABASE_DEMO_URL }}
+      NEXT_PUBLIC_ENV: demo
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Clean demo database
+        run: pnpm db:seed:clean:demo
+
+      - name: Seed demo database
+        run: pnpm db:seed:demo

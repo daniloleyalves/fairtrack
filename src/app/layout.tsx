@@ -5,6 +5,7 @@ import { Geist, Londrina_Solid } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth/auth-provider';
 import NavigationLoadingIndicator from '@components/navigation-loading-indicator';
+import { DemoBanner } from '@components/demo-banner';
 import { Suspense } from 'react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
@@ -59,6 +60,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${londrinaSolid.variable} flex min-h-screen flex-col font-sans antialiased`}
       >
+        <DemoBanner />
         <NavigationLoadingIndicator />
         <Suspense>
           {/* <AuthErrorBoundary> */}

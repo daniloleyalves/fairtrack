@@ -175,7 +175,10 @@ export const auth = betterAuth({
         disabled,
       },
       async sendInvitationEmail(data) {
-        if (process.env.NEXT_PUBLIC_ENV === 'testing') {
+        if (
+          process.env.NEXT_PUBLIC_ENV === 'testing' ||
+          process.env.NEXT_PUBLIC_ENV === 'demo'
+        ) {
           console.log('Skipping invitation email in test environment');
           return;
         }
@@ -213,7 +216,10 @@ export const auth = betterAuth({
       },
     },
     sendResetPassword: async ({ user, url }) => {
-      if (process.env.NEXT_PUBLIC_ENV === 'testing') {
+      if (
+        process.env.NEXT_PUBLIC_ENV === 'testing' ||
+        process.env.NEXT_PUBLIC_ENV === 'demo'
+      ) {
         console.log('Skipping reset password email in test environment');
         return;
       }

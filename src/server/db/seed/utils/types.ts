@@ -80,6 +80,46 @@ export interface SeedData {
     companyId: string;
     createdAt: Date;
   }[];
+  accounts?: {
+    id: string;
+    accountId: string;
+    providerId: string;
+    userId: string;
+    password: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }[];
+  experienceLevels?: {
+    id: string;
+    value: string;
+    name: string;
+    sortIndex: number;
+    icon: string;
+  }[];
+  milestones?: {
+    id: string;
+    quantity: number;
+  }[];
+  stepFlowProgress?: {
+    id: string;
+    flowId: string;
+    userId: string;
+    currentStepIndex: number;
+    completedSteps: string[];
+    skippedSteps: string[];
+    stepData: Record<string, unknown>;
+    progress: number;
+    createdAt: Date;
+    updatedAt: Date;
+  }[];
+  userPreferences?: {
+    id: string;
+    userId: string;
+    formTableView: 'fast' | 'wizard';
+    enableStreaks: boolean;
+    enableQuests: boolean;
+    enableAIFeedback: boolean;
+  }[];
   members: {
     id: string;
     organizationId: string;
