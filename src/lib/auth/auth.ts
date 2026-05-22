@@ -1,7 +1,9 @@
 import 'server-only';
 
+import { eq } from 'drizzle-orm';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { hashPassword, verifyPassword } from 'better-auth/crypto';
 import { nextCookies } from 'better-auth/next-js';
 import { admin, organization } from 'better-auth/plugins';
 import {
@@ -186,11 +188,22 @@ export const auth = betterAuth({
     enabled: true,
     autoSignIn: false,
     password: {
-      hash: async (password) => {
-        return await bcrypt.hash(password, 10);
-      },
+      // New hashes use better-auth's built-in non-blocking scrypt.
+      // Legacy bcrypt hashes ($2a/$2b/$2y) are verified via bcrypt and
+      // opportunistically re-hashed to scrypt on successful sign-in.
       verify: async ({ hash, password }) => {
-        return await bcrypt.compare(password, hash);
+        if (hash.startsWith('$2')) {
+          const ok = await bcrypt.compare(password, hash);
+          if (ok) {
+            const newHash = await hashPassword(password);
+            await db
+              .update(account)
+              .set({ password: newHash })
+              .where(eq(account.password, hash));
+          }
+          return ok;
+        }
+        return verifyPassword({ hash, password });
       },
     },
     onPasswordReset: async ({ user }) => {
