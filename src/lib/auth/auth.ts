@@ -39,6 +39,9 @@ import bcrypt from 'bcrypt';
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,
+  advanced: {
+    disableCSRFCheck: process.env.NEXT_PUBLIC_ENV === 'testing',
+  },
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema: {
@@ -57,6 +60,7 @@ export const auth = betterAuth({
       enabled: true,
       maxAge: 5 * 60, // Cache duration in seconds
     },
+    freshAge: 0,
   },
   rateLimit: {
     enabled: process.env.NEXT_PUBLIC_ENV !== 'testing',
@@ -142,6 +146,7 @@ export const auth = betterAuth({
     // jwt(),
     admin(),
     organization({
+      requireEmailVerificationOnInvitation: false,
       schema: {
         organization: {
           modelName: 'fairteiler',
@@ -302,7 +307,7 @@ export async function checkPermissionOnServer(
   return auth.api.hasPermission({
     headers: headers,
     body: {
-      permission: checks,
+      permissions: checks,
     },
   });
 }

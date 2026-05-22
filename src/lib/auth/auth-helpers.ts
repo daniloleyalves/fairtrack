@@ -104,7 +104,7 @@ export const checkAccess = (
   }
 
   return authClient.organization.checkRolePermission({
-    permission: {
+    permissions: {
       [reqPermissions.section]: reqPermissions.permissions,
     },
     role: role ?? 'disabled',
