@@ -33,3 +33,6 @@ yarn-error.log*
 .agents
 .claude
 skills-lock.json
+
+# Local-only planning / runbook docs (kept on disk, not in git)
+docs/
