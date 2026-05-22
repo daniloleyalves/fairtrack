@@ -6,7 +6,6 @@ on:
   workflow_dispatch: # Manual trigger
 
 env:
-  NODE_VERSION: 20
   PNPM_VERSION: latest
 
 jobs:
@@ -31,7 +30,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: '.nvmrc'
           cache: 'pnpm'
 
       - name: Install dependencies
