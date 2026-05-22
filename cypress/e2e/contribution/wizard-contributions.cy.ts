@@ -81,9 +81,6 @@ describe('Wizard Mode Contribution Flow E2E', () => {
           // Enter valid quantity
           cy.get('input[name="quantity"]').clear().type('2');
           cy.get('button').contains('Okay').should('not.be.disabled');
-
-          // Test with valid shelf life
-          cy.get('input[name="shelfLife"]').clear().type('7');
           cy.get('button').contains('Okay').click();
 
           cy.contains('2 kg').should('be.visible');

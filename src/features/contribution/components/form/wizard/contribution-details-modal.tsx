@@ -1,9 +1,6 @@
 'use client';
 
-import {
-  DaysToDateAdapter,
-  QuantityIncrementer,
-} from '@/components/form/quantity-incrementer';
+import { QuantityIncrementer } from '@/components/form/quantity-incrementer';
 import { cn } from '@/lib/utils';
 import { Button } from '@components/ui/button';
 import {
@@ -16,7 +13,7 @@ import {
 import { Label } from '@components/ui/label';
 import type { ContributionItem } from '@features/contribution/models/contribution';
 import { GenericItem } from '@server/db/db-types';
-import { InfinityIcon, Apple } from 'lucide-react';
+import { Apple } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -41,7 +38,6 @@ export function ContributionDetailsModal({
   // Internal state to manage the form while the modal is open.
   // This avoids modifying the parent's state directly.
   const [quantity, setQuantity] = useState(0);
-  const [shelfLife, setShelfLife] = useState<Date | null>(null);
   const [imageError, setImageError] = useState(false);
 
   // When the `contribution` prop changes (i.e., a new item is selected),
@@ -51,7 +47,6 @@ export function ContributionDetailsModal({
   useEffect(() => {
     if (contribution && !isInitialized) {
       setQuantity(contribution.quantity);
-      setShelfLife(contribution.shelfLife);
       setIsInitialized(true);
     }
   }, [contribution, isInitialized]);
@@ -76,7 +71,6 @@ export function ContributionDetailsModal({
     onSave({
       ...contribution,
       quantity,
-      shelfLife,
     });
   };
 
@@ -136,8 +130,7 @@ export function ContributionDetailsModal({
             {contribution.category.name}
           </DialogTitle>
           <DialogDescription className='text-center'>
-            Bitte gib eine möglichst genaue Menge sowie die geschätzte
-            Haltbarkeit des Lebensmittels an.
+            Bitte gib eine möglichst genaue Menge des Lebensmittels an.
           </DialogDescription>
         </DialogHeader>
         <div className='min-h-0 overflow-y-auto'>
@@ -153,22 +146,6 @@ export function ContributionDetailsModal({
                 inputWidth={80}
                 enableSmallIncrements={true}
                 onChange={setQuantity}
-              />
-            </div>
-            <div className='flex flex-col items-center justify-center gap-4'>
-              <div className='flex flex-col items-center gap-2'>
-                <Label htmlFor='shelfLife' className='text-md'>
-                  Wie lange genießbar? (Tage)
-                </Label>
-                <span className='text-center text-sm text-muted-foreground'>
-                  Unkritische Haltbarkeit? Einfach unverändert lassen!
-                </span>
-              </div>
-              <DaysToDateAdapter
-                name='shelfLife'
-                value={shelfLife}
-                iconWhenZero={InfinityIcon}
-                onChange={setShelfLife}
               />
             </div>
           </div>

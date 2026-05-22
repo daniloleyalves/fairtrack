@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, useRef, type ReactNode } from 'react';
 import { z } from 'zod';
 import { formTableViewEnum } from '@/server/db/schema';
 import useSWRSuspense, { type FetcherError } from './swr';
@@ -75,6 +75,8 @@ export function UserPreferencesProvider({
     },
   });
 
+  const lastUpdatedKeyRef = useRef<keyof ClientPreferences | null>(null);
+
   const { trigger: mutatePreferencesTrigger } = useSWRMutation(
     PREFERENCES_API_KEY,
     (_key, { arg }: { arg: ClientPreferences }) =>
@@ -83,6 +85,9 @@ export function UserPreferencesProvider({
       rollbackOnError: true,
       revalidate: false,
       onSuccess: (result) => {
+        const suppressToast = lastUpdatedKeyRef.current === 'formTableView';
+        lastUpdatedKeyRef.current = null;
+        if (suppressToast) return;
         if (result.success && result.message) {
           toast.success(
             result.message ?? 'Platformerlebnis erfolgreich aktualisiert!',
@@ -90,6 +95,7 @@ export function UserPreferencesProvider({
         }
       },
       onError: (err) => {
+        lastUpdatedKeyRef.current = null;
         const message =
           err instanceof Error ? err.message : 'Aktualisierung fehlgeschlagen.';
         toast.error(message);
@@ -111,6 +117,7 @@ export function UserPreferencesProvider({
       throw error;
     }
 
+    lastUpdatedKeyRef.current = key;
     try {
       // Optimistically update local cache
       await mutatePreferencesTrigger(validatedPreferences, {
