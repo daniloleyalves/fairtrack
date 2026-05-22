@@ -1,9 +1,7 @@
 import type { SeedData } from '../utils/types';
 import { generateId, createTimestamp } from '../utils/seed-helpers';
-import bcrypt from 'bcrypt';
 
 export const DEMO_PASSWORD = 'Demo1234';
-export const DEMO_PASSWORD_HASH = bcrypt.hashSync(DEMO_PASSWORD, 10);
 
 export const demoSeedData: SeedData = {
   users: [

@@ -26,11 +26,19 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 
 ### Changed
 
-- Password hashing switched from bcrypt to better-auth's built-in non-blocking scrypt for new hashes. Legacy bcrypt hashes (existing users) are still accepted via a compat shim in `password.verify` and are opportunistically re-hashed to scrypt on the next successful sign-in. The `bcrypt` dep stays for the shim and can be dropped once legacy hashes are gone from the user table.
+- Password hashing fully migrated from bcrypt to better-auth's built-in non-blocking scrypt. Drizzle migration `0040_clear_bcrypt_hashes.sql` NULLs all legacy `$2`-prefixed credential passwords; affected users go through password reset on next sign-in. Demo seed re-hashes its password via `better-auth/crypto` at seed time.
 - Upgraded `better-auth` 1.4.7 → 1.6.11. Sign-up form now pre-checks email existence to keep the "Benutzer bereits registriert." UX after 1.6's anti-enumeration change, matching the sign-in pre-check pattern.
 - `auth.ts` gained three test/UX-preserving options: `advanced.disableCSRFCheck` in `testing` env (Node-side test clients lack `Origin`), `session.freshAge: 0` to keep pre-1.6 sensitive-op re-auth cadence, and `organization.requireEmailVerificationOnInvitation: false` so synthetic access-view emails still work.
 - `user.phone` column: `numeric` → `text` (stores E.164); `user.foodsharing_id`: `numeric` → `integer`. Migrations cast existing data.
 - CI Node version bumped to 22 via `.nvmrc` + `package.json#engines`; workflows read from `.nvmrc` as the single source of truth.
+
+### Removed
+
+- `bcrypt` and `@types/bcrypt` dependencies. The verify shim that bridged bcrypt and scrypt is gone.
+
+### Deployment notes
+
+- **Before deploying this release to prod**, follow `docs/release-bcrypt-removal.md`: identify the ~16 users with `secure = true` and bcrypt hashes, send each a password reset email, then run the migration. The 185 users with `secure = false` go through the existing `SecurityModal` reset flow on next sign-in and need no special handling.
 
 ### Fixed
 
