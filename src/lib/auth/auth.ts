@@ -232,7 +232,7 @@ export const auth = betterAuth({
         required: true,
       },
       phone: {
-        type: 'number',
+        type: 'string',
         required: false,
       },
       foodsharingId: {
