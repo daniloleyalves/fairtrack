@@ -1,7 +1,6 @@
 'use client';
 
 import { Button } from '@components/ui/button';
-import { Checkbox } from '@components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -14,13 +13,7 @@ import { Label } from '@components/ui/label';
 import { ScrollArea } from '@components/ui/scroll-area';
 import { Textarea } from '@components/ui/textarea';
 import type { ContributionItem } from '@features/contribution/models/contribution';
-import {
-  MessageSquareText,
-  Store,
-  Tag,
-  Thermometer,
-  Wheat,
-} from 'lucide-react';
+import { MessageSquareText, Store, Tag, Wheat } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface OptionalInfoModalProps {
@@ -36,7 +29,6 @@ export function OptionalInfoModal({
 }: OptionalInfoModalProps) {
   // Internal state for the form fields
   const [title, setTitle] = useState('');
-  const [cool, setCool] = useState(false);
   const [company, setCompany] = useState('');
   const [allergens, setAllergens] = useState('');
   const [comment, setComment] = useState('');
@@ -45,7 +37,6 @@ export function OptionalInfoModal({
   useEffect(() => {
     if (contribution) {
       setTitle(contribution.title ?? '');
-      setCool(contribution.cool ?? false);
       setCompany(contribution.company ?? '');
       setAllergens(contribution.allergens ?? '');
       setComment(contribution.comment ?? '');
@@ -61,7 +52,6 @@ export function OptionalInfoModal({
     const updatedContribution = {
       ...contribution,
       title,
-      cool,
       company,
       allergens,
       comment,
@@ -101,17 +91,6 @@ export function OptionalInfoModal({
                 <Tag className='size-4' /> Lebensmittelname
               </Label>
               <Input value={title} onChange={(e) => setTitle(e.target.value)} />
-            </div>
-            {/* Cool Field */}
-            <div className='flex items-center gap-4'>
-              <Checkbox
-                size='36px'
-                checked={cool}
-                onCheckedChange={(c) => setCool(!!c)}
-              />
-              <Label className='flex items-center gap-2'>
-                <Thermometer className='size-4' /> In den Kühlschrank?
-              </Label>
             </div>
             {/* Company Field */}
             <div className='flex w-full flex-col gap-2'>

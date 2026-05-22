@@ -35,33 +35,36 @@ export function ExportButton({ filters, scope, className }: ExportButtonProps) {
         scope,
       });
 
-      if (result && typeof result === 'object' && 'data' in result) {
-        if (!result.data) {
-          const errorMessage =
-            scope === 'fairteiler'
-              ? 'Fehler beim Exportieren der Fairteiler-Daten'
-              : 'Fehler beim Exportieren der Plattform-Daten';
-          toast.error(errorMessage);
-          return;
-        }
-
-        const buffer = await exportContributionsToExcel({
-          data: result.data,
-          fairteilerName:
-            scope === 'fairteiler' ? result.data[0].fairteilerName : undefined,
-        });
-
-        const filename = generateExportFilename(
-          scope === 'fairteiler' ? result.data[0].fairteilerName : undefined,
-        );
-        downloadExcelFile(buffer, filename);
-
-        const successMessage =
-          scope === 'fairteiler'
-            ? 'Fairteiler Excel-Export erfolgreich heruntergeladen!'
-            : 'Plattform Excel-Export erfolgreich heruntergeladen!';
-        toast.success(successMessage);
+      if (!result.success) {
+        toast.error(result.error);
+        return;
       }
+
+      if (!result.data?.length) {
+        const errorMessage =
+          scope === 'fairteiler'
+            ? 'Keine Fairteiler-Daten zum Exportieren gefunden'
+            : 'Keine Plattform-Daten zum Exportieren gefunden';
+        toast.error(errorMessage);
+        return;
+      }
+
+      const fairteilerName =
+        scope === 'fairteiler' ? result.data[0].fairteilerName : undefined;
+
+      const buffer = await exportContributionsToExcel({
+        data: result.data,
+        fairteilerName,
+      });
+
+      const filename = generateExportFilename(fairteilerName);
+      downloadExcelFile(buffer, filename);
+
+      const successMessage =
+        scope === 'fairteiler'
+          ? 'Fairteiler Excel-Export erfolgreich heruntergeladen!'
+          : 'Plattform Excel-Export erfolgreich heruntergeladen!';
+      toast.success(successMessage);
     } catch (error) {
       console.error('Export error:', error);
       const errorMessage =

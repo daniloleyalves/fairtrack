@@ -123,35 +123,7 @@ export function getContributionsByOrigin(
     }));
 }
 
-// 3. For Cooling Requirements
-export interface CoolingDataPoint {
-  name: 'Kühlen notwendig' | 'Kein Kühlen';
-  quantity: number;
-  fill: string;
-}
-
-export function getCoolingRequirements(data: vContribution[]) {
-  const counts: Record<string, number> = {};
-
-  data.forEach((c) => {
-    let label: string;
-    if (c.foodCool === true) label = 'Kühlung erforderlich';
-    else if (c.foodCool === false) label = 'Keine Kühlung';
-    else label = 'Unbekannt';
-
-    counts[label] = (counts[label] || 0) + 1;
-  });
-
-  return Object.entries(counts)
-    .sort((a, b) => b[1] - a[1]) // sort descending by value
-    .map(([description, value], index) => ({
-      position: index + 1, // highest count gets position 1
-      value,
-      description,
-    }));
-}
-
-// 4. For Contributions by Company
+// 3. For Contributions by Company
 export function getContributionsByCompany(
   filteredData: vContribution[],
 ): AttributeDataPoint[] {

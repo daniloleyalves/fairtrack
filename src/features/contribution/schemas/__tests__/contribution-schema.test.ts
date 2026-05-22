@@ -4,9 +4,6 @@ import {
   contributionEditSchema,
 } from '../contribution-schema';
 
-const futureDate = new Date();
-futureDate.setFullYear(futureDate.getFullYear() + 1);
-
 describe('contributionFormSchema', () => {
   // Valid test data factory
   const createValidContribution = (overrides = {}) => ({
@@ -18,8 +15,6 @@ describe('contributionFormSchema', () => {
     originId: '550e8400-e29b-41d4-a716-446655440002',
     companyId: '550e8400-e29b-41d4-a716-446655440003',
     company: 'Test Company',
-    cool: false,
-    shelfLife: futureDate,
     allergens: 'Contains nuts',
     comment: 'Test comment',
     ...overrides,
@@ -66,7 +61,6 @@ describe('contributionFormSchema', () => {
       const validData = createValidFormData({
         companyId: null,
         company: null,
-        shelfLife: null,
         allergens: null,
         comment: null,
       });
@@ -326,70 +320,6 @@ describe('contributionFormSchema', () => {
       const result = contributionFormSchema.safeParse(validData);
 
       expect(result.success).toBe(true);
-    });
-  });
-
-  describe('date validation', () => {
-    it('should reject past shelf life date', () => {
-      const pastDate = new Date('2020-01-01');
-      const invalidData = createValidFormData({ shelfLife: pastDate });
-      const result = contributionFormSchema.safeParse(invalidData);
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.issues[0].message).toBe(
-          'Haltbarkeit darf nicht in der Vergangenheit liegen',
-        );
-      }
-    });
-
-    it('should accept future shelf life date', () => {
-      const futureDate = new Date('2030-12-31');
-      const validData = createValidFormData({ shelfLife: futureDate });
-      const result = contributionFormSchema.safeParse(validData);
-
-      expect(result.success).toBe(true);
-    });
-
-    it('should accept null shelf life', () => {
-      const validData = createValidFormData({ shelfLife: null });
-      const result = contributionFormSchema.safeParse(validData);
-
-      expect(result.success).toBe(true);
-    });
-
-    it('should reject today as shelf life (edge case)', () => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // Start of today
-      const invalidData = createValidFormData({ shelfLife: today });
-      const result = contributionFormSchema.safeParse(invalidData);
-
-      expect(result.success).toBe(false);
-    });
-  });
-
-  describe('boolean validation', () => {
-    it('should accept true for cool field', () => {
-      const validData = createValidFormData({ cool: true });
-      const result = contributionFormSchema.safeParse(validData);
-
-      expect(result.success).toBe(true);
-    });
-
-    it('should accept false for cool field', () => {
-      const validData = createValidFormData({ cool: false });
-      const result = contributionFormSchema.safeParse(validData);
-
-      expect(result.success).toBe(true);
-    });
-
-    it('should reject non-boolean cool field', () => {
-      const invalidData = createValidFormData({
-        cool: 'yes' as string | boolean,
-      });
-      const result = contributionFormSchema.safeParse(invalidData);
-
-      expect(result.success).toBe(false);
     });
   });
 

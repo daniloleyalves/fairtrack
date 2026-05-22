@@ -23,9 +23,13 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 ### Added
 
 - `PhoneInput` component (shadcn `input-group` + `Command`/`Popover` country picker, `libphonenumber-js`, German country names via `Intl.DisplayNames`); wired into the user profile form with `isValidPhoneNumber` validation. Phone is stored in E.164 format.
+- `QuantityIncrementer` gained `showStepperButtons?: boolean` (default `true`). Passed `false` in the fast-mode contribution list; wizard quantity modal keeps the +/- buttons.
 
 ### Changed
 
+- Platform + fairteiler statistics dashboards now default to the current calendar year (Jan 1 → today) instead of "Gesamter Zeitraum"; other `TimespanPicker` consumers (history tables) unchanged. The picker also receives the active range so its label reflects "Dieses Jahr".
+- Toggling the form-mode preference (fast ↔ wizard) no longer triggers `toast.success('Platformerlebnis erfolgreich aktualisiert!')` — silent save. Toasts on other preference toggles (streaks, quests, AI feedback) unchanged. `updateUserPreferences` DAL signature now lists `formTableView` so its parameter type matches what the action passes.
+- Platform export button no longer silently swallows server-action failures — `{ success: false }` responses now surface the server `error` as a toast and "no rows" is reported separately from genuine failures.
 - Password hashing fully migrated from bcrypt to better-auth's built-in non-blocking scrypt. Drizzle migration `0040_clear_bcrypt_hashes.sql` NULLs all legacy `$2`-prefixed credential passwords; affected users go through password reset on next sign-in. Demo seed re-hashes its password via `better-auth/crypto` at seed time.
 - Upgraded `better-auth` 1.4.7 → 1.6.11. Sign-up form now pre-checks email existence to keep the "Benutzer bereits registriert." UX after 1.6's anti-enumeration change, matching the sign-in pre-check pattern.
 - `auth.ts` gained three test/UX-preserving options: `advanced.disableCSRFCheck` in `testing` env (Node-side test clients lack `Origin`), `session.freshAge: 0` to keep pre-1.6 sensitive-op re-auth cadence, and `organization.requireEmailVerificationOnInvitation: false` so synthetic access-view emails still work.
@@ -34,6 +38,8 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 
 ### Removed
 
+- "Haltbarkeit" (shelfLife) field removed from every UI surface: wizard quantity modal, wizard category/optional-info steps, fast-mode contribution row + table column, fairteiler contribution info modal, Excel export, contribution zod schema, `ContributionItem` model + factory, `DaysToDateAdapter` helper, related cypress + vitest cases. DB column (`checkin.shelf_life`), `vContributions` view column, and DAL read paths preserved — new contributions write `NULL`, legacy rows untouched.
+- "Kühlen" (cool) field removed from every UI surface: optional-fields modal (fast), wizard optional-infos modal, wizard optional-info-step entry, fairteiler contribution info modal, Excel export, fairteiler statistics Kühlanforderungen filter + distribution chart, `getCoolingRequirements` + `CoolingDataPoint`, `getPlatformCoolingRequirements` (dead), `boolean-filter.tsx` deleted, `cool` removed from `ReportFilters` + `applyFilters`. DB column (`food.cool`) is `NOT NULL` with no default, so `checkinContribution` now writes a literal `cool: false`; column + DAL reads + AI feedback schema preserved.
 - `bcrypt` and `@types/bcrypt` dependencies. The verify shim that bridged bcrypt and scrypt is gone.
 
 ### Deployment notes

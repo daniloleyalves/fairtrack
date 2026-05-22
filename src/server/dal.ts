@@ -525,7 +525,7 @@ export async function checkinContribution(
           categoryId: c.categoryId,
           companyId: c.companyId,
           company: c.company,
-          cool: c.cool,
+          cool: false,
           allergens: c.allergens,
           comment: c.comment,
         })
@@ -537,7 +537,6 @@ export async function checkinContribution(
         foodId: c.foodId,
         fairteilerId: fairteilerId,
         quantity: c.quantity,
-        shelfLife: c.shelfLife,
       });
 
       insertedFoods.push(newFood);
@@ -1207,6 +1206,7 @@ export const addUserPreferences = async (
 export const updateUserPreferences = async (
   userId: string,
   preferences: {
+    formTableView?: 'fast' | 'wizard';
     enableStreaks?: boolean;
     enableQuests?: boolean;
     enableAIFeedback?: boolean;

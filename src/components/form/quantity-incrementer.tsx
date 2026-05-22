@@ -1,7 +1,6 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { addDays, differenceInCalendarDays, startOfToday } from 'date-fns';
 import { LucideIcon } from 'lucide-react';
 import React, {
   forwardRef,
@@ -61,6 +60,7 @@ export interface NumberInputProps extends Omit<
   inputWidth?: number;
   index?: number;
   preventAutoFocus?: boolean;
+  showStepperButtons?: boolean;
 }
 
 const QuantityIncrementer = forwardRef<HTMLInputElement, NumberInputProps>(
@@ -76,6 +76,7 @@ const QuantityIncrementer = forwardRef<HTMLInputElement, NumberInputProps>(
       className,
       index,
       preventAutoFocus = false,
+      showStepperButtons = true,
       ...props
     },
     ref,
@@ -142,25 +143,29 @@ const QuantityIncrementer = forwardRef<HTMLInputElement, NumberInputProps>(
     return (
       <div className={cn('relative flex w-min rounded-l', className)}>
         {/* --- Decrement Buttons --- */}
-        <Button
-          type='button'
-          variant='outline'
-          className='rounded-none rounded-l-lg'
-          disabled={value <= 0} // Disable when value is 0 or less
-          onClick={() => handleValueChange(-1)}
-        >
-          {enableSmallIncrements ? '--' : '-'}
-        </Button>
-        {enableSmallIncrements && (
-          <Button
-            type='button'
-            variant='outline'
-            className='rounded-none border-l-0'
-            disabled={value <= 0} // Disable when value is 0 or less
-            onClick={() => handleValueChange(-0.01)}
-          >
-            -
-          </Button>
+        {showStepperButtons && (
+          <>
+            <Button
+              type='button'
+              variant='outline'
+              className='rounded-none rounded-l-lg'
+              disabled={value <= 0}
+              onClick={() => handleValueChange(-1)}
+            >
+              {enableSmallIncrements ? '--' : '-'}
+            </Button>
+            {enableSmallIncrements && (
+              <Button
+                type='button'
+                variant='outline'
+                className='rounded-none border-l-0'
+                disabled={value <= 0}
+                onClick={() => handleValueChange(-0.01)}
+              >
+                -
+              </Button>
+            )}
+          </>
         )}
 
         {/* --- Input Field with Icon --- */}
@@ -178,7 +183,10 @@ const QuantityIncrementer = forwardRef<HTMLInputElement, NumberInputProps>(
             type='text'
             autoFocus={false}
             tabIndex={preventAutoFocus ? -1 : undefined}
-            className='max-w-[100px] min-w-[55px] rounded-none border-x-0 text-center font-medium'
+            className={cn(
+              'max-w-[100px] min-w-[55px] text-center font-medium',
+              showStepperButtons ? 'rounded-none border-x-0' : 'rounded-lg',
+            )}
             style={{
               color:
                 value === 0 && IconComponent && !isInputFocused
@@ -196,26 +204,30 @@ const QuantityIncrementer = forwardRef<HTMLInputElement, NumberInputProps>(
         </div>
 
         {/* --- Increment Buttons --- */}
-        {enableSmallIncrements && (
-          <Button
-            type='button'
-            variant='outline'
-            className='rounded-none border-r-0'
-            disabled={!!maxValue && value >= maxValue}
-            onClick={() => handleValueChange(0.01)}
-          >
-            +
-          </Button>
+        {showStepperButtons && (
+          <>
+            {enableSmallIncrements && (
+              <Button
+                type='button'
+                variant='outline'
+                className='rounded-none border-r-0'
+                disabled={!!maxValue && value >= maxValue}
+                onClick={() => handleValueChange(0.01)}
+              >
+                +
+              </Button>
+            )}
+            <Button
+              type='button'
+              variant='outline'
+              className='rounded-none rounded-r-lg'
+              disabled={!!maxValue && value >= maxValue}
+              onClick={() => handleValueChange(1)}
+            >
+              {enableSmallIncrements ? '++' : '+'}
+            </Button>
+          </>
         )}
-        <Button
-          type='button'
-          variant='outline'
-          className='rounded-none rounded-r-lg'
-          disabled={!!maxValue && value >= maxValue}
-          onClick={() => handleValueChange(1)}
-        >
-          {enableSmallIncrements ? '++' : '+'}
-        </Button>
       </div>
     );
   },
@@ -223,71 +235,3 @@ const QuantityIncrementer = forwardRef<HTMLInputElement, NumberInputProps>(
 QuantityIncrementer.displayName = 'QuantityIncrementer';
 
 export { QuantityIncrementer };
-
-// --------------------------------------------------
-
-function isDate(value: unknown): value is Date {
-  return value instanceof Date && !isNaN(value.getTime());
-}
-
-export function DaysToDateAdapter({
-  value,
-  onChange,
-  ...props
-}: {
-  value: Date | null;
-  onChange: (value: Date | null) => void;
-  name?: string;
-  maxValue?: number;
-  enableSmallIncrements?: boolean;
-  iconWhenZero?: LucideIcon;
-  inputWidth?: number;
-  className?: string;
-}) {
-  const today = startOfToday();
-
-  // --- Step 1: Derive the UI value directly from props during render ---
-  // This is a pure calculation, no state or effects needed here.
-  const valueInDays = isDate(value)
-    ? Math.max(0, differenceInCalendarDays(value, today))
-    : 0;
-
-  // --- Step 2: Handle the side effect of cleaning up invalid initial props ---
-  // This effect runs only if the `value` prop is invalid.
-  useEffect(() => {
-    if (isDate(value)) {
-      // If the date is in the past...
-      if (differenceInCalendarDays(value, today) < 0) {
-        // ...tell the parent to set it to null.
-        onChange(null);
-      }
-    } else if (value !== null) {
-      // If the value is not a Date but also not null (e.g., undefined),
-      // normalize it to null.
-      onChange(null);
-    }
-    // This effect only runs when the `value` prop from the parent changes.
-  }, [value, today, onChange]);
-
-  // --- Step 3: Create the callback for the UI component ---
-  // This translates the number from the UI back to a Date for the parent.
-  const handleDaysChange = (days: number) => {
-    // If days is 0, set form value to null
-    if (days === 0) {
-      onChange(null);
-    } else {
-      // Otherwise, convert the number of days back to a Date.
-      const newDate = addDays(today, days);
-      onChange(newDate);
-    }
-  };
-
-  return (
-    <QuantityIncrementer
-      value={valueInDays}
-      onChange={handleDaysChange}
-      min={0}
-      {...props}
-    />
-  );
-}
