@@ -1,3 +1,4 @@
+import { isValidPhoneNumber } from 'libphonenumber-js';
 import z from 'zod';
 
 const MAX_FILE_SIZE = 3000000;
@@ -15,6 +16,13 @@ export const userProfileSchema = z.object({
     .trim()
     .refine((data) => data.length > 0, {
       message: 'Standortkoordinaten erforderlich',
+    }),
+  phone: z
+    .string()
+    .optional()
+    .nullable()
+    .refine((value) => !value || isValidPhoneNumber(value), {
+      message: 'Bitte gib eine gültige Telefonnummer ein.',
     }),
   isAnonymous: z.boolean(),
   avatar: z

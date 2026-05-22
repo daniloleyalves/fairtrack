@@ -10,6 +10,7 @@ import {
   FormMessage,
 } from '@components/ui/form';
 import { Input } from '@components/ui/input';
+import { PhoneInput } from '@components/ui/phone-input';
 import { cn, extractImageKeyword } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, X } from 'lucide-react';
@@ -150,6 +151,25 @@ export default function UserProfileForm({
                       {...field}
                       placeholder='Enter your last name'
                       disabled={isMutating}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='phone'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Telefon</FormLabel>
+                  <FormControl>
+                    <PhoneInput
+                      value={field.value ?? ''}
+                      onChange={(v) => field.onChange(v || null)}
+                      disabled={isMutating}
+                      aria-invalid={!!form.formState.errors.phone}
                     />
                   </FormControl>
                   <FormMessage />

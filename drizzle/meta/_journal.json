@@ -267,6 +267,20 @@
       "when": 1771430164265,
       "tag": "0037_shocking_prodigy",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1779465213117,
+      "tag": "0038_clear_pet_avengers",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1779465781726,
+      "tag": "0039_conscious_klaw",
+      "breakpoints": true
     }
   ]
 }
