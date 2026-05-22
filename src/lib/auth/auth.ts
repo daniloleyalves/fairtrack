@@ -88,42 +88,15 @@ export const auth = betterAuth({
     },
     account: {
       update: {
-        after: async (_account, ctx) => {
-          const body = ctx?.body as { token: string; newPassword?: string };
-          const verificationEntry = await db.query.verification.findFirst({
-            where: (verification, { eq }) =>
-              eq(verification.identifier, `reset-password:${body.token}`),
-          });
-
-          if (!verificationEntry) {
-            console.error('Could not find verification entry');
-            return;
-          }
-
-          const user = await db.query.user.findFirst({
-            where: (user, { eq }) => eq(user.id, verificationEntry.value),
-          });
-
-          if (!user) {
-            console.error('Could not find user');
-            return;
-          }
-
-          // Check if password field was updated in the account
-          // This happens during password reset or password change operations
-          const hasPasswordUpdate =
-            body && 'newPassword' in (body as Record<string, unknown>);
-
-          if (hasPasswordUpdate) {
-            try {
-              await updateUserSecureStatus(user.id, true);
-              console.log(
-                `User ${user.name} marked as secure after password update`,
-              );
-            } catch (error) {
-              console.error('Failed to update user secure status:', error);
-              // Don't throw here to avoid breaking the password update flow
-            }
+        after: async (account, ctx) => {
+          // Catches /change-password (reset is handled via onPasswordReset below,
+          // which gives us the user without a verification-table lookup).
+          const body = ctx?.body as { newPassword?: string } | undefined;
+          if (!body?.newPassword) return;
+          try {
+            await updateUserSecureStatus(account.userId, true);
+          } catch (error) {
+            console.error('Failed to update user secure status:', error);
           }
         },
       },
@@ -219,6 +192,13 @@ export const auth = betterAuth({
       verify: async ({ hash, password }) => {
         return await bcrypt.compare(password, hash);
       },
+    },
+    onPasswordReset: async ({ user }) => {
+      try {
+        await updateUserSecureStatus(user.id, true);
+      } catch (error) {
+        console.error('Failed to update user secure status:', error);
+      }
     },
     sendResetPassword: async ({ user, url }) => {
       if (
