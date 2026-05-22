@@ -281,6 +281,13 @@
       "when": 1779465781726,
       "tag": "0039_conscious_klaw",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1779468896646,
+      "tag": "0040_clear_bcrypt_hashes",
+      "breakpoints": true
     }
   ]
 }
