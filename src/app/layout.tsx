@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { Geist, Londrina_Solid } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth/auth-provider';
+import { QueryProvider } from '@/lib/providers/query-provider';
 import NavigationLoadingIndicator from '@components/navigation-loading-indicator';
 import { DemoBanner } from '@components/demo-banner';
 import { Suspense } from 'react';
@@ -65,7 +66,9 @@ export default function RootLayout({
         <Suspense>
           {/* <AuthErrorBoundary> */}
           <AuthProvider>
-            <ErrorBoundary>{children}</ErrorBoundary>
+            <QueryProvider>
+              <ErrorBoundary>{children}</ErrorBoundary>
+            </QueryProvider>
           </AuthProvider>
           {/* </AuthErrorBoundary> */}
         </Suspense>
