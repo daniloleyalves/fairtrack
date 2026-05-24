@@ -4,7 +4,7 @@ import {
   getRecentCheckinsWithinLastMinute,
   getContributions,
   getVersionHistoryByCheckinId,
-} from '../dto';
+} from '../contribution/dto';
 import {
   getFairteilers,
   getActiveFairteiler,
@@ -18,7 +18,7 @@ import {
   getFairteilerDashboardData,
 } from '../fairteiler/dto';
 import { getSession } from '../user/dto';
-import * as dal from '../dal';
+import * as dal from '../contribution/dal';
 import * as fairteilerDal from '../fairteiler/dal';
 import * as userDal from '../user/dal';
 import {
@@ -35,7 +35,7 @@ import {
 import { NotFoundError } from '../error-handling';
 
 // Mock all DAL functions
-vi.mock('../dal', () => ({
+vi.mock('../contribution/dal', () => ({
   loadContributions: vi.fn(),
   loadContributionVersionHistory: vi.fn(),
   loadCheckinsWithinTimeframe: vi.fn(),

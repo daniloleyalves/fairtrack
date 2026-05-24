@@ -19,7 +19,7 @@ import {
   loadLeaderboard,
   loadOriginDistribution,
   loadRecentContributions,
-} from '../dal';
+} from '../contribution/dal';
 import { loadAuthenticatedSession } from '../user/dal';
 import { loadFairteilerTutorialWithSteps } from '../tutorial/dal';
 import { MemberRoles } from '@/lib/auth/auth-permissions';

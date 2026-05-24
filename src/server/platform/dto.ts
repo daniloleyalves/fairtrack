@@ -3,7 +3,7 @@ import {
   loadCategoryDistribution,
   loadKeyFigures,
   loadOriginDistribution,
-} from '../dal';
+} from '../contribution/dal';
 import { loadFairteilers } from '../fairteiler/dal';
 import { initialContributionQuantity } from '@/lib/config/site-config';
 import { formatNumber } from '@/lib/utils';

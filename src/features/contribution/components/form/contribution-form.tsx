@@ -1,7 +1,7 @@
 'use client';
 
 import { Form } from '@components/ui/form';
-import { submitContributionAction } from '@server/actions';
+import { submitContributionAction } from '@server/contribution/actions';
 import {
   contributionFormSchema,
   ContributionFormValues,

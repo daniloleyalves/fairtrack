@@ -14,7 +14,7 @@ import { DateRange } from 'react-day-picker';
 import { attempt } from '@/lib/attempt';
 import { defaultDateRange } from '@/lib/config/site-config';
 import type { ContributionItem } from '@features/contribution/models/contribution';
-import { db } from './db/drizzle';
+import { db } from '../db/drizzle';
 import {
   checkin,
   contributionVersionHistory,
@@ -23,14 +23,12 @@ import {
   invitation,
   user,
   vContributions,
-} from './db/schema';
+} from '../db/schema';
 import {
   handleDatabaseError,
   NotFoundError,
   ValidationError,
-} from './error-handling';
-
-// --- 6. Contribution and Checkin Logic ---
+} from '../error-handling';
 
 /**
  * IMPORTANT: This function is NOT ATOMIC. It performs multiple database
@@ -41,7 +39,7 @@ import {
  *
  * The ideal solution is to wrap these operations in a database transaction
  * (`db.transaction(...)`). Since that is not available in the current
-- * setup, be aware of this potential data integrity issue.
+ * setup, be aware of this potential data integrity issue.
  */
 export async function checkinContribution(
   fairteilerId: string,
@@ -102,8 +100,6 @@ export async function loadCheckinsWithinTimeframe(
   if (error) handleDatabaseError(error, 'loadCheckinsWithinTimeframe');
   return data;
 }
-
-// -------- FAIRTEILER DASHBOARD DATA ----------
 
 export async function loadKeyFigures(
   fairteilerId?: string,
@@ -286,7 +282,6 @@ export async function loadContributions({
     ? baseQuery.where(and(...conditions))
     : baseQuery;
 
-  // Apply pagination
   const finalQuery = (() => {
     if (offset != null && limit != null)
       return queryWithConditions.offset(offset).limit(limit);
@@ -294,13 +289,11 @@ export async function loadContributions({
     return queryWithConditions;
   })();
 
-  // Count query
   const countQuery = db.select({ count: count() }).from(vContributions);
   const countQueryWithConditions = conditions.length
     ? countQuery.where(and(...conditions))
     : countQuery;
 
-  // Execute both queries in parallel
   const [error, result] = await attempt(
     Promise.all([finalQuery, countQueryWithConditions]),
   );
@@ -357,7 +350,6 @@ export async function addVersionHistoryRecord(
 
   const [error] = await attempt(
     Promise.all([
-      // 1. Insert the history record
       db.insert(contributionVersionHistory).values({
         checkinId: payload.checkinId,
         userId: userId,
@@ -366,7 +358,6 @@ export async function addVersionHistoryRecord(
         newValue: payload.newValue,
         field: payload.field,
       }),
-      // 2. Update the field in the checkin table
       db
         .update(checkin)
         .set({
@@ -381,12 +372,9 @@ export async function addVersionHistoryRecord(
   }
 }
 
-// --- 7. Invitation Management ---
-
 export async function checkInvitationAndUser(invitationId: string) {
   const [error, data] = await attempt(
     (async () => {
-      // Load invitation details with organization info
       const invitationData = await db.query.invitation.findFirst({
         where: eq(invitation.id, invitationId),
       });
@@ -395,22 +383,18 @@ export async function checkInvitationAndUser(invitationId: string) {
         throw new NotFoundError('Invitation not found');
       }
 
-      // Check if invitation is expired
       if (invitationData.expiresAt < new Date()) {
         throw new ValidationError('Invitation has expired');
       }
 
-      // Check if invitation is still pending
       if (invitationData.status !== 'pending') {
         throw new ValidationError('Invitation is no longer valid');
       }
 
-      // Load organization details
       const organizationData = await db.query.fairteiler.findFirst({
         where: eq(fairteiler.id, invitationData.organizationId),
       });
 
-      // Check if user exists with the invitation email
       const existingUser = await db.query.user.findFirst({
         where: eq(user.email, invitationData.email),
       });

@@ -2,7 +2,7 @@
 
 import { headers } from 'next/headers';
 import z, { ZodError } from 'zod';
-import { checkInvitationAndUser } from '@server/dal';
+import { checkInvitationAndUser } from '@server/contribution/dal';
 import {
   toggleFairteilerVisibility,
   updateFairteiler,

@@ -4,7 +4,7 @@ import {
   submitContributionAction,
   editContributionAction,
   exportContributionsAction,
-} from '../actions';
+} from '../contribution/actions';
 import {
   suggestNewOriginAction,
   addFairteilerOriginAction,
@@ -16,7 +16,7 @@ import {
   addFairteilerCompanyAction,
   removeFairteilerCompanyAction,
 } from '../fairteiler/actions';
-import * as dal from '../dal';
+import * as dal from '../contribution/dal';
 import * as fairteilerDal from '../fairteiler/dal';
 import { NotFoundError, ValidationError } from '../error-handling';
 import { AuthError } from '../api-helpers';
@@ -38,7 +38,7 @@ vi.mock('@lib/auth/auth', () => ({
 }));
 
 // Mock all DAL functions
-vi.mock('../dal', () => ({
+vi.mock('../contribution/dal', () => ({
   checkinContribution: vi.fn(),
   addVersionHistoryRecord: vi.fn(),
   loadContributions: vi.fn(),

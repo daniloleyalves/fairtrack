@@ -1,5 +1,5 @@
 import { createApiRoute } from '@server/api-helpers';
-import { getVersionHistoryByCheckinId } from '@server/dto';
+import { getVersionHistoryByCheckinId } from '@server/contribution/dto';
 
 /**
  * Handles GET request to the /api/fairteiler/contribution-version-history route.
