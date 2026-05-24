@@ -23,6 +23,10 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 ### Added
 
 - TanStack Query + `next-safe-action` foundation (refactor Phase 1): `QueryClient` factory in `src/lib/query-client.ts`, client-side `QueryProvider` mounted in the root layout, and a `next-safe-action` client (`action` + `authedAction`) in `src/server/_lib/safe-action.ts`. SWR remains active alongside; no call sites migrated yet.
+
+### Changed
+
+- Refactor Phase 2 (slice 1/5 — tutorial): tutorial DAL/DTO/actions moved from the server monoliths into `src/server/tutorial/`. Mechanical split; no behavior change. The remaining 4 slices (platform, user, fairteiler, contribution) follow.
 - `PhoneInput` component (shadcn `input-group` + `Command`/`Popover` country picker, `libphonenumber-js`, German country names via `Intl.DisplayNames`); wired into the user profile form with `isValidPhoneNumber` validation. Phone is stored in E.164 format.
 - `QuantityIncrementer` gained `showStepperButtons?: boolean` (default `true`). Passed `false` in the fast-mode contribution list; wizard quantity modal keeps the +/- buttons.
 
