@@ -51,10 +51,7 @@ export const addFairteilerTutorialAction = createAction({
       throw new Error('Failed to create tutorial');
     }
 
-    return {
-      message: 'Tutorial erfolgreich erstellt!',
-      data: result,
-    };
+    return result;
   },
 });
 
@@ -93,10 +90,7 @@ export const updateFairteilerTutorialAction = createAction({
       throw new Error('Failed to update tutorial');
     }
 
-    return {
-      message: 'Tutorial erfolgreich aktualisiert!',
-      data: result,
-    };
+    return result;
   },
 });
 
@@ -125,10 +119,7 @@ export const removeFairteilerTutorialAction = createAction({
       throw new Error('Failed to delete tutorial');
     }
 
-    return {
-      message: 'Tutorial erfolgreich gelöscht!',
-      data: result,
-    };
+    return result;
   },
 });
 
@@ -351,9 +342,6 @@ export const removeFairteilerTutorialStepAction = createAction({
       throw new Error('Failed to delete tutorial');
     }
 
-    return {
-      message: 'Tutorial erfolgreich gelöscht!',
-      data: result,
-    };
+    return result;
   },
 });

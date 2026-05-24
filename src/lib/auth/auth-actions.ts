@@ -36,11 +36,8 @@ export const signOutAction = createAction({
     await auth.api.signOut({ headers });
 
     return {
-      message: 'Erfolgreich abgemeldet.',
-      data: {
-        redirectTo: '/sign-in',
-        shouldRefresh: true,
-      },
+      redirectTo: '/sign-in',
+      shouldRefresh: true,
     };
   },
 });
@@ -151,10 +148,7 @@ export const toggleFairteilerDisabled = createAction({
       throw new NotFoundError('Toggle of Fairteiler visibility failed');
     }
 
-    return {
-      message: 'Visibility of Fairteiler changed successfully',
-      data: result,
-    };
+    return result;
   },
 });
 
@@ -263,10 +257,7 @@ export const checkInvitationAndUserAction = createAction({
       throw new NotFoundError('Invitation data');
     }
 
-    return {
-      message: 'Invitation details retrieved successfully',
-      data: result,
-    };
+    return result;
   },
 });
 
@@ -316,10 +307,7 @@ export const addAccessViewAction = createAction({
         body: { userId: newUserId, organizationId: fairteiler.id, role },
       });
 
-      return {
-        message: 'Zugangsprofil erfolgreich erstellt!',
-        data: { email, password },
-      };
+      return { email, password };
     } catch (error) {
       if (newUserId) {
         console.warn(`Attempting to clean up orphaned user: ${newUserId}`);
@@ -348,7 +336,6 @@ export const removeMemberAction = createAction({
         memberIdOrEmail: input.email,
       },
     });
-    return { message: `Mitglied ${input.email} wurde erfolgreich entfernt.` };
   },
 });
 
@@ -367,7 +354,6 @@ export const updateMemberRoleAction = createAction({
         body: { role: 'admin', userId: input.userId },
       });
     }
-    return { message: 'Rolle erfolgreich aktualisiert.' };
   },
 });
 
@@ -378,7 +364,6 @@ export const inviteMemberAction = createAction({
       headers,
       body: { email: input.email, role: input.role, resend: true },
     });
-    return { message: `Einladung erfolgreich an ${input.email} gesendet!` };
   },
 });
 
@@ -390,15 +375,10 @@ export const disableAccessViewAction = createAction({
       headers,
       body: { userId: input.userId, banReason: 'DISABLED ACCESS VIEW' },
     });
-    const result = await auth.api.updateMemberRole({
+    return await auth.api.updateMemberRole({
       headers,
       body: { memberId: input.memberId, role: MemberRolesEnum.DISABLED },
     });
-    return {
-      success: true,
-      message: 'Zugang erfolgreich deaktiviert.',
-      data: result,
-    };
   },
 });
 
@@ -414,21 +394,13 @@ interface TokenValidationResult {
 
 export const validateResetPasswordTokenAction = createAction({
   inputSchema: validateResetTokenSchema,
-  handler: async ({
-    input,
-  }): Promise<{ message: string; data: TokenValidationResult }> => {
+  handler: async ({ input }): Promise<TokenValidationResult> => {
     const result = await validateResetPasswordToken(input.token);
     if (!result) {
-      return {
-        message: 'Token validation completed',
-        data: { isValid: false, reason: 'invalid_or_expired' },
-      };
+      return { isValid: false, reason: 'invalid_or_expired' };
     }
 
-    return {
-      message: 'Token validation completed',
-      data: { isValid: true },
-    };
+    return { isValid: true };
   },
 });
 
@@ -444,24 +416,16 @@ interface UserSecureStatusResult {
 
 export const checkUserSecureStatusAction = createAction({
   inputSchema: checkUserSecureStatusSchema,
-  handler: async ({
-    input,
-  }): Promise<{ message: string; data: UserSecureStatusResult }> => {
+  handler: async ({ input }): Promise<UserSecureStatusResult> => {
     const result = await loadUserByEmail(input.email);
 
     if (!result) {
-      return {
-        message: 'User check completed',
-        data: { userExists: false },
-      };
+      return { userExists: false };
     }
 
     return {
-      message: 'User check completed',
-      data: {
-        userExists: true,
-        isSecure: result.secure,
-      },
+      userExists: true,
+      isSecure: result.secure,
     };
   },
 });

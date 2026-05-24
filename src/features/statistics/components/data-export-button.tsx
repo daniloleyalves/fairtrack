@@ -30,17 +30,12 @@ export function ExportButton({ filters, scope, className }: ExportButtonProps) {
           ? { from: filters.dateRange.from, to: filters.dateRange.to }
           : undefined;
 
-      const result = await exportContributionsAction({
+      const data = await exportContributionsAction({
         dateRange,
         scope,
       });
 
-      if (!result.success) {
-        toast.error(result.error);
-        return;
-      }
-
-      if (!result.data?.length) {
+      if (!data.length) {
         const errorMessage =
           scope === 'fairteiler'
             ? 'Keine Fairteiler-Daten zum Exportieren gefunden'
@@ -50,10 +45,10 @@ export function ExportButton({ filters, scope, className }: ExportButtonProps) {
       }
 
       const fairteilerName =
-        scope === 'fairteiler' ? result.data[0].fairteilerName : undefined;
+        scope === 'fairteiler' ? data[0].fairteilerName : undefined;
 
       const buffer = await exportContributionsToExcel({
-        data: result.data,
+        data,
         fairteilerName,
       });
 

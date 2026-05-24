@@ -130,13 +130,8 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     {
       revalidate: false,
       rollbackOnError: true,
-      onSuccess: (result) => {
-        if (result.success && result.data) {
-          toast.success(result.message ?? 'Anleitung erfolgreich erstellt!');
-        }
-        if (!result.success && result.error) {
-          toast.error(result.error);
-        }
+      onSuccess: () => {
+        toast.success('Anleitung erfolgreich erstellt!');
       },
       onError: (err) => {
         const message =
@@ -153,15 +148,8 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     {
       revalidate: false,
       rollbackOnError: true,
-      onSuccess: (result) => {
-        if (result.success && result.data) {
-          toast.success(
-            result.message ?? 'Anleitung erfolgreich aktualisiert!',
-          );
-        }
-        if (!result.success && result.error) {
-          toast.error(result.error);
-        }
+      onSuccess: () => {
+        toast.success('Anleitung erfolgreich aktualisiert!');
       },
       onError: (err) => {
         const message =
@@ -178,13 +166,8 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     {
       revalidate: false,
       rollbackOnError: true,
-      onSuccess: (result) => {
-        if (result.success && result.data) {
-          toast.success(result.message ?? 'Anleitung erfolgreich gelöscht!');
-        }
-        if (!result.success && result.error) {
-          toast.error(result.error);
-        }
+      onSuccess: () => {
+        toast.success('Anleitung erfolgreich gelöscht!');
       },
       onError: (err) => {
         const message =
@@ -254,13 +237,8 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     {
       revalidate: true,
       rollbackOnError: true,
-      onSuccess: (result) => {
-        if (result.success && result.data) {
-          toast.success(result.message ?? 'Schritt erfolgreich gelöscht!');
-        }
-        if (!result.success && result.error) {
-          toast.error(result.error);
-        }
+      onSuccess: () => {
+        toast.success('Schritt erfolgreich gelöscht!');
       },
       onError: (err) => {
         const message =
