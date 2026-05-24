@@ -12,7 +12,7 @@ import {
   loadUserByEmail,
   validateResetPasswordToken,
 } from '@server/user/dal';
-import { getActiveFairteiler } from '@server/fairteiler/dto';
+import { getActiveFairteiler } from '@server/fairteiler/queries';
 import { auth, checkPermissionOnServer } from './auth';
 import { generatePassword, getErrorMessage } from './auth-helpers';
 import { MemberRolesEnum } from './auth-permissions';

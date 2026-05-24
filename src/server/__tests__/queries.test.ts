@@ -4,7 +4,7 @@ import {
   getRecentCheckinsWithinLastMinute,
   getContributions,
   getVersionHistoryByCheckinId,
-} from '../contribution/dto';
+} from '../contribution/queries';
 import {
   getFairteilers,
   getActiveFairteiler,
@@ -16,8 +16,8 @@ import {
   getCompanies,
   getCompaniesByFairteiler,
   getFairteilerDashboardData,
-} from '../fairteiler/dto';
-import { getSession } from '../user/dto';
+} from '../fairteiler/queries';
+import { getSession } from '../user/queries';
 import * as dal from '../contribution/dal';
 import * as fairteilerDal from '../fairteiler/dal';
 import * as userDal from '../user/dal';

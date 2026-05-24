@@ -1,4 +1,5 @@
-import 'server-only';
+'use server';
+
 import {
   addMilestoneEvent,
   loadAuthenticatedSession,
@@ -17,15 +18,11 @@ import {
 import { loadStepFlowProgress } from '../tutorial/dal';
 import { AuthError } from '../api-helpers';
 import { NotFoundError } from '../error-handling';
-import {
-  ExperienceLevel,
-  StepFlowProgress,
-  UserPreferences,
-} from '../db/db-types';
+import { UserPreferences } from '../db/db-types';
+import { OnboardingData } from './types';
 import { transformMilestoneData } from '@/features/user/gamification/milestones/milestone-utils';
 import { calculateUserAllTimeStreaks } from '@/features/user/gamification/streaks/streak-processor';
 import { gamificationElements } from '@/features/user/gamification/gamification-config';
-import { GamificationElement } from '@/features/user/onboarding/onboarding-flow-types';
 import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
 
 export async function getSession(
@@ -191,17 +188,6 @@ export async function getUserDashboardData(headers: Headers) {
     calendarData: formattedCalendarData,
     milestoneData: transformedMilestoneData,
   };
-}
-
-export interface OnboardingData {
-  user: {
-    id: string;
-    isFirstLogin: boolean;
-  };
-  experienceLevels: ExperienceLevel[];
-  gamificationElements: GamificationElement[];
-  userPreferences: UserPreferences | null | undefined;
-  stepFlowProgress: StepFlowProgress | null | undefined;
 }
 
 /**

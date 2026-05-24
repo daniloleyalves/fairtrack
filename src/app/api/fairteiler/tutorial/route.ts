@@ -1,4 +1,4 @@
-import { getFairteilerTutorialWithSteps } from '@/server/tutorial/dto';
+import { getFairteilerTutorialWithSteps } from '@/server/tutorial/queries';
 import { createApiRoute } from '@server/api-helpers';
 
 /**

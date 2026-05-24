@@ -1,9 +1,9 @@
-import { getFairteilerBySlug } from '@/server/fairteiler/dto';
-import { getUserPreferences } from '@/server/user/dto';
+import { getFairteilerBySlug } from '@/server/fairteiler/queries';
+import { getUserPreferences } from '@/server/user/queries';
 import {
   getFairteilerTutorialWithSteps,
   getContributionTutorialProgress,
-} from '@/server/tutorial/dto';
+} from '@/server/tutorial/queries';
 import { notFound } from 'next/navigation';
 import { ContributionProvider } from '@/features/contribution/context/contribution-context';
 import { ContributionHeader } from '@/features/contribution/components/contribution-header';

@@ -1,5 +1,5 @@
 import { headers } from 'next/headers';
-import { getSession } from '@server/user/dto';
+import { getSession } from '@server/user/queries';
 
 export async function AuthProvider({ children }: React.ComponentProps<'div'>) {
   // Auth Provider calls session and user data by default and caches it.
