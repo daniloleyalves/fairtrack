@@ -1,6 +1,7 @@
 'use server';
 
 import { z } from 'zod';
+import { revalidatePath } from 'next/cache';
 import {
   addVersionHistoryRecord,
   checkinContribution,
@@ -24,7 +25,6 @@ import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
 
 export const submitContributionAction = createAction({
   inputSchema: contributionFormSchema,
-  revalidate: '/hub',
   handler: async ({ input, headers }) => {
     const session = await loadAuthenticatedSession(headers);
     if (!session) {
@@ -75,11 +75,9 @@ export const submitContributionAction = createAction({
       successRedirect = url.pathname + url.search;
     }
 
-    return {
-      message: 'Lebensmittel erfolgreich beigetragen!',
-      data: { redirectTo: successRedirect },
-      revalidatePaths,
-    };
+    revalidatePaths.forEach((path) => revalidatePath(path));
+
+    return { redirectTo: successRedirect };
   },
 });
 
@@ -95,10 +93,7 @@ export const editContributionAction = createAction({
 
     await addVersionHistoryRecord(fairteilerId, session.user.id, input);
 
-    return {
-      message: 'Beitrag erfolgreich bearbeitet.',
-      data: input,
-    };
+    return input;
   },
 });
 
@@ -153,14 +148,7 @@ export const exportContributionsAction = createAction({
     });
 
     const typecheckedData = anonymizedData satisfies vContribution[];
-    const message =
-      input.scope === 'fairteiler'
-        ? 'Fairteiler-Daten erfolgreich exportiert.'
-        : 'Plattform-Daten erfolgreich exportiert.';
 
-    return {
-      message,
-      data: typecheckedData,
-    };
+    return typecheckedData;
   },
 });

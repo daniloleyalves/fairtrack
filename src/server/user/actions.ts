@@ -43,11 +43,6 @@ export const saveOnboardingProgressAction = createAction({
       ...input,
       userId: session.user.id,
     });
-
-    return {
-      message: 'Onboarding-Vortschritt gespeichert',
-      data: null,
-    };
   },
 });
 
@@ -118,14 +113,11 @@ export const completeOnboardingAction = createAction({
     await updateFirstLogin(userId, false);
     await loadAuthenticatedSession(headers, true);
     return {
-      message: 'Onboarding erfolgreich!',
-      data: {
-        userId,
-        savedLevel,
-        savedPreferences,
-        onboardingCompleted: true,
-        redirectTo: '/hub/user/dashboard',
-      },
+      userId,
+      savedLevel,
+      savedPreferences,
+      onboardingCompleted: true,
+      redirectTo: '/hub/user/dashboard',
     };
   },
 });
@@ -142,11 +134,6 @@ export const saveContributionTutorialProgressAction = createAction({
       ...input,
       userId: session.user.id,
     });
-
-    return {
-      message: 'Anleitung-Vortschritt gespeichert',
-      data: null,
-    };
   },
 });
 
@@ -171,12 +158,7 @@ export const updateUserPreferencesAction = createAction({
       throw new ValidationError('Keine Einträge gefunden.');
     }
 
-    const result = await updateUserPreferences(userId, input);
-
-    return {
-      message: 'Platformerlebnis erfolgreich aktualisiert!',
-      data: result,
-    };
+    return await updateUserPreferences(userId, input);
   },
 });
 
@@ -226,9 +208,6 @@ export const submitFeedbackAction = createAction({
       console.error('Error sending feedback notification email:', error);
     }
 
-    return {
-      message: 'Feedback erfolgreich gesendet!',
-      data: result,
-    };
+    return result;
   },
 });

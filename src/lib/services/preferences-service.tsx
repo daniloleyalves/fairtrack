@@ -84,15 +84,11 @@ export function UserPreferencesProvider({
     {
       rollbackOnError: true,
       revalidate: false,
-      onSuccess: (result) => {
+      onSuccess: () => {
         const suppressToast = lastUpdatedKeyRef.current === 'formTableView';
         lastUpdatedKeyRef.current = null;
         if (suppressToast) return;
-        if (result.success && result.message) {
-          toast.success(
-            result.message ?? 'Platformerlebnis erfolgreich aktualisiert!',
-          );
-        }
+        toast.success('Platformerlebnis erfolgreich aktualisiert!');
       },
       onError: (err) => {
         lastUpdatedKeyRef.current = null;

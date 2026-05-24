@@ -65,9 +65,9 @@ export function ContributionForm({
 
     startTransition(() => {
       handleAsyncAction(() => submitContributionAction(submissionData), form, {
-        showToast: true,
+        successMessage: 'Lebensmittel erfolgreich beigetragen!',
         setFormError: true,
-        onSuccess: (result) => {
+        onSuccess: (data) => {
           // Use configured cache keys or defaults
           const cacheKeys = config?.cacheKeys ?? [
             FAIRTEILER_DASHBOARD_KEY,
@@ -75,8 +75,8 @@ export function ContributionForm({
           ];
           cacheKeys.forEach((key) => mutate(key));
 
-          if (result.data?.redirectTo) {
-            router.push(result.data.redirectTo);
+          if (data?.redirectTo) {
+            router.push(data.redirectTo);
           }
         },
       });

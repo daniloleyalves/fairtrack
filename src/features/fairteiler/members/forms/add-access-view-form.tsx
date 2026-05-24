@@ -59,10 +59,8 @@ export function AddAccessViewForm({
       handleAsyncAction(() => addAccessViewAction(values), form, {
         showToast: false,
         setFormError: false,
-        onSuccess: async (result) => {
-          if (result.data) {
-            setCredentials(result.data);
-          }
+        onSuccess: async (data) => {
+          setCredentials(data);
           setFormSubmitted(true);
           await mutate(ACTIVE_FAIRTEILER_KEY);
         },

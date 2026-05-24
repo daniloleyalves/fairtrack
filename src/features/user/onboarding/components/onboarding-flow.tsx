@@ -81,10 +81,10 @@ export function OnboardingFlow({
         () => completeOnboardingAction(allStepData),
         undefined,
         {
-          showToast: true,
-          onSuccess: (result) => {
-            if (result.data?.redirectTo) {
-              router.push(result.data?.redirectTo);
+          successMessage: 'Onboarding erfolgreich!',
+          onSuccess: (data) => {
+            if (data?.redirectTo) {
+              router.push(data.redirectTo);
             }
           },
         },
