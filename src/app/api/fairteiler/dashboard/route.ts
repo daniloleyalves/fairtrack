@@ -1,5 +1,5 @@
 import { createApiRoute } from '@server/api-helpers';
-import { getFairteilerDashboardData } from '@server/dto';
+import { getFairteilerDashboardData } from '@server/fairteiler/dto';
 
 /**
  * Handles GET requests to the /api/fairteiler/dashboard route.

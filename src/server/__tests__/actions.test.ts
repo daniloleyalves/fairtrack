@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { headers } from 'next/headers';
 import {
+  submitContributionAction,
+  editContributionAction,
+  exportContributionsAction,
+} from '../actions';
+import {
   suggestNewOriginAction,
   addFairteilerOriginAction,
   removeFairteilerOriginAction,
@@ -10,11 +15,9 @@ import {
   suggestNewCompanyAction,
   addFairteilerCompanyAction,
   removeFairteilerCompanyAction,
-  submitContributionAction,
-  editContributionAction,
-  exportContributionsAction,
-} from '../actions';
+} from '../fairteiler/actions';
 import * as dal from '../dal';
+import * as fairteilerDal from '../fairteiler/dal';
 import { NotFoundError, ValidationError } from '../error-handling';
 import { AuthError } from '../api-helpers';
 import type { GenericItem } from '../db/db-types';
@@ -36,6 +39,13 @@ vi.mock('@lib/auth/auth', () => ({
 
 // Mock all DAL functions
 vi.mock('../dal', () => ({
+  checkinContribution: vi.fn(),
+  addVersionHistoryRecord: vi.fn(),
+  loadContributions: vi.fn(),
+  checkInvitationAndUser: vi.fn(),
+}));
+
+vi.mock('../fairteiler/dal', () => ({
   addOrigin: vi.fn(),
   addFairteilerOrigin: vi.fn(),
   removeFairteilerOrigin: vi.fn(),
@@ -45,10 +55,6 @@ vi.mock('../dal', () => ({
   addCompany: vi.fn(),
   addFairteilerCompany: vi.fn(),
   removeFairteilerCompany: vi.fn(),
-  checkinContribution: vi.fn(),
-  addVersionHistoryRecord: vi.fn(),
-  loadContributions: vi.fn(),
-  checkInvitationAndUser: vi.fn(),
 }));
 
 vi.mock('../user/dal', () => ({
@@ -84,11 +90,11 @@ describe('Server Actions', () => {
   describe('Origin Management Actions', () => {
     describe('suggestNewOriginAction', () => {
       it('should successfully suggest a new origin', async () => {
-        vi.mocked(dal.addOrigin).mockResolvedValue(mockOrigins);
+        vi.mocked(fairteilerDal.addOrigin).mockResolvedValue(mockOrigins);
 
         const result = await suggestNewOriginAction(mockGenericItem);
 
-        expect(dal.addOrigin).toHaveBeenCalledWith(mockGenericItem);
+        expect(fairteilerDal.addOrigin).toHaveBeenCalledWith(mockGenericItem);
         expect(result).toEqual({
           success: true,
           message: 'Herkunft erfolgreich vorgeschlagen.',
@@ -98,7 +104,7 @@ describe('Server Actions', () => {
 
       it('should return error when origin creation fails', async () => {
         (
-          vi.mocked(dal.addOrigin) as ReturnType<typeof vi.fn>
+          vi.mocked(fairteilerDal.addOrigin) as ReturnType<typeof vi.fn>
         ).mockResolvedValue(null);
 
         await expect(suggestNewOriginAction(mockGenericItem)).rejects.toThrow();
@@ -132,13 +138,13 @@ describe('Server Actions', () => {
             originId: 'test-id',
           },
         ];
-        vi.mocked(dal.addFairteilerOrigin).mockResolvedValue(
+        vi.mocked(fairteilerDal.addFairteilerOrigin).mockResolvedValue(
           mockFairteilerOriginResult,
         );
 
         const result = await addFairteilerOriginAction(mockGenericItem);
 
-        expect(dal.addFairteilerOrigin).toHaveBeenCalledWith(
+        expect(fairteilerDal.addFairteilerOrigin).toHaveBeenCalledWith(
           mockFairteiler.id,
           mockGenericItem,
         );
@@ -147,7 +153,9 @@ describe('Server Actions', () => {
 
       it('should throw Error when addition fails', async () => {
         (
-          vi.mocked(dal.addFairteilerOrigin) as ReturnType<typeof vi.fn>
+          vi.mocked(fairteilerDal.addFairteilerOrigin) as ReturnType<
+            typeof vi.fn
+          >
         ).mockResolvedValue(null);
 
         await expect(
@@ -157,7 +165,9 @@ describe('Server Actions', () => {
 
       it('should handle and re-throw DAL errors', async () => {
         const dalError = new Error('Database error');
-        vi.mocked(dal.addFairteilerOrigin).mockRejectedValue(dalError);
+        vi.mocked(fairteilerDal.addFairteilerOrigin).mockRejectedValue(
+          dalError,
+        );
 
         await expect(
           addFairteilerOriginAction(mockGenericItem),
@@ -167,7 +177,7 @@ describe('Server Actions', () => {
 
     describe('removeFairteilerOriginAction', () => {
       it('should successfully remove origin from fairteiler', async () => {
-        vi.mocked(dal.removeFairteilerOrigin).mockResolvedValue([
+        vi.mocked(fairteilerDal.removeFairteilerOrigin).mockResolvedValue([
           {
             id: 'mock-id',
             createdAt: new Date(),
@@ -178,7 +188,7 @@ describe('Server Actions', () => {
 
         const result = await removeFairteilerOriginAction(mockGenericItem);
 
-        expect(dal.removeFairteilerOrigin).toHaveBeenCalledWith(
+        expect(fairteilerDal.removeFairteilerOrigin).toHaveBeenCalledWith(
           mockFairteiler.id,
           mockGenericItem,
         );
@@ -187,7 +197,9 @@ describe('Server Actions', () => {
 
       it('should throw NotFoundError when removal fails', async () => {
         (
-          vi.mocked(dal.removeFairteilerOrigin) as ReturnType<typeof vi.fn>
+          vi.mocked(fairteilerDal.removeFairteilerOrigin) as ReturnType<
+            typeof vi.fn
+          >
         ).mockResolvedValue(null);
 
         await expect(
@@ -200,17 +212,17 @@ describe('Server Actions', () => {
   describe('Category Management Actions', () => {
     describe('suggestNewCategoryAction', () => {
       it('should successfully suggest a new category', async () => {
-        vi.mocked(dal.addCategory).mockResolvedValue(mockCategories);
+        vi.mocked(fairteilerDal.addCategory).mockResolvedValue(mockCategories);
 
         const result = await suggestNewCategoryAction(mockGenericItem);
 
-        expect(dal.addCategory).toHaveBeenCalledWith(mockGenericItem);
+        expect(fairteilerDal.addCategory).toHaveBeenCalledWith(mockGenericItem);
         expect(result.success).toEqual(true);
       });
 
       it('should throw Error when category creation fails', async () => {
         (
-          vi.mocked(dal.addCategory) as ReturnType<typeof vi.fn>
+          vi.mocked(fairteilerDal.addCategory) as ReturnType<typeof vi.fn>
         ).mockResolvedValue(null);
 
         await expect(
@@ -221,7 +233,7 @@ describe('Server Actions', () => {
 
     describe('addFairteilerCategoryAction', () => {
       it('should successfully add category to fairteiler', async () => {
-        vi.mocked(dal.addFairteilerCategory).mockResolvedValue([
+        vi.mocked(fairteilerDal.addFairteilerCategory).mockResolvedValue([
           {
             id: 'mock-id',
             createdAt: new Date(),
@@ -232,7 +244,7 @@ describe('Server Actions', () => {
 
         const result = await addFairteilerCategoryAction(mockGenericItem);
 
-        expect(dal.addFairteilerCategory).toHaveBeenCalledWith(
+        expect(fairteilerDal.addFairteilerCategory).toHaveBeenCalledWith(
           mockFairteiler.id,
           mockGenericItem,
         );
@@ -241,7 +253,9 @@ describe('Server Actions', () => {
 
       it('should throw Error when addition fails', async () => {
         (
-          vi.mocked(dal.addFairteilerCategory) as ReturnType<typeof vi.fn>
+          vi.mocked(fairteilerDal.addFairteilerCategory) as ReturnType<
+            typeof vi.fn
+          >
         ).mockResolvedValue(null);
 
         await expect(
@@ -252,7 +266,7 @@ describe('Server Actions', () => {
 
     describe('removeFairteilerCategoryAction', () => {
       it('should successfully remove category from fairteiler', async () => {
-        vi.mocked(dal.removeFairteilerCategory).mockResolvedValue([
+        vi.mocked(fairteilerDal.removeFairteilerCategory).mockResolvedValue([
           {
             id: 'mock-id',
             createdAt: new Date(),
@@ -263,7 +277,7 @@ describe('Server Actions', () => {
 
         const result = await removeFairteilerCategoryAction(mockGenericItem);
 
-        expect(dal.removeFairteilerCategory).toHaveBeenCalledWith(
+        expect(fairteilerDal.removeFairteilerCategory).toHaveBeenCalledWith(
           mockFairteiler.id,
           mockGenericItem,
         );
@@ -272,7 +286,9 @@ describe('Server Actions', () => {
 
       it('should throw NotFoundError when removal fails', async () => {
         (
-          vi.mocked(dal.removeFairteilerCategory) as ReturnType<typeof vi.fn>
+          vi.mocked(fairteilerDal.removeFairteilerCategory) as ReturnType<
+            typeof vi.fn
+          >
         ).mockResolvedValue(null);
 
         await expect(
@@ -285,11 +301,11 @@ describe('Server Actions', () => {
   describe('Company Management Actions', () => {
     describe('suggestNewCompanyAction', () => {
       it('should successfully suggest a new company', async () => {
-        vi.mocked(dal.addCompany).mockResolvedValue(mockCompanies);
+        vi.mocked(fairteilerDal.addCompany).mockResolvedValue(mockCompanies);
 
         const result = await suggestNewCompanyAction(mockGenericItem);
 
-        expect(dal.addCompany).toHaveBeenCalledWith(
+        expect(fairteilerDal.addCompany).toHaveBeenCalledWith(
           mockFairteiler.id,
           mockGenericItem,
         );
@@ -297,7 +313,7 @@ describe('Server Actions', () => {
       });
 
       it('should throw Error when company creation fails', async () => {
-        vi.mocked(dal.addCompany).mockResolvedValue(null);
+        vi.mocked(fairteilerDal.addCompany).mockResolvedValue(null);
 
         const result = await suggestNewCompanyAction(mockGenericItem);
 
@@ -310,7 +326,7 @@ describe('Server Actions', () => {
 
     describe('addFairteilerCompanyAction', () => {
       it('should successfully add company to fairteiler', async () => {
-        vi.mocked(dal.addFairteilerCompany).mockResolvedValue([
+        vi.mocked(fairteilerDal.addFairteilerCompany).mockResolvedValue([
           {
             id: 'mock-id',
             createdAt: new Date(),
@@ -321,7 +337,7 @@ describe('Server Actions', () => {
 
         const result = await addFairteilerCompanyAction(mockGenericItem);
 
-        expect(dal.addFairteilerCompany).toHaveBeenCalledWith(
+        expect(fairteilerDal.addFairteilerCompany).toHaveBeenCalledWith(
           mockFairteiler.id,
           mockGenericItem,
         );
@@ -330,7 +346,9 @@ describe('Server Actions', () => {
 
       it('should throw Error when addition fails', async () => {
         (
-          vi.mocked(dal.addFairteilerCompany) as ReturnType<typeof vi.fn>
+          vi.mocked(fairteilerDal.addFairteilerCompany) as ReturnType<
+            typeof vi.fn
+          >
         ).mockResolvedValue(null);
 
         await expect(
@@ -341,7 +359,7 @@ describe('Server Actions', () => {
 
     describe('removeFairteilerCompanyAction', () => {
       it('should successfully remove company from fairteiler', async () => {
-        vi.mocked(dal.removeFairteilerCompany).mockResolvedValue([
+        vi.mocked(fairteilerDal.removeFairteilerCompany).mockResolvedValue([
           {
             id: 'mock-id',
             createdAt: new Date(),
@@ -352,7 +370,7 @@ describe('Server Actions', () => {
 
         const result = await removeFairteilerCompanyAction(mockGenericItem);
 
-        expect(dal.removeFairteilerCompany).toHaveBeenCalledWith(
+        expect(fairteilerDal.removeFairteilerCompany).toHaveBeenCalledWith(
           mockFairteiler.id,
           mockGenericItem,
         );
@@ -361,7 +379,9 @@ describe('Server Actions', () => {
 
       it('should throw NotFoundError when removal fails', async () => {
         (
-          vi.mocked(dal.removeFairteilerCompany) as ReturnType<typeof vi.fn>
+          vi.mocked(fairteilerDal.removeFairteilerCompany) as ReturnType<
+            typeof vi.fn
+          >
         ).mockResolvedValue(null);
 
         await expect(
@@ -481,7 +501,7 @@ describe('Server Actions', () => {
     describe('Database Connection Failures', () => {
       it('should handle database errors in origin actions', async () => {
         const dbError = new Error('Database connection lost');
-        vi.mocked(dal.addOrigin).mockRejectedValue(dbError);
+        vi.mocked(fairteilerDal.addOrigin).mockRejectedValue(dbError);
 
         const result = await suggestNewOriginAction(mockGenericItem);
 
@@ -493,7 +513,7 @@ describe('Server Actions', () => {
 
       it('should handle database errors in category actions', async () => {
         const dbError = new Error('Database timeout');
-        vi.mocked(dal.addCategory).mockRejectedValue(dbError);
+        vi.mocked(fairteilerDal.addCategory).mockRejectedValue(dbError);
 
         const result = await suggestNewCategoryAction(mockGenericItem);
 
@@ -505,7 +525,7 @@ describe('Server Actions', () => {
 
       it('should handle database errors in company actions', async () => {
         const dbError = new Error('Connection pool exhausted');
-        vi.mocked(dal.addCompany).mockRejectedValue(dbError);
+        vi.mocked(fairteilerDal.addCompany).mockRejectedValue(dbError);
 
         const result = await suggestNewCompanyAction(mockGenericItem);
 
@@ -737,7 +757,7 @@ describe('Server Actions', () => {
     describe('Multi-step Operations', () => {
       it('should handle sequential origin operations', async () => {
         // First suggest a new origin
-        vi.mocked(dal.addOrigin).mockResolvedValue([
+        vi.mocked(fairteilerDal.addOrigin).mockResolvedValue([
           {
             id: 'new-origin',
             name: 'New Origin',
@@ -757,7 +777,7 @@ describe('Server Actions', () => {
         expect(suggestResult.success).toBe(true);
 
         // Then add it to fairteiler
-        vi.mocked(dal.addFairteilerOrigin).mockResolvedValue([
+        vi.mocked(fairteilerDal.addFairteilerOrigin).mockResolvedValue([
           {
             id: 'fairteiler-origin-1',
             createdAt: new Date(),
@@ -779,7 +799,7 @@ describe('Server Actions', () => {
         });
 
         // Finally remove it
-        vi.mocked(dal.removeFairteilerOrigin).mockResolvedValue([
+        vi.mocked(fairteilerDal.removeFairteilerOrigin).mockResolvedValue([
           {
             id: 'fairteiler-origin-1',
             createdAt: new Date(),

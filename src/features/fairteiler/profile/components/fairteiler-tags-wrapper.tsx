@@ -8,7 +8,7 @@ import { Tag } from '@/server/db/db-types';
 import {
   addTagToFairteilerAction,
   removeTagFromFairteilerAction,
-} from '@/server/actions';
+} from '@/server/fairteiler/actions';
 import useSWRSuspense from '@/lib/services/swr';
 
 interface FairteilerTagsWrapperProps {

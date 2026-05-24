@@ -1,10 +1,10 @@
 import 'server-only';
 import {
   loadCategoryDistribution,
-  loadFairteilers,
   loadKeyFigures,
   loadOriginDistribution,
 } from '../dal';
+import { loadFairteilers } from '../fairteiler/dal';
 import { initialContributionQuantity } from '@/lib/config/site-config';
 import { formatNumber } from '@/lib/utils';
 

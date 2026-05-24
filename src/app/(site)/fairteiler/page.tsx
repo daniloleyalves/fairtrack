@@ -1,6 +1,6 @@
 'use cache';
 
-import { getFairteilers } from '@server/dto';
+import { getFairteilers } from '@server/fairteiler/dto';
 import { Badge } from '@components/ui/badge';
 import { Button } from '@components/ui/button';
 import {

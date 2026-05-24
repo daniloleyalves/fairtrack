@@ -1,5 +1,5 @@
 import { createApiRoute } from '@server/api-helpers';
-import { getTags } from '@server/dto';
+import { getTags } from '@server/fairteiler/dto';
 
 /**
  * Handles GET requests to the /api/fairteiler/tags route.
