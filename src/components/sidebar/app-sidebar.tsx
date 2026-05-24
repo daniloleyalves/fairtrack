@@ -21,7 +21,7 @@ export async function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const nextHeaders = await headers();
-  const fairteiler = await getActiveFairteiler(nextHeaders);
+  const fairteiler = await getActiveFairteiler();
   const membership = await getActiveMembership(nextHeaders);
   const session = await getSession(nextHeaders);
 

@@ -1,4 +1,6 @@
 'use server';
+
+import { headers } from 'next/headers';
 import {
   loadActiveMembership,
   loadActiveOrganization,
@@ -66,8 +68,8 @@ export async function getTags(headers: Headers) {
   return tags;
 }
 
-export async function getActiveFairteiler(headers: Headers) {
-  const fairteiler = await loadActiveOrganization(headers);
+export async function getActiveFairteiler() {
+  const fairteiler = await loadActiveOrganization(await headers());
   if (!fairteiler) {
     throw new NotFoundError('active fairteiler');
   }
@@ -242,8 +244,8 @@ export async function getCompaniesByFairteiler(
 /**
  * Orchestrates loading and transforming all data required for the fairteiler dashboard.
  */
-export async function getFairteilerDashboardData(headers: Headers) {
-  const session = await loadAuthenticatedSession(headers);
+export async function getFairteilerDashboardData() {
+  const session = await loadAuthenticatedSession(await headers());
   const fairteilerId = session.session.activeOrganizationId;
   if (!fairteilerId) {
     throw new AuthError('No active organization selected.');

@@ -98,7 +98,7 @@ async function SuccessDisplay({ checkins }: { checkins: RecentCheckin[] }) {
     try {
       const [latestContributions, milestoneData] = await Promise.all([
         getLatestContributions(nextHeaders, 5),
-        getMilestoneData(nextHeaders),
+        getMilestoneData(),
       ]);
 
       const transformedMilestoneData = transformMilestoneData(milestoneData);
