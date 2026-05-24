@@ -4,8 +4,6 @@ import { getActiveFairteiler } from '@server/fairteiler/queries';
 /**
  * Handles GET requests to the /api/fairteiler/active-fairteiler route.
  */
-export const GET = createApiRoute(async (request) => {
-  const headers = request.headers;
-  const activeFairteiler = await getActiveFairteiler(headers);
-  return activeFairteiler;
+export const GET = createApiRoute(async () => {
+  return await getActiveFairteiler();
 });

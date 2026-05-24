@@ -12,10 +12,5 @@ export const GET = createApiRoute(async (request) => {
     throw Error('checkinId not found');
   }
 
-  const contributionVersionHistory = await getVersionHistoryByCheckinId(
-    request.headers,
-    checkinId,
-  );
-
-  return contributionVersionHistory;
+  return await getVersionHistoryByCheckinId(checkinId);
 });

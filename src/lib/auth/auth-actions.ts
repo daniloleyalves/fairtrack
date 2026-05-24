@@ -64,7 +64,7 @@ export async function updateFairteilerAction(
 
     const nextHeaders = await headers();
 
-    const currentFairteiler = await getActiveFairteiler(nextHeaders);
+    const currentFairteiler = await getActiveFairteiler();
     if (!currentFairteiler) {
       throw new AuthError('Authentifizierung fehlgeschlagen.');
     }
@@ -279,7 +279,7 @@ export const addAccessViewAction = createAction({
         );
       }
 
-      const fairteiler = await getActiveFairteiler(headers);
+      const fairteiler = await getActiveFairteiler();
       if (!fairteiler) {
         throw new NotFoundError('Fairteiler nicht gefunden.');
       }
