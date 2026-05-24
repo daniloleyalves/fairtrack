@@ -9,7 +9,7 @@ import {
 } from '@/features/fairteiler/tutorial/schemas/fairteiler-tutorial-schema';
 import { getErrorMessage } from '@/lib/auth/auth-helpers';
 import { checkPermissionOnServer } from '@/lib/auth/auth';
-import { loadAuthenticatedSession } from '../dal';
+import { loadAuthenticatedSession } from '../user/dal';
 import { AuthError, handleImageUpload } from '../api-helpers';
 import { ActionState, createAction } from '../action-helpers';
 import { PermissionError } from '../error-handling';

@@ -4,8 +4,8 @@ import {
   createStepFlowAPI,
   StepConfig,
 } from '@/lib/factories/step-flow-factory';
-import { saveOnboardingProgressAction } from '@/server/actions';
-import { OnboardingData } from '@/server/dto';
+import { saveOnboardingProgressAction } from '@/server/user/actions';
+import { OnboardingData } from '@/server/user/dto';
 import {
   OnboardingMetadata,
   OnboardingStepData,

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { headers } from 'next/headers';
-import { loadAuthenticatedSession } from '@/server/dal';
+import { loadAuthenticatedSession } from '@/server/user/dal';
 import {
   generatePersonalizedFeedbackStream,
   UserFeedbackData,

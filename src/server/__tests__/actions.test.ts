@@ -26,10 +26,11 @@ import {
   mockSession,
 } from '@/__tests__/mocks/server-only';
 import { checkPermissionOnServer } from '@/lib/auth/auth';
-import { loadAuthenticatedSession } from '../dal';
+import { loadAuthenticatedSession } from '../user/dal';
 
 // Mockk all auth functions
 vi.mock('@lib/auth/auth', () => ({
+  auth: { api: {} },
   checkPermissionOnServer: vi.fn(),
 }));
 
@@ -46,9 +47,12 @@ vi.mock('../dal', () => ({
   removeFairteilerCompany: vi.fn(),
   checkinContribution: vi.fn(),
   addVersionHistoryRecord: vi.fn(),
-  loadAuthenticatedSession: vi.fn(),
   loadContributions: vi.fn(),
   checkInvitationAndUser: vi.fn(),
+}));
+
+vi.mock('../user/dal', () => ({
+  loadAuthenticatedSession: vi.fn(),
 }));
 
 // Mock Next.js headers
@@ -515,7 +519,7 @@ describe('Server Actions', () => {
     describe('Authentication Errors', () => {
       it('should handle authentication errors in export action', async () => {
         const authError = new AuthError('Session expired');
-        vi.mocked(dal.loadAuthenticatedSession).mockRejectedValue(authError);
+        vi.mocked(loadAuthenticatedSession).mockRejectedValue(authError);
 
         const result = await exportContributionsAction({
           scope: 'fairteiler',
@@ -689,7 +693,7 @@ describe('Server Actions', () => {
           },
         ];
 
-        vi.mocked(dal.loadAuthenticatedSession).mockResolvedValue(mockSession);
+        vi.mocked(loadAuthenticatedSession).mockResolvedValue(mockSession);
         vi.mocked(dal.loadContributions).mockResolvedValue({
           data: mockContributions,
           total: 1,
@@ -714,7 +718,7 @@ describe('Server Actions', () => {
 
       it('should handle export timeout gracefully', async () => {
         const timeoutError = new Error('Query timeout');
-        vi.mocked(dal.loadAuthenticatedSession).mockResolvedValue(mockSession);
+        vi.mocked(loadAuthenticatedSession).mockResolvedValue(mockSession);
         vi.mocked(dal.loadContributions).mockRejectedValue(timeoutError);
 
         const result = await exportContributionsAction({

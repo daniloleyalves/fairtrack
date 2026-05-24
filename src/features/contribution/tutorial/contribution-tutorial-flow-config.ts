@@ -7,7 +7,7 @@ import {
   PersistedStepFlow,
   FlowCompletionConfig,
 } from '@/lib/factories/step-flow-factory';
-import { saveContributionTutorialProgressAction } from '@/server/actions';
+import { saveContributionTutorialProgressAction } from '@/server/user/actions';
 import { FairteilerTutorialStep } from '@/server/db/db-types';
 import { useRouter } from 'next/navigation';
 

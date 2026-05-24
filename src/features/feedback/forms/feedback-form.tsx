@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { handleAsyncAction } from '@/lib/client-error-handling';
-import { submitFeedbackAction } from '@/server/actions';
+import { submitFeedbackAction } from '@/server/user/actions';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, MessageCircleHeart, Send } from 'lucide-react';

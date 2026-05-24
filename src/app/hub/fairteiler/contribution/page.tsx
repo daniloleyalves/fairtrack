@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 import { Skeleton } from '@ui/skeleton';
 import { UserPreferencesProvider } from '@/lib/services/preferences-service';
 import { headers } from 'next/headers';
-import { getSession } from '@/server/dto';
+import { getSession } from '@/server/user/dto';
 
 export default async function FairteilerContributionPage() {
   const session = await getSession(await headers());

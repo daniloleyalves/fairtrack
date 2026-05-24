@@ -4,7 +4,8 @@ import { UserNav } from '@/components/nav/user-nav';
 import { NavButton } from '@/components/ui/nav-button';
 import { UnauthorizedAccess } from '@/components/unauthorized-access';
 import { FairteilerMapWrapper } from '@/features/fairteiler-map/components/fairteiler-map-wrapper';
-import { getFairteilers, getSession } from '@/server/dto';
+import { getFairteilers } from '@/server/dto';
+import { getSession } from '@/server/user/dto';
 import { headers } from 'next/headers';
 import { Suspense } from 'react';
 

@@ -4,12 +4,14 @@ import { headers } from 'next/headers';
 import z, { ZodError } from 'zod';
 import {
   checkInvitationAndUser,
-  loadAuthenticatedSession,
-  loadUserByEmail,
   toggleFairteilerVisibility,
   updateFairteiler,
-  validateResetPasswordToken,
 } from '@server/dal';
+import {
+  loadAuthenticatedSession,
+  loadUserByEmail,
+  validateResetPasswordToken,
+} from '@server/user/dal';
 import { getActiveFairteiler } from '@server/dto';
 import { auth, checkPermissionOnServer } from './auth';
 import { generatePassword, getErrorMessage } from './auth-helpers';
