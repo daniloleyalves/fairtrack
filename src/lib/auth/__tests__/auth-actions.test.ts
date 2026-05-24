@@ -11,7 +11,7 @@ import {
 } from '../auth-actions';
 import { auth, checkPermissionOnServer } from '../auth';
 import { getActiveFairteiler } from '@server/fairteiler/dto';
-import { checkInvitationAndUser } from '@server/dal';
+import { checkInvitationAndUser } from '@server/contribution/dal';
 import { updateFairteiler } from '@server/fairteiler/dal';
 import { put, del } from '@vercel/blob';
 import { headers } from 'next/headers';
@@ -40,7 +40,7 @@ vi.mock('@server/fairteiler/dto', () => ({
   getActiveFairteiler: vi.fn(),
 }));
 
-vi.mock('@server/dal', () => ({
+vi.mock('@server/contribution/dal', () => ({
   checkInvitationAndUser: vi.fn(),
 }));
 

@@ -5,18 +5,10 @@ import {
   loadContributionVersionHistory,
   loadKeyFigures,
 } from './dal';
-import { loadAuthenticatedSession } from './user/dal';
-import { NotFoundError } from './error-handling';
-import { AuthError } from './api-helpers';
+import { loadAuthenticatedSession } from '../user/dal';
+import { NotFoundError } from '../error-handling';
+import { AuthError } from '../api-helpers';
 import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
-
-/**
- * The DTO (Data Transfer Object) layer is responsible for loading data
- * from the Data Access Layer (DAL) and shaping it for the client.
- * It acts as a boundary, ensuring the client only receives the data it needs.
- */
-
-// CHECKIN SELECTION ----------------------------------------------------------------
 
 export async function getRecentCheckinsWithinLastMinute(
   headers: Headers,
@@ -48,12 +40,6 @@ export async function getRecentCheckinsWithinLastMinute(
   }));
 }
 
-// ------ HISTORY -------
-
-/**
- * @param headers The request headers for authentication.
- * @returns The fully formatted contribution data object.
- */
 export async function getContributions(
   headers: Headers,
   options?: {
@@ -72,7 +58,6 @@ export async function getContributions(
     throw new AuthError('No active organization selected.');
   }
 
-  // 2. load raw data from the DAL
   const contributions = await loadContributions({
     fairteilerId: options?.platformWide ? null : fairteilerId,
     dateRange: options?.dateRange,
@@ -80,7 +65,6 @@ export async function getContributions(
     offset: options?.offset,
   });
 
-  // 3. Apply anonymization based on user preferences
   if (contributions.data) {
     const anonymizedData = contributions.data.map((contribution) => {
       const isAnonymous = contribution.contributorIsAnonymous ?? false;
@@ -105,10 +89,6 @@ export async function getContributions(
   return contributions;
 }
 
-/**
- * @param headers The request headers for authentication.
- * @returns The fully formatted contributionVersionHistory data object.
- */
 export async function getVersionHistoryByCheckinId(
   headers: Headers,
   checkinId: string,
@@ -141,8 +121,6 @@ export async function getVersionHistoryByCheckinId(
 
   return formattedContributionVersionHistory;
 }
-
-// ----------- USER DTO --------------
 
 export async function getKeyFigures() {
   const keyFigureData = await loadKeyFigures();
