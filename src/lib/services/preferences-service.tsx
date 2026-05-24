@@ -4,7 +4,7 @@ import { createContext, useContext, useRef, type ReactNode } from 'react';
 import { z } from 'zod';
 import { formTableViewEnum } from '@/server/db/schema';
 import useSWRSuspense, { type FetcherError } from './swr';
-import { updateUserPreferencesAction } from '@/server/actions';
+import { updateUserPreferencesAction } from '@/server/user/actions';
 import useSWRMutation from 'swr/mutation';
 import { toast } from 'sonner';
 

@@ -1,5 +1,5 @@
 import { createApiRoute } from '@server/api-helpers';
-import { getUserPreferences } from '@server/dto';
+import { getUserPreferences } from '@server/user/dto';
 
 /**
  * Handles GET requests to the /api/user/preferences route.

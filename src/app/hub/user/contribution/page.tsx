@@ -1,4 +1,5 @@
-import { getFairteilerBySlug, getUserPreferences } from '@/server/dto';
+import { getFairteilerBySlug } from '@/server/dto';
+import { getUserPreferences } from '@/server/user/dto';
 import {
   getFairteilerTutorialWithSteps,
   getContributionTutorialProgress,

@@ -42,6 +42,11 @@ vi.mock('@server/dto', () => ({
 vi.mock('@server/dal', () => ({
   updateFairteiler: vi.fn(),
   checkInvitationAndUser: vi.fn(),
+}));
+
+vi.mock('@server/user/dal', () => ({
+  loadAuthenticatedSession: vi.fn(),
+  loadUserByEmail: vi.fn(),
   validateResetPasswordToken: vi.fn(),
 }));
 

@@ -9,51 +9,29 @@ import {
   loadLeaderboard,
   loadOriginDistribution,
   loadRecentContributions,
-  loadUserCalendarData,
-  loadUserCategoryDistribution,
-  loadUserKeyFigures,
-  loadUserOriginDistribution,
-  loadUserRecentContributions,
-  loadAuthenticatedSession,
   loadCheckinsWithinTimeframe,
   loadActiveMembership,
   loadActiveOrganization,
   loadCategories,
   loadCompanies,
-  loadExperienceLevels,
   loadFairteilerBySlug,
   loadFairteilerCategories,
   loadFairteilerCompanies,
   loadFairteilerOrigins,
   loadOrigins,
   loadTagsByFairteiler,
-  loadUserPreferences,
-  loadUserAllTimeWeeklyContributions,
-  loadMilestonesByUser,
-  addMilestoneEvent,
-  loadSession,
-  loadUserContributions,
 } from './dal';
-import {
-  loadFairteilerTutorialWithSteps,
-  loadStepFlowProgress,
-} from './tutorial/dal';
+import { loadAuthenticatedSession } from './user/dal';
+import { loadFairteilerTutorialWithSteps } from './tutorial/dal';
 import { MemberRoles } from '@/lib/auth/auth-permissions';
 import {
   CompanyWithOrigin,
-  ExperienceLevel,
   Fairteiler,
   FairteilerWithMembers,
   GenericItem,
-  StepFlowProgress,
-  UserPreferences,
 } from './db/db-types';
 import { NotFoundError } from './error-handling';
 import { AuthError } from './api-helpers';
-import { GamificationElement } from '@/features/user/onboarding/onboarding-flow-types';
-import { gamificationElements } from '@/features/user/gamification/gamification-config';
-import { calculateUserAllTimeStreaks } from '@/features/user/gamification/streaks/streak-processor';
-import { transformMilestoneData } from '@/features/user/gamification/milestones/milestone-utils';
 import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
 
 /**
@@ -61,31 +39,6 @@ import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
  * from the Data Access Layer (DAL) and shaping it for the client.
  * It acts as a boundary, ensuring the client only receives the data it needs.
  */
-
-export async function getSession(
-  headers: Headers,
-  invalidateCookieCache?: boolean,
-) {
-  const result = await loadSession(headers, invalidateCookieCache);
-  if (!result) return null;
-
-  return {
-    session: {
-      activeOrganizationId: result.session.activeOrganizationId,
-      userId: result.session.userId,
-    },
-    user: {
-      id: result.user.id,
-      name: result.user.name,
-      firstName: result.user.firstName,
-      lastName: result.user.lastName,
-      email: result.user.email,
-      avatar: result.user.image,
-      isFirstLogin: result.user.isFirstLogin,
-      isAnonymous: result.user.isAnonymous,
-    },
-  };
-}
 
 export async function getFairteilers() {
   const fairteilers = await loadFairteilers();
@@ -331,22 +284,6 @@ export async function getRecentCheckinsWithinLastMinute(
   }));
 }
 
-export async function getLatestContributions(headers: Headers, limit?: number) {
-  const session = await loadAuthenticatedSession(headers);
-  const userId = session.user.id;
-  if (!userId) {
-    throw new AuthError('No active session');
-  }
-
-  const contributions = await loadUserRecentContributions(userId, limit);
-
-  if (!contributions) {
-    throw new NotFoundError('latestCheckins');
-  }
-
-  return contributions;
-}
-
 // ------ DASHBOARD -------
 
 /**
@@ -496,56 +433,6 @@ export async function getContributions(
   return contributions;
 }
 
-export async function getUserContributions(
-  headers: Headers,
-  options?: {
-    dateRange?: {
-      from: Date;
-      to: Date;
-    };
-    limit?: number;
-    offset?: number;
-  },
-) {
-  const session = await loadAuthenticatedSession(headers);
-  const userId = session.user.id;
-
-  // Load user's contributions across all fairteilers
-  const contributions = await loadUserContributions({
-    userId,
-    dateRange: options?.dateRange,
-    limit: options?.limit,
-    offset: options?.offset,
-  });
-
-  // Apply anonymization based on user preferences (for other users' data)
-  if (contributions.data) {
-    const anonymizedData = contributions.data.map((contribution) => {
-      const isAnonymous = contribution.contributorIsAnonymous ?? false;
-      const isOwnContribution = contribution.contributorId === userId;
-
-      // Don't anonymize user's own contributions
-      if (isOwnContribution || !isAnonymous) {
-        return contribution;
-      }
-
-      return {
-        ...contribution,
-        contributorName: ANONYMOUS_USER_NAME,
-        contributorEmail: null,
-        contributorImage: null,
-      };
-    });
-
-    return {
-      ...contributions,
-      data: anonymizedData,
-    };
-  }
-
-  return contributions;
-}
-
 /**
  * @param headers The request headers for authentication.
  * @returns The fully formatted contributionVersionHistory data object.
@@ -584,265 +471,6 @@ export async function getVersionHistoryByCheckinId(
 }
 
 // ----------- USER DTO --------------
-
-/**
- * Orchestrates loading and transforming all data required for the user dashboard.
- * @param headers The request headers for authentication.
- * @returns The fully formatted dashboard data object.
- */
-export async function getUserDashboardData(headers: Headers) {
-  const session = await loadAuthenticatedSession(headers);
-  const userId = session.user.id;
-  if (!userId) {
-    throw new AuthError('No active session.');
-  }
-
-  const [
-    keyFigures,
-    categoryDistribution,
-    originDistribution,
-    recentContributions,
-    calendarData,
-    milestoneData,
-  ] = await Promise.all([
-    loadUserKeyFigures(userId),
-    loadUserCategoryDistribution(userId),
-    loadUserOriginDistribution(userId),
-    loadUserRecentContributions(userId),
-    loadUserCalendarData(userId),
-    loadMilestonesByUser(userId),
-  ]);
-
-  // 3. Transform raw data into the required DTO format
-  const formattedKeyFigures = [
-    {
-      value: parseFloat(keyFigures?.[0].totalQuantity ?? '0'),
-      description: 'gerettet',
-      color: 'primary',
-      unit: 'kg',
-    },
-    {
-      value: keyFigures?.[0].totalContributions ?? 0,
-      description: 'Abgaben',
-      color: 'default',
-    },
-  ];
-
-  const formattedCategoryDistribution = {
-    name: 'Kategorien',
-    data: categoryDistribution?.map((item, index) => ({
-      position: index + 1,
-      value: parseFloat(item.totalQuantity?.toString() ?? '0'),
-      description: item.name ?? 'Unkategorisiert',
-    })),
-  };
-
-  const formattedOriginDistribution = {
-    name: 'Herkunft',
-    data: originDistribution?.map((item, index) => ({
-      position: index + 1,
-      value: parseFloat(item.totalQuantity?.toString() ?? '0'),
-      description: item.name ?? 'Unbekannt',
-    })),
-  };
-
-  const formattedCalendarData = calendarData?.map((d) => ({
-    value: d.date,
-    quantity: parseFloat(d.quantity?.toString() ?? '0'),
-  }));
-
-  const transformedMilestoneData = transformMilestoneData(milestoneData);
-
-  // 4. Assemble and return the final object
-  return {
-    keyFigures: formattedKeyFigures,
-    categoryDistribution: formattedCategoryDistribution,
-    originDistribution: formattedOriginDistribution,
-    recentContributions: recentContributions,
-    calendarData: formattedCalendarData,
-    milestoneData: transformedMilestoneData,
-  };
-}
-
-// ONBOARDING DATA TRANSFER OBJECTS
-
-export interface OnboardingData {
-  user: {
-    id: string;
-    isFirstLogin: boolean;
-  };
-  experienceLevels: ExperienceLevel[];
-  gamificationElements: GamificationElement[];
-  userPreferences: UserPreferences | null | undefined;
-  stepFlowProgress: StepFlowProgress | null | undefined;
-}
-
-/**
- * Get all data needed for user onboarding
- */
-export async function getOnboardingData(
-  headers: Headers,
-): Promise<OnboardingData> {
-  // Get authenticated user session
-  const session = await loadAuthenticatedSession(headers);
-  const userId = session.user.id;
-  if (!userId) {
-    throw new AuthError('No active session.');
-  }
-
-  // Load all data concurrently
-  const [experienceLevels, userPreferences, stepFlowProgress] =
-    await Promise.all([
-      loadExperienceLevels(),
-      loadUserPreferences(userId),
-      loadStepFlowProgress(userId, 'onboarding'),
-    ]);
-
-  if (!experienceLevels) {
-    throw new NotFoundError(
-      'ExperienceLevels, userPreferences or stepFlowProgress not found',
-    );
-  }
-
-  return {
-    user: {
-      id: userId,
-      isFirstLogin: session.user.isFirstLogin ?? true,
-    },
-    experienceLevels: experienceLevels,
-    gamificationElements: gamificationElements,
-    userPreferences: userPreferences,
-    stepFlowProgress: stepFlowProgress,
-  };
-}
-
-// USER SETTINGS DATA TRANSFER OBJECTS
-
-/**
- * Get all data needed for user onboarding
- */
-export async function getUserPreferences(
-  headers: Headers,
-): Promise<UserPreferences | null | undefined> {
-  // Get authenticated user session
-  const session = await loadAuthenticatedSession(headers);
-  const userId = session.user.id;
-  if (!userId) {
-    throw new AuthError('No active session.');
-  }
-
-  // Load all data concurrently
-  const userPreferences = loadUserPreferences(userId);
-
-  if (!userPreferences) {
-    throw new NotFoundError(
-      'ExperienceLevels, userPreferences or stepFlowProgress not found',
-    );
-  }
-
-  return userPreferences;
-}
-
-// GAMIFICATION DTO ---------------
-export async function getUserStreak(headers: Headers) {
-  // Get authenticated user session
-  const session = await loadAuthenticatedSession(headers);
-  const userId = session.user.id;
-
-  if (!userId) {
-    throw new AuthError('No active session.');
-  }
-
-  const allTimeWeeklyContributions =
-    await loadUserAllTimeWeeklyContributions(userId);
-
-  if (!allTimeWeeklyContributions) {
-    throw new NotFoundError('weekly contributions not found');
-  }
-
-  const userStreak = calculateUserAllTimeStreaks(allTimeWeeklyContributions);
-
-  return userStreak;
-}
-
-export async function getMilestoneData(headers: Headers) {
-  // Get authenticated user session
-  const session = await loadAuthenticatedSession(headers);
-  const userId = session.user.id;
-
-  if (!userId) {
-    throw new AuthError('No active session.');
-  }
-
-  const milestoneData = await loadMilestonesByUser(userId);
-
-  return milestoneData;
-}
-
-/**
- * Check milestone achievement for the current user
- * Contains all business logic for determining and recording achievements
- */
-export async function checkMilestoneProgressForCurrentUser(headers: Headers) {
-  // Get authenticated user session
-  const session = await loadAuthenticatedSession(headers);
-  const userId = session.user.id;
-
-  if (!userId) {
-    throw new AuthError('No active session.');
-  }
-
-  // Fetch all required data in parallel
-  const { milestones, milestoneEvents } = await loadMilestonesByUser(userId);
-
-  if (!milestones || !milestoneEvents) {
-    throw new NotFoundError('Keine Meilensteine gefunden');
-  }
-
-  const keyFigureData = await loadUserKeyFigures(userId);
-  if (keyFigureData?.[0]?.totalContributions == null) {
-    throw new NotFoundError('Uservortschritt konnte nicht ermittelt werden');
-  }
-
-  // Create a set of achieved milestone IDs for fast lookup
-  const achievedMilestoneIds = new Set(
-    milestoneEvents.map((event) => event.milestoneId),
-  );
-
-  // Sort milestones by quantity to find all unachieved milestones in order
-  const sortedMilestones = [...milestones].sort(
-    (a, b) => a.quantity - b.quantity,
-  );
-
-  // Find ALL unachieved milestones that the user has reached
-  const newlyAchievedMilestones = sortedMilestones.filter(
-    (milestone) =>
-      !achievedMilestoneIds.has(milestone.id) &&
-      keyFigureData[0].totalContributions >= milestone.quantity,
-  );
-
-  // If any new milestones are achieved, record them all
-  if (newlyAchievedMilestones.length > 0) {
-    // Record all newly achieved milestones
-    const achievedMilestones = await Promise.all(
-      newlyAchievedMilestones.map(async (milestone) => {
-        const achievedAt = await addMilestoneEvent(milestone.id, userId);
-        return {
-          id: milestone.id,
-          quantity: milestone.quantity,
-          achievedAt,
-        };
-      }),
-    );
-
-    return {
-      achieved: true,
-      milestones: achievedMilestones,
-    };
-  }
-
-  return { achieved: false };
-}
 
 export async function getKeyFigures() {
   const keyFigureData = await loadKeyFigures();

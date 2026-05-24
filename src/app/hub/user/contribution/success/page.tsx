@@ -14,11 +14,12 @@ import {
 } from '@components/ui/card';
 import { Skeleton } from '@components/ui/skeleton';
 import { siteConfig } from '@/lib/config/site-config';
+import { getRecentCheckinsWithinLastMinute } from '@server/dto';
 import {
   getLatestContributions,
-  getRecentCheckinsWithinLastMinute,
+  getMilestoneData,
   getUserPreferences,
-} from '@server/dto';
+} from '@server/user/dto';
 import {
   AlertTriangle,
   ArrowRight,
@@ -30,7 +31,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Suspense, type ReactNode } from 'react';
 import { ContributionFeedback } from '@/features/contribution/components/contribution-feedback';
-import { getMilestoneData } from '@/server/dto';
 import { transformMilestoneData } from '@/features/user/gamification/milestones/milestone-utils';
 
 // Define a more specific type for the checkin data for better type safety.

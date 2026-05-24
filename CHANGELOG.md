@@ -28,6 +28,7 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 
 - Refactor Phase 2 (slice 1/5 — tutorial): tutorial DAL/DTO/actions moved from the server monoliths into `src/server/tutorial/`. Mechanical split; no behavior change. The remaining 4 slices (platform, user, fairteiler, contribution) follow.
 - Refactor Phase 2 (slice 2/5 — platform): `getPlatformStats` moved from `src/server/dto.ts` into `src/server/platform/dto.ts`. Single-function move; no behavior change.
+- Refactor Phase 2 (slice 3/5 — user): user-domain DAL/DTO/actions extracted into `src/server/user/` (auth/session, profile, preferences, feedback, user-scoped contribution stats, milestones, gamification events). 21 DAL + 9 DTO + 5 actions moved; ~25 caller files repointed; cross-domain imports updated in monoliths and tutorial files. Mechanical split; no behavior change.
 - `PhoneInput` component (shadcn `input-group` + `Command`/`Popover` country picker, `libphonenumber-js`, German country names via `Intl.DisplayNames`); wired into the user profile form with `isValidPhoneNumber` validation. Phone is stored in E.164 format.
 - `QuantityIncrementer` gained `showStepperButtons?: boolean` (default `true`). Passed `false` in the fast-mode contribution list; wizard quantity modal keeps the +/- buttons.
 

@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { headers } from 'next/headers';
 import {
-  getSession,
   getFairteilers,
   getActiveFairteiler,
   getActiveMembership,
@@ -16,7 +15,9 @@ import {
   getContributions,
   getVersionHistoryByCheckinId,
 } from '../dto';
+import { getSession } from '../user/dto';
 import * as dal from '../dal';
+import * as userDal from '../user/dal';
 import {
   mockCategories,
   mockCheckins,
@@ -32,8 +33,6 @@ import { NotFoundError } from '../error-handling';
 
 // Mock all DAL functions
 vi.mock('../dal', () => ({
-  loadAuthenticatedSession: vi.fn(),
-  loadSession: vi.fn(),
   loadActiveMembership: vi.fn(),
   loadFairteiler: vi.fn(),
   loadFairteilers: vi.fn(),
@@ -55,6 +54,11 @@ vi.mock('../dal', () => ({
   loadCalendarData: vi.fn(),
 }));
 
+vi.mock('../user/dal', () => ({
+  loadAuthenticatedSession: vi.fn(),
+  loadSession: vi.fn(),
+}));
+
 // Mock Next.js headers
 vi.mock('next/headers', () => ({
   headers: vi.fn(),
@@ -71,11 +75,14 @@ describe('DTO Layer', () => {
   describe('Authentication & Session Management', () => {
     describe('getSession', () => {
       it('should return transformed session data when DAL returns valid data', async () => {
-        vi.mocked(dal.loadSession).mockResolvedValue(mockSession);
+        vi.mocked(userDal.loadSession).mockResolvedValue(mockSession);
 
         const result = await getSession(mockHeaders);
 
-        expect(dal.loadSession).toHaveBeenCalledWith(mockHeaders, undefined);
+        expect(userDal.loadSession).toHaveBeenCalledWith(
+          mockHeaders,
+          undefined,
+        );
         expect(result).toEqual({
           session: {
             activeOrganizationId: mockSession.session.activeOrganizationId,
@@ -99,7 +106,7 @@ describe('DTO Layer', () => {
           ...mockSession,
           user: { ...mockSession.user, image: null },
         };
-        vi.mocked(dal.loadSession).mockResolvedValue(sessionWithoutImage);
+        vi.mocked(userDal.loadSession).mockResolvedValue(sessionWithoutImage);
 
         const result = await getSession(mockHeaders);
 
@@ -230,7 +237,7 @@ describe('DTO Layer', () => {
 
       describe('getOriginsByFairteiler', () => {
         it('should return filtered active origins when DAL returns valid data', async () => {
-          vi.mocked(dal.loadAuthenticatedSession).mockResolvedValue(
+          vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue(
             mockSession,
           );
           const mockFairteilerOrigins = [
@@ -283,7 +290,7 @@ describe('DTO Layer', () => {
 
       describe('getCategoriesByFairteiler', () => {
         it('should return filtered active categories when DAL returns valid data', async () => {
-          vi.mocked(dal.loadAuthenticatedSession).mockResolvedValue(
+          vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue(
             mockSession,
           );
           const mockFairteilerCategories = [
@@ -338,7 +345,7 @@ describe('DTO Layer', () => {
 
       describe('getCompaniesByFairteiler', () => {
         it('should return filtered active companies when DAL returns valid data', async () => {
-          vi.mocked(dal.loadAuthenticatedSession).mockResolvedValue(
+          vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue(
             mockSession,
           );
           const mockFairteilerCompanies = [
@@ -384,7 +391,9 @@ describe('DTO Layer', () => {
       });
 
       it('should return transformed checkin data within last minute', async () => {
-        vi.mocked(dal.loadAuthenticatedSession).mockResolvedValue(mockSession);
+        vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue(
+          mockSession,
+        );
         vi.mocked(dal.loadCheckinsWithinTimeframe).mockResolvedValue(
           mockCheckins,
         );
@@ -439,7 +448,9 @@ describe('DTO Layer', () => {
 
     describe('getContributions', () => {
       it('should return contributions for authenticated user', async () => {
-        vi.mocked(dal.loadAuthenticatedSession).mockResolvedValue(mockSession);
+        vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue(
+          mockSession,
+        );
         vi.mocked(dal.loadContributions).mockResolvedValue(mockContributions);
 
         const result = await getContributions(mockHeaders);
@@ -450,7 +461,9 @@ describe('DTO Layer', () => {
 
     describe('getVersionHistoryByCheckinId', () => {
       it('should return formatted version history when DAL returns valid data', async () => {
-        vi.mocked(dal.loadAuthenticatedSession).mockResolvedValue(mockSession);
+        vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue(
+          mockSession,
+        );
         vi.mocked(dal.loadContributionVersionHistory).mockResolvedValue(
           mockContributionVersionHistory,
         );
@@ -518,7 +531,9 @@ describe('DTO Layer', () => {
           { date: new Date('2024-01-01'), quantity: '10.5' },
         ];
 
-        vi.mocked(dal.loadAuthenticatedSession).mockResolvedValue(mockSession);
+        vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue(
+          mockSession,
+        );
         vi.mocked(dal.loadKeyFigures).mockResolvedValue(mockKeyFigures);
         vi.mocked(dal.loadCategoryDistribution).mockResolvedValue(
           mockCategoryDistribution,
@@ -534,7 +549,9 @@ describe('DTO Layer', () => {
 
         const result = await getFairteilerDashboardData(mockHeaders);
 
-        expect(dal.loadAuthenticatedSession).toHaveBeenCalledWith(mockHeaders);
+        expect(userDal.loadAuthenticatedSession).toHaveBeenCalledWith(
+          mockHeaders,
+        );
         expect(result).toEqual({
           keyFigures: [
             {
@@ -575,7 +592,9 @@ describe('DTO Layer', () => {
       });
 
       it('should handle empty data gracefully', async () => {
-        vi.mocked(dal.loadAuthenticatedSession).mockResolvedValue(mockSession);
+        vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue(
+          mockSession,
+        );
         vi.mocked(dal.loadKeyFigures).mockResolvedValue([
           { totalQuantity: null, totalContributions: 0, activeContributors: 0 },
         ]);
@@ -627,7 +646,9 @@ describe('DTO Layer', () => {
           { date: new Date('2024-01-02'), quantity: '15.5' },
         ];
 
-        vi.mocked(dal.loadAuthenticatedSession).mockResolvedValue(mockSession);
+        vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue(
+          mockSession,
+        );
         vi.mocked(dal.loadKeyFigures).mockResolvedValue([
           { totalQuantity: null, totalContributions: 0, activeContributors: 0 },
         ]);
@@ -666,7 +687,7 @@ describe('DTO Layer', () => {
     describe('Database Connection Failures', () => {
       it('should propagate DAL errors in getSession', async () => {
         const dbError = new Error('Database connection lost');
-        vi.mocked(dal.loadSession).mockRejectedValue(dbError);
+        vi.mocked(userDal.loadSession).mockRejectedValue(dbError);
 
         await expect(getSession(mockHeaders)).rejects.toThrow(
           'Database connection lost',
@@ -675,7 +696,9 @@ describe('DTO Layer', () => {
 
       it('should propagate DAL errors in getFairteilerDashboardData', async () => {
         const dbError = new Error('Database timeout');
-        vi.mocked(dal.loadAuthenticatedSession).mockResolvedValue(mockSession);
+        vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue(
+          mockSession,
+        );
         vi.mocked(dal.loadKeyFigures).mockRejectedValue(dbError);
 
         await expect(getFairteilerDashboardData(mockHeaders)).rejects.toThrow(
@@ -687,7 +710,9 @@ describe('DTO Layer', () => {
     describe('Authentication Errors', () => {
       it('should handle authentication errors in getContributions', async () => {
         const authError = new Error('Session expired');
-        vi.mocked(dal.loadAuthenticatedSession).mockRejectedValue(authError);
+        vi.mocked(userDal.loadAuthenticatedSession).mockRejectedValue(
+          authError,
+        );
 
         await expect(getContributions(mockHeaders)).rejects.toThrow(
           'Session expired',
@@ -696,7 +721,9 @@ describe('DTO Layer', () => {
 
       it('should handle authentication errors in getFairteilerDashboardData', async () => {
         const authError = new Error('Unauthorized');
-        vi.mocked(dal.loadAuthenticatedSession).mockRejectedValue(authError);
+        vi.mocked(userDal.loadAuthenticatedSession).mockRejectedValue(
+          authError,
+        );
 
         await expect(getFairteilerDashboardData(mockHeaders)).rejects.toThrow(
           'Unauthorized',
@@ -713,7 +740,9 @@ describe('DTO Layer', () => {
             activeContributors: 0,
           },
         ];
-        vi.mocked(dal.loadAuthenticatedSession).mockResolvedValue(mockSession);
+        vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue(
+          mockSession,
+        );
         vi.mocked(dal.loadKeyFigures).mockResolvedValue(mockKeyFigures);
         vi.mocked(dal.loadCategoryDistribution).mockResolvedValue([]);
         vi.mocked(dal.loadOriginDistribution).mockResolvedValue([]);
