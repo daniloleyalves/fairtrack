@@ -9,7 +9,7 @@ import {
   getSession,
   getUserPreferences,
   getUserStreak,
-} from '@/server/user/dto';
+} from '@/server/user/queries';
 import { headers } from 'next/headers';
 import { Suspense } from 'react';
 import { Streak } from '@/features/user/gamification/streaks/streak';

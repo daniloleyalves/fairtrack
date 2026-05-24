@@ -10,7 +10,7 @@ import {
   disableAccessViewAction,
 } from '../auth-actions';
 import { auth, checkPermissionOnServer } from '../auth';
-import { getActiveFairteiler } from '@server/fairteiler/dto';
+import { getActiveFairteiler } from '@server/fairteiler/queries';
 import { checkInvitationAndUser } from '@server/contribution/dal';
 import { updateFairteiler } from '@server/fairteiler/dal';
 import { put, del } from '@vercel/blob';
@@ -36,7 +36,7 @@ vi.mock('../auth', () => ({
   checkPermissionOnServer: vi.fn(),
 }));
 
-vi.mock('@server/fairteiler/dto', () => ({
+vi.mock('@server/fairteiler/queries', () => ({
   getActiveFairteiler: vi.fn(),
 }));
 

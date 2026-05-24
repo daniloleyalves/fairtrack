@@ -1,5 +1,5 @@
 import { createApiRoute } from '@server/api-helpers';
-import { getOriginsByFairteiler } from '@server/fairteiler/dto';
+import { getOriginsByFairteiler } from '@server/fairteiler/queries';
 
 /**
  * Handles GET requests to the /api/fairteiler/fairteiler-origins route.

@@ -1,5 +1,5 @@
 import { createApiRoute } from '@server/api-helpers';
-import { getCategories } from '@server/fairteiler/dto';
+import { getCategories } from '@server/fairteiler/queries';
 
 /**
  * Handles GET requests to the /api/platform/categories route.

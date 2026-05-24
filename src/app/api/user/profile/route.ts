@@ -1,5 +1,5 @@
 import { createApiRoute } from '@server/api-helpers';
-import { getSession } from '@server/user/dto';
+import { getSession } from '@server/user/queries';
 
 /**
  * Handles GET requests to the /api/user/preferences route.

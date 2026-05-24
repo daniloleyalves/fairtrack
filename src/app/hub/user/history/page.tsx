@@ -3,7 +3,7 @@ import { UserHistoryWrapper } from '@/features/user/history/components/user-hist
 import { BlurFade } from '@/components/magicui/blur-fade';
 import { NavButton } from '@/components/ui/nav-button';
 import { UserNav } from '@/components/nav/user-nav';
-import { getSession } from '@/server/user/dto';
+import { getSession } from '@/server/user/queries';
 import { headers } from 'next/headers';
 import { UnauthorizedAccess } from '@/components/unauthorized-access';
 import { Skeleton } from '@/components/ui/skeleton';

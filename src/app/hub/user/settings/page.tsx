@@ -4,7 +4,7 @@ import { UserNav } from '@/components/nav/user-nav';
 import { NavButton } from '@/components/ui/nav-button';
 import { UnauthorizedAccess } from '@/components/unauthorized-access';
 import UserSettingsWrapper from '@/features/user/settings/components/user-settings-wrapper';
-import { getSession } from '@/server/user/dto';
+import { getSession } from '@/server/user/queries';
 import { headers } from 'next/headers';
 
 export default async function UserSettingsPage() {

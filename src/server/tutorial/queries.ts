@@ -1,4 +1,4 @@
-import 'server-only';
+'use server';
 import { loadAuthenticatedSession } from '../user/dal';
 import { AuthError } from '../api-helpers';
 import { StepFlowProgress } from '../db/db-types';
