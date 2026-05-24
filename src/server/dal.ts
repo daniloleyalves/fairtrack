@@ -19,12 +19,7 @@ import { cache } from 'react';
 import 'server-only';
 import z from 'zod';
 import { AuthError } from './api-helpers';
-import {
-  FairteilerTutorial,
-  FairteilerTutorialStep,
-  GenericItem,
-  Tag,
-} from './db/db-types';
+import { GenericItem, Tag } from './db/db-types';
 import { db } from './db/drizzle';
 import {
   category,
@@ -37,8 +32,6 @@ import {
   fairteilerCategory,
   fairteilerCompany,
   fairteilerOrigin,
-  fairteilerTutorial,
-  fairteilerTutorialStep,
   food,
   invitation,
   milestoneEvents,
@@ -46,7 +39,6 @@ import {
   onboardingStepsEvents,
   origin,
   questBadgeEvents,
-  stepFlowProgress,
   tag,
   user,
   userFeedback,
@@ -62,7 +54,6 @@ import {
 } from './error-handling';
 import { DateRange } from 'react-day-picker';
 import { defaultDateRange } from '@/lib/config/site-config';
-import { PersistedStepFlow } from '@/lib/factories/step-flow-factory';
 
 /**
  * A cached helper to load the authenticated session.
@@ -1120,61 +1111,6 @@ export const loadUserPreferences = cache(async (userId: string) => {
 });
 
 /**
- * Load step flow progress for a specific flow and user
- */
-export const loadStepFlowProgress = cache(
-  async (userId: string, flowId: string) => {
-    const [error, data] = await attempt(
-      db.query.stepFlowProgress.findFirst({
-        where: and(
-          eq(stepFlowProgress.flowId, flowId),
-          eq(stepFlowProgress.userId, userId),
-        ),
-      }),
-    );
-
-    if (error) handleDatabaseError(error, 'loadStepFlowProgress');
-    return data;
-  },
-);
-
-export async function addStepFlowProgress<T>(
-  data: Partial<PersistedStepFlow<T>> & {
-    flowId: string;
-    userId: string;
-  },
-) {
-  const [error] = await attempt(
-    db
-      .insert(stepFlowProgress)
-      .values({
-        flowId: data.flowId,
-        userId: data.userId,
-        currentStepIndex: data.currentStepIndex ?? 0,
-        completedSteps: data.completedSteps ?? [],
-        skippedSteps: data.skippedSteps ?? [],
-        stepData: data.stepData ?? {},
-        progress: data.progress ?? 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .onConflictDoUpdate({
-        target: [stepFlowProgress.userId, stepFlowProgress.flowId],
-        set: {
-          currentStepIndex: data.currentStepIndex,
-          completedSteps: data.completedSteps,
-          skippedSteps: data.skippedSteps,
-          stepData: data.stepData,
-          progress: data.progress,
-          updatedAt: new Date(),
-        },
-      }),
-  );
-
-  if (error) handleDatabaseError(error, 'addStepFlowProgress');
-}
-
-/**
  * Add or update user preferences
  */
 export const addUserPreferences = async (
@@ -1292,150 +1228,6 @@ export const submitUserFeedbackWithDetails = async (
 
   if (error) handleDatabaseError(error, 'submitUserFeedbackWithDetails');
   return details?.[0];
-};
-
-// TUTORIAL RELATED FUNCTIONS -----------
-
-// export const getFairteilerTutorial = cache(async (fairteilerId: string) => {
-//   const [error, data] = await attempt(
-//     db
-//       .select()
-//       .from(fairteilerTutorial)
-//       .where(eq(fairteilerTutorial.fairteilerId, fairteilerId)),
-//   );
-
-//   if (error) handleDatabaseError(error, 'getFairteilerTutorial');
-//   return data;
-// });
-
-export const loadFairteilerTutorialWithSteps = cache(
-  async (fairteilerId: string) => {
-    const [error, data] = await attempt(
-      db.query.fairteilerTutorial.findFirst({
-        where: eq(fairteilerTutorial.fairteilerId, fairteilerId),
-        with: {
-          steps: {
-            orderBy: (step, { asc }) => [asc(step.sortIndex)],
-          },
-        },
-      }),
-    );
-
-    if (error) handleDatabaseError(error, 'loadFairteilerTutorialWithSteps');
-
-    return data;
-  },
-);
-
-export const addFairteilerTutorial = async (
-  fairteilerId: string,
-  tutorial: FairteilerTutorial,
-) => {
-  const [error, data] = await attempt(
-    db
-      .insert(fairteilerTutorial)
-      .values({
-        id: tutorial.id,
-        fairteilerId,
-        title: tutorial.title,
-      })
-      .returning(),
-  );
-
-  if (error) handleDatabaseError(error, 'addFairteilerTutorial');
-  return data;
-};
-
-export const updateFairteilerTutorial = async (
-  tutorialId: string,
-  updatedTutorialData: FairteilerTutorial,
-) => {
-  const [error, data] = await attempt(
-    db
-      .update(fairteilerTutorial)
-      .set({
-        title: updatedTutorialData.title,
-        isActive: updatedTutorialData.isActive,
-      })
-      .where(eq(fairteilerTutorial.id, tutorialId))
-      .returning(),
-  );
-
-  if (error) handleDatabaseError(error, 'updateFairteilerTutorial');
-  return data;
-};
-
-export const removeFairteilerTutorial = async (tutorialId: string) => {
-  const [error, data] = await attempt(
-    db
-      .delete(fairteilerTutorial)
-      .where(eq(fairteilerTutorial.id, tutorialId))
-      .returning(),
-  );
-
-  if (error) handleDatabaseError(error, 'deleteFairteilerTutorial');
-  return data;
-};
-
-export const addFairteilerTutorialStep = async (
-  tutorialId: string,
-  tutorial: FairteilerTutorialStep,
-) => {
-  const [error, data] = await attempt(
-    db
-      .insert(fairteilerTutorialStep)
-      .values({
-        tutorialId,
-        title: tutorial.title,
-        content: tutorial.content,
-        media: tutorial.media,
-        sortIndex: tutorial.sortIndex,
-      })
-      .returning(),
-  );
-
-  if (error) handleDatabaseError(error, 'addFairteilerTutorialStep');
-  return data;
-};
-
-export const updateFairteilerTutorialStep = async (
-  tutorialStepId: string,
-  updatedTutorialStepData: FairteilerTutorialStep,
-) => {
-  if (
-    updatedTutorialStepData.media &&
-    typeof updatedTutorialStepData.media !== 'string'
-  ) {
-    throw new DatabaseError('media url is not of type string');
-  }
-
-  const [error, data] = await attempt(
-    db
-      .update(fairteilerTutorialStep)
-      .set({
-        title: updatedTutorialStepData.title,
-        content: updatedTutorialStepData.content,
-        media: updatedTutorialStepData.media,
-        sortIndex: updatedTutorialStepData.sortIndex,
-      })
-      .where(eq(fairteilerTutorialStep.id, tutorialStepId))
-      .returning(),
-  );
-
-  if (error) handleDatabaseError(error, 'updateFairteilerTutorialStep');
-  return data;
-};
-
-export const removeFairteilerTutorialStep = async (tutorialStepId: string) => {
-  const [error, data] = await attempt(
-    db
-      .delete(fairteilerTutorialStep)
-      .where(eq(fairteilerTutorialStep.id, tutorialStepId))
-      .returning(),
-  );
-
-  if (error) handleDatabaseError(error, 'deleteFairteilerTutorialStep');
-  return data;
 };
 
 // GAMIFICATION QUERIES ----------------

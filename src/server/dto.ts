@@ -26,16 +26,18 @@ import {
   loadFairteilerCompanies,
   loadFairteilerOrigins,
   loadOrigins,
-  loadStepFlowProgress,
   loadTagsByFairteiler,
   loadUserPreferences,
-  loadFairteilerTutorialWithSteps,
   loadUserAllTimeWeeklyContributions,
   loadMilestonesByUser,
   addMilestoneEvent,
   loadSession,
   loadUserContributions,
 } from './dal';
+import {
+  loadFairteilerTutorialWithSteps,
+  loadStepFlowProgress,
+} from './tutorial/dal';
 import { MemberRoles } from '@/lib/auth/auth-permissions';
 import {
   CompanyWithOrigin,
@@ -583,31 +585,6 @@ export async function getVersionHistoryByCheckinId(
   return formattedContributionVersionHistory;
 }
 
-// ----------- FAIRTEILER TUTORIAL DTO --------------
-
-export async function getFairteilerTutorialWithSteps(
-  headers: Headers,
-  fairteilerId?: string,
-) {
-  let fairteilerIdentifier;
-
-  if (fairteilerId) {
-    fairteilerIdentifier = fairteilerId;
-  } else {
-    const session = await loadAuthenticatedSession(headers);
-    fairteilerIdentifier = session.session.activeOrganizationId;
-  }
-
-  if (!fairteilerIdentifier) {
-    throw new AuthError('No active organization.');
-  }
-
-  const fairteilerTutorialWithSteps =
-    await loadFairteilerTutorialWithSteps(fairteilerIdentifier);
-
-  return fairteilerTutorialWithSteps;
-}
-
 // ----------- USER DTO --------------
 
 /**
@@ -766,29 +743,6 @@ export async function getUserPreferences(
   }
 
   return userPreferences;
-}
-
-/**
- * Get contribution tutorial progress for the authenticated user
- */
-export async function getContributionTutorialProgress(
-  headers: Headers,
-  fairteilerId: string,
-): Promise<StepFlowProgress | null | undefined> {
-  // Get authenticated user session
-  const session = await loadAuthenticatedSession(headers);
-  const userId = session.user.id;
-
-  if (!userId) {
-    throw new AuthError('No active session.');
-  }
-
-  const flowId = `contribution-tutorial-${fairteilerId}`;
-
-  // Load step flow progress for contribution tutorial
-  const stepFlowProgress = await loadStepFlowProgress(userId, flowId);
-
-  return stepFlowProgress;
 }
 
 // GAMIFICATION DTO ---------------
