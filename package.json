@@ -69,7 +69,7 @@
     "embla-carousel-react": "^8.6.0",
     "exceljs": "^4.4.0",
     "html-to-image": "^1.11.13",
-    "import-in-the-middle": "^1.15.0",
+    "import-in-the-middle": "^2.0.0",
     "jose": "^6.1.3",
     "libphonenumber-js": "^1.13.3",
     "lucide-react": "^0.544.0",
@@ -87,7 +87,7 @@
     "react-hook-form": "^7.68.0",
     "react-map-gl": "^8.1.0",
     "recharts": "3.2.1",
-    "require-in-the-middle": "^7.5.2",
+    "require-in-the-middle": "^8.0.1",
     "resend": "^6.6.0",
     "rimraf": "^6.1.2",
     "sharp": "^0.34.5",
@@ -144,6 +144,16 @@
   },
   "overrides": {
     "react-is": "^19.0.0",
-    "esbuild": ">=0.25.0"
+    "esbuild": ">=0.25.0",
+    "baseline-browser-mapping": "^2.10.32",
+    "import-in-the-middle": "^2.0.0",
+    "require-in-the-middle": "^8.0.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "baseline-browser-mapping": "^2.10.32",
+      "import-in-the-middle": "^2.0.0",
+      "require-in-the-middle": "^8.0.1"
+    }
   }
 }
