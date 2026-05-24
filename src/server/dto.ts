@@ -55,8 +55,6 @@ import { gamificationElements } from '@/features/user/gamification/gamification-
 import { calculateUserAllTimeStreaks } from '@/features/user/gamification/streaks/streak-processor';
 import { transformMilestoneData } from '@/features/user/gamification/milestones/milestone-utils';
 import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
-import { initialContributionQuantity } from '@/lib/config/site-config';
-import { formatNumber } from '@/lib/utils';
 
 /**
  * The DTO (Data Transfer Object) layer is responsible for loading data
@@ -853,51 +851,4 @@ export async function getKeyFigures() {
     totalContributions: data.totalContributions,
     totalQuantity: parseFloat(data.totalQuantity ?? ''),
   }))[0];
-}
-
-/**
- * Public platform stats endpoint - no authentication required.
- * Returns aggregated key data across all fairteilers.
- */
-export async function getPlatformStats() {
-  const [keyFigures, categoryDistribution, originDistribution, fairteilers] =
-    await Promise.all([
-      loadKeyFigures(),
-      loadCategoryDistribution(),
-      loadOriginDistribution(),
-      loadFairteilers(),
-    ]);
-
-  const totalQuantityInKg =
-    parseFloat(keyFigures?.[0]?.totalQuantity ?? '0') +
-    initialContributionQuantity;
-
-  return {
-    keyFigures: {
-      totalQuantityInKg: formatNumber(totalQuantityInKg, 2),
-      totalContributions: formatNumber(
-        keyFigures?.[0]?.totalContributions ?? 0,
-      ),
-      activeContributors: formatNumber(
-        keyFigures?.[0]?.activeContributors ?? 0,
-      ),
-      totalFairteilers: formatNumber(fairteilers?.length ?? 0),
-    },
-    categoryDistribution:
-      categoryDistribution?.map((item) => ({
-        name: item.name ?? 'Unkategorisiert',
-        totalQuantityInKg: formatNumber(
-          parseFloat(item.totalQuantity ?? '0'),
-          2,
-        ),
-      })) ?? [],
-    originDistribution:
-      originDistribution?.map((item) => ({
-        name: item.name ?? 'Unbekannt',
-        totalQuantityInKg: formatNumber(
-          parseFloat(item.totalQuantity ?? '0'),
-          2,
-        ),
-      })) ?? [],
-  };
 }
