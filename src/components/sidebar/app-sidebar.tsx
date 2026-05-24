@@ -11,7 +11,10 @@ import { NavFairteiler } from './nav-fairteiler';
 import { NavMain } from './nav-main';
 import { NavUser } from './nav-user';
 import { headers } from 'next/headers';
-import { getActiveMembership, getActiveFairteiler } from '@server/dto';
+import {
+  getActiveMembership,
+  getActiveFairteiler,
+} from '@server/fairteiler/dto';
 import { getSession } from '@server/user/dto';
 
 export async function AppSidebar({
