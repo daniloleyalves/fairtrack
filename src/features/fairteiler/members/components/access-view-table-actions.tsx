@@ -10,31 +10,26 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@ui/tooltip';
-import { useTransition } from 'react';
-import { handleAsyncAction } from '@/lib/client-error-handling';
+import { startTransition } from 'react';
+import { useFormAction } from '@/lib/hooks/use-form-action';
 import { ACTIVE_FAIRTEILER_KEY } from '@/lib/config/api-routes';
 import { useSWRConfig } from 'swr';
 
 export function AccessViewTableActions({ member }: { member: Member }) {
   const { mutate } = useSWRConfig();
-  const [isPending, startTransition] = useTransition();
+  const disableAccessView = useFormAction(disableAccessViewAction, undefined, {
+    onSuccess: () => {
+      mutate(ACTIVE_FAIRTEILER_KEY);
+    },
+  });
+  const isPending = disableAccessView.isPending;
 
   const handleDisableMember = () => {
     startTransition(() => {
-      const actionArgument = {
+      disableAccessView.execute({
         memberId: member.id,
         userId: member.user.id,
-      };
-      handleAsyncAction(
-        () => disableAccessViewAction(actionArgument),
-        undefined,
-        {
-          showToast: true,
-          onSuccess: () => {
-            mutate(ACTIVE_FAIRTEILER_KEY);
-          },
-        },
-      );
+      });
     });
   };
 
