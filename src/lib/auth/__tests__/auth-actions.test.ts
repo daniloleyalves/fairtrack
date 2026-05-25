@@ -168,14 +168,18 @@ describe('Authentication Actions', () => {
       const result = await signOutAction({});
 
       expect(auth.api.signOut).toHaveBeenCalledWith({ headers: mockHeaders });
-      expect(result).toEqual({ redirectTo: '/sign-in', shouldRefresh: true });
+      expect(result?.data).toEqual({
+        redirectTo: '/sign-in',
+        shouldRefresh: true,
+      });
     });
 
-    it('should propagate sign out errors', async () => {
+    it('should surface sign out errors as serverError', async () => {
       const mockError = new Error('Sign out failed');
       vi.mocked(auth.api.signOut).mockRejectedValue(mockError);
 
-      await expect(signOutAction({})).rejects.toThrow('Sign out failed');
+      const result = await signOutAction({});
+      expect(result?.serverError).toBe('Sign out failed');
     });
 
     it('should call signOut with correct headers', async () => {
@@ -1131,11 +1135,12 @@ describe('Authentication Actions', () => {
     });
 
     describe('Network and Timeout Scenarios', () => {
-      it('should propagate network timeouts in auth operations', async () => {
+      it('should surface network timeouts as serverError', async () => {
         const timeoutError = new Error('Network timeout');
         vi.mocked(auth.api.signOut).mockRejectedValue(timeoutError);
 
-        await expect(signOutAction({})).rejects.toThrow('Network timeout');
+        const result = await signOutAction({});
+        expect(result?.serverError).toBe('Network timeout');
       });
 
       it('should handle slow database responses', async () => {

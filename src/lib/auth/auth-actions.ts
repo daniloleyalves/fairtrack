@@ -18,6 +18,7 @@ import { generatePassword, getErrorMessage } from './auth-helpers';
 import { MemberRolesEnum } from './auth-permissions';
 import { fairteilerProfileSchema } from '../../features/fairteiler/profile/schemas/fairteiler-profile-schema';
 import { ActionState, createAction } from '@server/action-helpers';
+import { action } from '@server/_lib/safe-action';
 import { BetterAuthError } from 'better-auth';
 import {
   accessViewSchema,
@@ -30,17 +31,15 @@ import { NotFoundError, PermissionError } from '@/server/error-handling';
 import { AuthError, handleImageUpload } from '@/server/api-helpers';
 import { userProfileSchema } from '@/features/user/settings/schemas/user-profile-schema';
 
-export const signOutAction = createAction({
-  inputSchema: z.object({}),
-  handler: async ({ headers }) => {
-    await auth.api.signOut({ headers });
-
+export const signOutAction = action
+  .inputSchema(z.object({}))
+  .action(async () => {
+    await auth.api.signOut({ headers: await headers() });
     return {
       redirectTo: '/sign-in',
       shouldRefresh: true,
     };
-  },
-});
+  });
 
 // Custom action for FormData handling (can't use createAction with FormData directly)
 export async function updateFairteilerAction(
