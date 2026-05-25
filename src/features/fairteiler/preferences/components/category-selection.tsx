@@ -5,6 +5,7 @@ import {
   CATEGORY_KEY,
 } from '@/lib/config/api-routes';
 import useSWRSuspense from '@/lib/services/swr';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 import {
   addFairteilerCategoryAction,
   removeFairteilerCategoryAction,
@@ -55,7 +56,8 @@ function CategorySelection({
   const { trigger: addFairteilerCategoryTrigger, isMutating: isAdding } =
     useSWRMutation(
       CATEGORIES_BY_FAIRTEILER_KEY,
-      (_key, { arg }: { arg: GenericItem }) => addFairteilerCategoryAction(arg),
+      (_key, { arg }: { arg: GenericItem }) =>
+        invokeAction(addFairteilerCategoryAction, arg),
       {
         populateCache: (
           addedCategory: GenericItem,
@@ -80,7 +82,7 @@ function CategorySelection({
     useSWRMutation(
       CATEGORIES_BY_FAIRTEILER_KEY,
       (_key, { arg }: { arg: GenericItem }) =>
-        removeFairteilerCategoryAction(arg),
+        invokeAction(removeFairteilerCategoryAction, arg),
       {
         populateCache: (
           removedCategory: GenericItem,
@@ -105,7 +107,8 @@ function CategorySelection({
   const { trigger: updateCategoryTrigger, isMutating: isUpdating } =
     useSWRMutation(
       CATEGORIES_BY_FAIRTEILER_KEY,
-      (_key, { arg }: { arg: GenericItem }) => updateCategoryAction(arg),
+      (_key, { arg }: { arg: GenericItem }) =>
+        invokeAction(updateCategoryAction, arg),
       {
         populateCache: (
           updatedCategory: GenericItem,
@@ -308,7 +311,8 @@ export function SuggestCategoryForm({
 
   const { trigger: addTrigger, isMutating: isAdding } = useSWRMutation(
     CATEGORY_KEY,
-    (_key, { arg }: { arg: GenericItem }) => suggestNewCategoryAction(arg),
+    (_key, { arg }: { arg: GenericItem }) =>
+      invokeAction(suggestNewCategoryAction, arg),
     {
       revalidate: false,
       rollbackOnError: true,

@@ -160,7 +160,7 @@ export async function invokeAction<TData, TInput>(
     | undefined
   >,
   input: TInput,
-): Promise<TData | undefined> {
+): Promise<TData> {
   const result = await action(input);
   if (result?.serverError) {
     throw new Error(result.serverError);
@@ -174,5 +174,8 @@ export async function invokeAction<TData, TInput>(
     ];
     throw new Error(allMessages[0] ?? ERROR_MESSAGES.VALIDATION_ERROR);
   }
-  return result?.data;
+  if (result?.data === undefined) {
+    throw new Error('Action returned no data and no error');
+  }
+  return result.data;
 }

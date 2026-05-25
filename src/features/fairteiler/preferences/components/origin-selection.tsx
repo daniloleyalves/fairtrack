@@ -2,6 +2,7 @@
 
 import { ORIGIN_KEY, ORIGINS_BY_FAIRTEILER_KEY } from '@/lib/config/api-routes';
 import useSWRSuspense from '@/lib/services/swr';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 import {
   addFairteilerOriginAction,
   removeFairteilerOriginAction,
@@ -49,7 +50,8 @@ function OriginSelection({
   const { trigger: addFairteilerOriginTrigger, isMutating: isAdding } =
     useSWRMutation(
       ORIGINS_BY_FAIRTEILER_KEY,
-      (_key, { arg }: { arg: GenericItem }) => addFairteilerOriginAction(arg),
+      (_key, { arg }: { arg: GenericItem }) =>
+        invokeAction(addFairteilerOriginAction, arg),
       {
         populateCache: (
           addedOrigin: GenericItem,
@@ -73,7 +75,7 @@ function OriginSelection({
     useSWRMutation(
       ORIGINS_BY_FAIRTEILER_KEY,
       (_key, { arg }: { arg: GenericItem }) =>
-        removeFairteilerOriginAction(arg),
+        invokeAction(removeFairteilerOriginAction, arg),
       {
         populateCache: (
           removedOrigin: GenericItem,
@@ -97,7 +99,8 @@ function OriginSelection({
   const { trigger: updateOriginTrigger, isMutating: isUpdating } =
     useSWRMutation(
       ORIGINS_BY_FAIRTEILER_KEY,
-      (_key, { arg }: { arg: GenericItem }) => updateOriginAction(arg),
+      (_key, { arg }: { arg: GenericItem }) =>
+        invokeAction(updateOriginAction, arg),
       {
         populateCache: (
           updatedOrigin: GenericItem,
@@ -297,7 +300,8 @@ export function SuggestOriginForm({
 
   const { trigger: addTrigger, isMutating: isAdding } = useSWRMutation(
     ORIGIN_KEY,
-    (_key, { arg }: { arg: GenericItem }) => suggestNewOriginAction(arg),
+    (_key, { arg }: { arg: GenericItem }) =>
+      invokeAction(suggestNewOriginAction, arg),
     {
       revalidate: false,
       rollbackOnError: true,
