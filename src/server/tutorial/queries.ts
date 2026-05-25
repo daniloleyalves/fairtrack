@@ -1,19 +1,15 @@
 'use server';
+import { headers } from 'next/headers';
 import { loadAuthenticatedSession } from '../user/dal';
 import { AuthError } from '../api-helpers';
 import { StepFlowProgress } from '../db/db-types';
 import { loadFairteilerTutorialWithSteps, loadStepFlowProgress } from './dal';
 
-export async function getFairteilerTutorialWithSteps(
-  headers: Headers,
-  fairteilerId?: string,
-) {
-  let fairteilerIdentifier;
+export async function getFairteilerTutorialWithSteps(fairteilerId?: string) {
+  let fairteilerIdentifier: string | null | undefined = fairteilerId;
 
-  if (fairteilerId) {
-    fairteilerIdentifier = fairteilerId;
-  } else {
-    const session = await loadAuthenticatedSession(headers);
+  if (!fairteilerIdentifier) {
+    const session = await loadAuthenticatedSession(await headers());
     fairteilerIdentifier = session.session.activeOrganizationId;
   }
 
@@ -21,10 +17,7 @@ export async function getFairteilerTutorialWithSteps(
     throw new AuthError('No active organization.');
   }
 
-  const fairteilerTutorialWithSteps =
-    await loadFairteilerTutorialWithSteps(fairteilerIdentifier);
-
-  return fairteilerTutorialWithSteps;
+  return await loadFairteilerTutorialWithSteps(fairteilerIdentifier);
 }
 
 /**

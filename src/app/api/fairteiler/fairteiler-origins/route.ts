@@ -1,11 +1,6 @@
 import { createApiRoute } from '@server/api-helpers';
 import { getOriginsByFairteiler } from '@server/fairteiler/queries';
 
-/**
- * Handles GET requests to the /api/fairteiler/fairteiler-origins route.
- */
-export const GET = createApiRoute(async (request) => {
-  const headers = request.headers;
-  const originsByFairteiler = await getOriginsByFairteiler(headers);
-  return originsByFairteiler;
+export const GET = createApiRoute(async () => {
+  return await getOriginsByFairteiler();
 });
