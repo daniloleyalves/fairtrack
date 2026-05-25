@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { formTableViewEnum } from '@/server/db/schema';
 import useSWRSuspense, { type FetcherError } from './swr';
 import { updateUserPreferencesAction } from '@/server/user/actions';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 import useSWRMutation from 'swr/mutation';
 import { toast } from 'sonner';
 
@@ -80,7 +81,7 @@ export function UserPreferencesProvider({
   const { trigger: mutatePreferencesTrigger } = useSWRMutation(
     PREFERENCES_API_KEY,
     (_key, { arg }: { arg: ClientPreferences }) =>
-      updateUserPreferencesAction(arg),
+      invokeAction(updateUserPreferencesAction, arg),
     {
       rollbackOnError: true,
       revalidate: false,

@@ -1,6 +1,6 @@
 'use client';
 
-import { handleAsyncAction } from '@/lib/client-error-handling';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 import {
   createStepFlow,
   createStepFlowAPI,
@@ -26,13 +26,11 @@ const tutorialStepConfig = (steps: FairteilerTutorialStep[]) => {
 const createTutorialAPI = () =>
   createStepFlowAPI<FairteilerTutorialStep>({
     async saveProgress(data) {
-      await handleAsyncAction(
-        () => saveContributionTutorialProgressAction(data),
-        undefined,
-        {
-          showToast: false,
-        },
-      );
+      try {
+        await invokeAction(saveContributionTutorialProgressAction, data);
+      } catch (error) {
+        console.error('Failed to save contribution tutorial progress:', error);
+      }
     },
   });
 
