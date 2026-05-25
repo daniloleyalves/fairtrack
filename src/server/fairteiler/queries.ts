@@ -271,32 +271,34 @@ export async function getFairteilerDashboardData() {
     {
       value: parseFloat(keyFigures?.[0].totalQuantity ?? '0'),
       description: 'gerettet',
-      color: 'primary',
+      color: 'primary' as const,
       unit: 'kg',
     },
     {
       value: keyFigures?.[0].totalContributions ?? 0,
       description: 'Abgaben',
-      color: 'default',
+      color: 'default' as const,
     },
   ];
 
   const formattedCategoryDistribution = {
     name: 'Kategorien',
-    data: categoryDistribution?.map((item, index) => ({
-      position: index + 1,
-      value: parseFloat(item.totalQuantity?.toString() ?? '0'),
-      description: item.name ?? 'Unkategorisiert',
-    })),
+    data:
+      categoryDistribution?.map((item, index) => ({
+        position: index + 1,
+        value: parseFloat(item.totalQuantity?.toString() ?? '0'),
+        description: item.name ?? 'Unkategorisiert',
+      })) ?? [],
   };
 
   const formattedOriginDistribution = {
     name: 'Herkunft',
-    data: originDistribution?.map((item, index) => ({
-      position: index + 1,
-      value: parseFloat(item.totalQuantity?.toString() ?? '0'),
-      description: item.name ?? 'Unbekannt',
-    })),
+    data:
+      originDistribution?.map((item, index) => ({
+        position: index + 1,
+        value: parseFloat(item.totalQuantity?.toString() ?? '0'),
+        description: item.name ?? 'Unbekannt',
+      })) ?? [],
   };
 
   const formattedLeaderboardEntries =
@@ -312,17 +314,29 @@ export async function getFairteilerDashboardData() {
       };
     }) ?? [];
 
-  const formattedCalendarData = calendarData?.map((d) => ({
-    value: d.date,
-    quantity: parseFloat(d.quantity?.toString() ?? '0'),
+  const formattedRecentContributions = (recentContributions ?? []).map((c) => ({
+    id: c.id,
+    date: c.date,
+    title: c.title,
+    quantity: c.quantity,
+    category: {
+      name: c.category.name ?? 'Unkategorisiert',
+      image: c.category.image,
+    },
   }));
+
+  const formattedCalendarData =
+    calendarData?.map((d) => ({
+      value: d.date,
+      quantity: parseFloat(d.quantity?.toString() ?? '0'),
+    })) ?? [];
 
   return {
     keyFigures: formattedKeyFigures,
     categoryDistribution: formattedCategoryDistribution,
     originDistribution: formattedOriginDistribution,
     leaderboardEntries: formattedLeaderboardEntries,
-    recentContributions: recentContributions,
+    recentContributions: formattedRecentContributions,
     calendarData: formattedCalendarData,
   };
 }
