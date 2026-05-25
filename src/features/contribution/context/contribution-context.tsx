@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useUserLocation } from '@/lib/hooks/use-user-location';
 import {
   isWithinRadius,
@@ -14,14 +15,20 @@ import {
   User,
   Fairteiler,
 } from '@/server/db/db-types';
-import useSWRSuspense from '@/lib/services/swr';
 import {
-  ACTIVE_FAIRTEILER_KEY,
-  CATEGORIES_BY_FAIRTEILER_KEY,
-  COMPANIES_BY_FAIRTEILER_KEY,
-  FAIRTEILER_TUTORIAL_KEY,
-  ORIGINS_BY_FAIRTEILER_KEY,
-} from '@/lib/config/api-routes';
+  getActiveFairteiler,
+  getCategoriesByFairteiler,
+  getCompaniesByFairteiler,
+  getOriginsByFairteiler,
+} from '@/server/fairteiler/queries';
+import {
+  categoryKeys,
+  companyKeys,
+  fairteilerKeys,
+  originKeys,
+} from '@/server/fairteiler/query-keys';
+import { getFairteilerTutorialWithSteps } from '@/server/tutorial/queries';
+import { tutorialKeys } from '@/server/tutorial/query-keys';
 
 export type LocationStatus =
   | 'loading'
@@ -68,6 +75,7 @@ interface ContributionProviderProps {
   initialData?: FairteilerData;
   trackUserLocation?: boolean;
   user?: User | null;
+  pendingFallback?: React.ReactNode;
 }
 
 export function ContributionProvider({
@@ -75,6 +83,7 @@ export function ContributionProvider({
   initialData,
   trackUserLocation = false,
   user = null,
+  pendingFallback = null,
 }: ContributionProviderProps) {
   const { coordinates, error, loading, permissionDenied } = useUserLocation({
     enabled: trackUserLocation,
@@ -83,25 +92,38 @@ export function ContributionProvider({
   const [locationStatus, setLocationStatus] =
     useState<LocationStatus>('loading');
 
-  // Client-side SWR hooks (only active in client mode)
-  const { data: swrFairteilerWithMembers } =
-    useSWRSuspense<FairteilerWithMembers>(
-      !initialData ? ACTIVE_FAIRTEILER_KEY : undefined,
-    );
-  const { data: swrOrigins } = useSWRSuspense<GenericItem[]>(
-    !initialData ? ORIGINS_BY_FAIRTEILER_KEY : undefined,
-  );
-  const { data: swrCategories } = useSWRSuspense<
-    (GenericItem & { image: string })[]
-  >(!initialData ? CATEGORIES_BY_FAIRTEILER_KEY : undefined);
-  const { data: swrCompanies } = useSWRSuspense<
-    (GenericItem & { originId: string })[]
-  >(!initialData ? COMPANIES_BY_FAIRTEILER_KEY : undefined);
-  const { data: swrTutorial } = useSWRSuspense<FairteilerTutorialWithSteps>(
-    !initialData ? FAIRTEILER_TUTORIAL_KEY : undefined,
-  );
+  // Client-side TanStack Query reads, gated behind `!initialData`. Five
+  // independent hooks → no shared Suspense boundary → no SWR >3-call race.
+  const clientEnabled = !initialData;
+  const fairteilerQuery = useQuery({
+    ...fairteilerKeys.active(),
+    queryFn: () => getActiveFairteiler(),
+    enabled: clientEnabled,
+  });
+  const originsQuery = useQuery({
+    ...originKeys.byFairteiler(),
+    queryFn: () => getOriginsByFairteiler(),
+    enabled: clientEnabled,
+  });
+  const categoriesQuery = useQuery({
+    ...categoryKeys.byFairteiler(),
+    queryFn: () => getCategoriesByFairteiler(),
+    enabled: clientEnabled,
+  });
+  const companiesQuery = useQuery({
+    ...companyKeys.byFairteiler(),
+    queryFn: () => getCompaniesByFairteiler(),
+    enabled: clientEnabled,
+  });
+  const tutorialQuery = useQuery({
+    ...tutorialKeys.fairteilerTutorial(),
+    queryFn: () => getFairteilerTutorialWithSteps(),
+    enabled: clientEnabled,
+  });
 
-  // Data resolution based on mode
+  // Data resolution: prefer initialData (RSC path); otherwise wait for
+  // the four required queries to resolve. Tutorial is optional, so we
+  // don't gate on its loading state.
   let fairteiler: Fairteiler | FairteilerWithMembers;
   let origins: GenericItem[];
   let categories: (GenericItem & { image?: string })[];
@@ -117,11 +139,19 @@ export function ContributionProvider({
     })[];
     tutorial = initialData.tutorial;
   } else {
-    fairteiler = swrFairteilerWithMembers!;
-    origins = swrOrigins!;
-    categories = swrCategories!;
-    companies = swrCompanies!;
-    tutorial = swrTutorial;
+    if (
+      !fairteilerQuery.data ||
+      !originsQuery.data ||
+      !categoriesQuery.data ||
+      !companiesQuery.data
+    ) {
+      return <>{pendingFallback}</>;
+    }
+    fairteiler = fairteilerQuery.data;
+    origins = originsQuery.data;
+    categories = categoriesQuery.data as (GenericItem & { image?: string })[];
+    companies = companiesQuery.data as (GenericItem & { originId?: string })[];
+    tutorial = tutorialQuery.data ?? undefined;
   }
 
   const fairteilerCoords: Coordinates = {

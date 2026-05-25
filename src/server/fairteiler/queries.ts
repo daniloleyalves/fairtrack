@@ -159,10 +159,8 @@ export async function getOrigins(): Promise<GenericItem[]> {
   }));
 }
 
-export async function getOriginsByFairteiler(
-  headers: Headers,
-): Promise<GenericItem[]> {
-  const session = await loadAuthenticatedSession(headers);
+export async function getOriginsByFairteiler(): Promise<GenericItem[]> {
+  const session = await loadAuthenticatedSession(await headers());
   const fairteilerId = session.session.activeOrganizationId;
   if (!fairteilerId) {
     throw new AuthError('No active organization');
@@ -190,10 +188,8 @@ export async function getCategories(): Promise<GenericItem[]> {
   }));
 }
 
-export async function getCategoriesByFairteiler(
-  headers: Headers,
-): Promise<GenericItem[]> {
-  const session = await loadAuthenticatedSession(headers);
+export async function getCategoriesByFairteiler(): Promise<GenericItem[]> {
+  const session = await loadAuthenticatedSession(await headers());
   const fairteilerId = session.session.activeOrganizationId;
   if (!fairteilerId) {
     throw new AuthError('No active organization');
@@ -223,10 +219,8 @@ export async function getCompanies(): Promise<CompanyWithOrigin[]> {
   }));
 }
 
-export async function getCompaniesByFairteiler(
-  headers: Headers,
-): Promise<GenericItem[]> {
-  const session = await loadAuthenticatedSession(headers);
+export async function getCompaniesByFairteiler(): Promise<GenericItem[]> {
+  const session = await loadAuthenticatedSession(await headers());
   const fairteilerId = session.session.activeOrganizationId;
   if (!fairteilerId) {
     throw new AuthError('No active organization');
