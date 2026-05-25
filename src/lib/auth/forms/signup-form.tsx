@@ -29,6 +29,7 @@ import {
   checkInvitationAndUserAction,
   checkUserSecureStatusAction,
 } from '../auth-actions';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 
 export function SignUpForm({
   className,
@@ -69,7 +70,9 @@ export function SignUpForm({
     if (invitationId) {
       handleClientOperation(
         async () => {
-          const data = await checkInvitationAndUserAction({ invitationId });
+          const data = await invokeAction(checkInvitationAndUserAction, {
+            invitationId,
+          });
 
           // If user already exists, redirect to sign-in with invitationId
           if (data.userExists) {
@@ -101,7 +104,9 @@ export function SignUpForm({
     // when autoSignIn is false (anti-enumeration). Surface the duplicate here so
     // the user sees a clear error instead of being silently redirected to sign-in.
     setIsPending(true);
-    const existing = await checkUserSecureStatusAction({ email: values.email });
+    const existing = await invokeAction(checkUserSecureStatusAction, {
+      email: values.email,
+    });
     if (existing.userExists) {
       form.setError('root.serverError', {
         message: getErrorMessage('USER_ALREADY_EXISTS', 'de'),

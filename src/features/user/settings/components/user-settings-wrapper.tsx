@@ -11,7 +11,12 @@ import UserPreferencesCard from './user-preferences';
 import UserAccountCard from './user-account';
 import useSWRMutation from 'swr/mutation';
 import { updateUserAction } from '@/lib/auth/auth-actions';
+import { invokeAction } from '@/lib/hooks/use-form-action';
+import { userProfileSchema } from '../schemas/user-profile-schema';
+import type { z } from 'zod';
 import { toast } from 'sonner';
+
+type UserProfileValues = z.infer<typeof userProfileSchema>;
 
 export default function UserSettingsWrapper({ user }: { user: User }) {
   const { data: userPreferences } = useSWRSuspense<UserPreferences>(
@@ -30,20 +35,15 @@ export default function UserSettingsWrapper({ user }: { user: User }) {
     revalidateOnMount: true,
   });
 
-  // --- Mutations ---
   const { trigger: updateUserTrigger } = useSWRMutation(
     USER_PROFILE_KEY,
-    (_key, { arg }: { arg: FormData }) => updateUserAction(arg),
+    (_key, { arg }: { arg: UserProfileValues }) =>
+      invokeAction(updateUserAction, arg),
     {
       revalidate: false,
       rollbackOnError: true,
-      onSuccess: (result) => {
-        if (result.success && result.data) {
-          toast.success(result.message ?? 'Profil erfolgreich aktualisiert!');
-        }
-        if (!result.success && result.error) {
-          toast.success(result.error);
-        }
+      onSuccess: () => {
+        toast.success('Profil erfolgreich aktualisiert!');
       },
       onError: (err) => {
         const message =
@@ -60,15 +60,24 @@ export default function UserSettingsWrapper({ user }: { user: User }) {
         <UserAccountCard
           user={userData}
           onUpdateUser={(updatedUser, isAnonymous) =>
-            updateUserTrigger(updatedUser, {
-              optimisticData: (currentUserCache: User | undefined): User => {
-                const baseUser: User = currentUserCache ?? user;
-                return {
-                  ...baseUser,
-                  isAnonymous,
-                };
+            updateUserTrigger(
+              {
+                name: updatedUser.name,
+                firstName: updatedUser.firstName,
+                lastName: updatedUser.lastName,
+                isAnonymous: updatedUser.isAnonymous,
+                avatar: updatedUser.avatar ?? null,
               },
-            })
+              {
+                optimisticData: (currentUserCache: User | undefined): User => {
+                  const baseUser: User = currentUserCache ?? user;
+                  return {
+                    ...baseUser,
+                    isAnonymous,
+                  };
+                },
+              },
+            )
           }
         />
       </div>

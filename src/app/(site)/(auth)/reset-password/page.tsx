@@ -29,13 +29,13 @@ export default async function ResetPassword({
   // Validate token if present
   let tokenValidation: { isValid: boolean; reason?: string } | null = null;
   if (isToken && !isError) {
-    try {
-      tokenValidation = await validateResetPasswordTokenAction({
-        token: isToken,
-      });
-    } catch {
-      tokenValidation = { isValid: false, reason: 'validation_error' };
-    }
+    const result = await validateResetPasswordTokenAction({
+      token: isToken,
+    });
+    tokenValidation = result?.data ?? {
+      isValid: false,
+      reason: 'validation_error',
+    };
   }
 
   return (

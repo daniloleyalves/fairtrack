@@ -35,6 +35,7 @@ import {
   ORIGINS_BY_FAIRTEILER_KEY,
 } from '@/lib/config/api-routes';
 import useSWRSuspense, { fetcher } from '@/lib/services/swr';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 
 preload(ORIGIN_KEY, fetcher);
 preload(CATEGORY_KEY, fetcher);
@@ -81,24 +82,22 @@ function FairteilerProfileForm({
 }: React.ComponentProps<'div'> & {
   fairteiler: FairteilerWithMembers;
 }) {
-  // --- Mutations ---
+  type FairteilerProfileValues = z.infer<typeof fairteilerProfileSchema>;
   const { trigger: updateTrigger, isMutating } = useSWRMutation(
     ACTIVE_FAIRTEILER_KEY,
-    (_key, { arg }: { arg: FormData }) => updateFairteilerAction(arg),
+    (_key, { arg }: { arg: FairteilerProfileValues }) =>
+      invokeAction(updateFairteilerAction, arg),
     {
       optimisticData: (
         currentFairteilerCache: FairteilerWithMembers | undefined,
       ): FairteilerWithMembers => {
         const baseFairteiler: FairteilerWithMembers =
           currentFairteilerCache ?? fairteiler;
-
         const values = form.getValues();
-
         const updatedThumbnail =
           values.thumbnail instanceof File
             ? URL.createObjectURL(values.thumbnail)
             : values.thumbnail;
-
         return {
           ...baseFairteiler,
           ...values,
@@ -107,15 +106,9 @@ function FairteilerProfileForm({
       },
       revalidate: false,
       rollbackOnError: true,
-      onSuccess: (result) => {
-        if (result.success && result.data) {
-          toast.success(result.message ?? 'Profil erfolgreich aktualisiert!');
-          form.reset(result.data);
-        }
-        if (!result.success && result.error) {
-          toast.success(result.error);
-          form.reset();
-        }
+      onSuccess: (data) => {
+        toast.success('Profil erfolgreich aktualisiert!');
+        form.reset(data);
       },
       onError: (err) => {
         const message =
@@ -152,17 +145,7 @@ function FairteilerProfileForm({
   // --- End of preview logic ---
 
   async function onSubmit(values: z.infer<typeof fairteilerProfileSchema>) {
-    const formData = new FormData();
-    for (const key in values) {
-      const value = values[key as keyof typeof values];
-      if (value instanceof File) {
-        formData.append(key, value);
-      } else if (value != null) {
-        formData.append(key, String(value));
-      }
-    }
-
-    await updateTrigger(formData);
+    await updateTrigger(values);
   }
 
   return (

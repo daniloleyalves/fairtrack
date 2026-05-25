@@ -26,6 +26,7 @@ import {
   checkInvitationAndUserAction,
   checkUserSecureStatusAction,
 } from '../auth-actions';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 import { MemberRolesEnum } from '../auth-permissions';
 import { User } from '@/server/db/db-types';
 import { SuccessContext } from 'better-auth/react';
@@ -77,7 +78,9 @@ export function SignInForm({
     if (invitationId) {
       handleClientOperation(
         async () => {
-          const data = await checkInvitationAndUserAction({ invitationId });
+          const data = await invokeAction(checkInvitationAndUserAction, {
+            invitationId,
+          });
           setInvitationData(data);
 
           // If user doesn't exist, redirect to sign-up with invitationId
@@ -117,7 +120,7 @@ export function SignInForm({
 
     await handleClientOperation(
       async () => {
-        const data = await checkUserSecureStatusAction({
+        const data = await invokeAction(checkUserSecureStatusAction, {
           email: values.email,
         });
 
