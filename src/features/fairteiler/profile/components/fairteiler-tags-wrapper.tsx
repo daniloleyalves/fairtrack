@@ -10,6 +10,7 @@ import {
   removeTagFromFairteilerAction,
 } from '@/server/fairteiler/actions';
 import useSWRSuspense from '@/lib/services/swr';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 
 interface FairteilerTagsWrapperProps {
   className?: string;
@@ -23,7 +24,8 @@ export function FairteilerTagsWrapper({
   // --- Mutations  ---
   const { trigger: addTagTrigger } = useSWRMutation(
     FAIRTEILER_TAGS_KEY,
-    (_key, { arg }: { arg: Tag }) => addTagToFairteilerAction(arg),
+    (_key, { arg }: { arg: Tag }) =>
+      invokeAction(addTagToFairteilerAction, arg),
     {
       populateCache: (addedTag: Tag, currentTags: Tag[] = []) => {
         if (!currentTags.length) {
@@ -42,7 +44,8 @@ export function FairteilerTagsWrapper({
 
   const { trigger: removeTagTrigger } = useSWRMutation(
     FAIRTEILER_TAGS_KEY,
-    (_key, { arg }: { arg: Tag }) => removeTagFromFairteilerAction(arg),
+    (_key, { arg }: { arg: Tag }) =>
+      invokeAction(removeTagFromFairteilerAction, arg),
     {
       populateCache: (removedTag: Tag, currentTags: Tag[] = []) => {
         return (currentTags || []).filter((c) => c.id !== removedTag.id);

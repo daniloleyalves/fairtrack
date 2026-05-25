@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from '@ui/select';
 import useSWRSuspense from '@/lib/services/swr';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 import {
   COMPANIES_BY_FAIRTEILER_KEY,
   COMPANY_KEY,
@@ -69,7 +70,8 @@ function CompanySelection({
   const { trigger: addFairteilerCompanyTrigger, isMutating: isAdding } =
     useSWRMutation(
       COMPANIES_BY_FAIRTEILER_KEY,
-      (_key, { arg }: { arg: GenericItem }) => addFairteilerCompanyAction(arg),
+      (_key, { arg }: { arg: GenericItem }) =>
+        invokeAction(addFairteilerCompanyAction, arg),
       {
         populateCache: (
           addedCompany: GenericItem,
@@ -93,7 +95,7 @@ function CompanySelection({
     useSWRMutation(
       COMPANIES_BY_FAIRTEILER_KEY,
       (_key, { arg }: { arg: GenericItem }) =>
-        removeFairteilerCompanyAction(arg),
+        invokeAction(removeFairteilerCompanyAction, arg),
       {
         populateCache: (
           removedCompany: GenericItem,
@@ -119,7 +121,8 @@ function CompanySelection({
   const { trigger: updateCompanyTrigger, isMutating: isUpdating } =
     useSWRMutation(
       COMPANIES_BY_FAIRTEILER_KEY,
-      (_key, { arg }: { arg: GenericItem }) => updateCompanyAction(arg),
+      (_key, { arg }: { arg: GenericItem }) =>
+        invokeAction(updateCompanyAction, arg),
       {
         populateCache: (
           updatedCompany: GenericItem,
@@ -332,7 +335,8 @@ export function SuggestCompanyForm({
 
   const { trigger: addTrigger, isMutating: isAdding } = useSWRMutation(
     COMPANY_KEY,
-    (_key, { arg }: { arg: GenericItem }) => suggestNewCompanyAction(arg),
+    (_key, { arg }: { arg: GenericItem }) =>
+      invokeAction(suggestNewCompanyAction, arg),
     {
       revalidate: false,
       rollbackOnError: true,
