@@ -4,7 +4,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { MilestoneData } from './milestone-processor';
+import { MilestoneData } from './milestone-utils';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { formatDate } from 'date-fns';
