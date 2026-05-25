@@ -141,3 +141,38 @@ export function useFormAction<
 
   return useAction(action, callbacks);
 }
+
+/**
+ * Non-hook helper for invoking a next-safe-action procedure from a context
+ * where hooks aren't available (e.g. step-flow callbacks, event handlers
+ * outside React). Returns the action's `data` on success, throws a regular
+ * Error carrying the server error message on failure. Validation errors
+ * surface as Error too — call sites needing field-level errors should use
+ * `useFormAction` instead.
+ */
+export async function invokeAction<TData, TInput>(
+  action: (input: TInput) => Promise<
+    | {
+        data?: TData;
+        serverError?: string;
+        validationErrors?: unknown;
+      }
+    | undefined
+  >,
+  input: TInput,
+): Promise<TData | undefined> {
+  const result = await action(input);
+  if (result?.serverError) {
+    throw new Error(result.serverError);
+  }
+  if (isFlattenedValidationErrors(result?.validationErrors)) {
+    const allMessages = [
+      ...result.validationErrors.formErrors,
+      ...Object.values(result.validationErrors.fieldErrors)
+        .flat()
+        .filter((m): m is string => typeof m === 'string'),
+    ];
+    throw new Error(allMessages[0] ?? ERROR_MESSAGES.VALIDATION_ERROR);
+  }
+  return result?.data;
+}

@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import {
   addExperienceLevelEvent,
@@ -10,14 +11,14 @@ import {
   updateUserPreferences,
 } from './dal';
 import { addStepFlowProgress } from '../tutorial/dal';
-import { createAction } from '../action-helpers';
-import { AuthError } from '../api-helpers';
+import { authedAction } from '../_lib/safe-action';
 import { ValidationError } from '../error-handling';
 import { FairteilerTutorialStep } from '../db/db-types';
 import { formTableViewEnum } from '../db/schema';
 import { OnboardingStepData } from '@/features/user/onboarding/onboarding-flow-types';
 import { sendFeedbackNotification } from '@/lib/services/resend/feedback-notification';
 import { feedbackSchema } from '@/features/feedback/schemas/feedack-schema';
+import { headers } from 'next/headers';
 
 const stepFlowDataSchema = z.object({
   flowId: z.string(),
@@ -31,20 +32,14 @@ const stepFlowDataSchema = z.object({
   updatedAt: z.date().optional(),
 });
 
-export const saveOnboardingProgressAction = createAction({
-  inputSchema: stepFlowDataSchema,
-  handler: async ({ input, headers }) => {
-    const session = await loadAuthenticatedSession(headers);
-    if (!session.session) {
-      throw new AuthError('No active session');
-    }
-
+export const saveOnboardingProgressAction = authedAction
+  .inputSchema(stepFlowDataSchema)
+  .action(async ({ parsedInput, ctx }) => {
     await addStepFlowProgress<OnboardingStepData>({
-      ...input,
-      userId: session.user.id,
+      ...parsedInput,
+      userId: ctx.session.user.id,
     });
-  },
-});
+  });
 
 const completeOnboardingSchema = z.object({
   selectedLevel: z
@@ -69,33 +64,28 @@ const completeOnboardingSchema = z.object({
     .optional(),
 });
 
-export const completeOnboardingAction = createAction({
-  inputSchema: completeOnboardingSchema,
-  revalidate: '/hub',
-  handler: async ({ input, headers }) => {
-    const session = await loadAuthenticatedSession(headers);
-    const userId = session.user.id;
-    if (!userId) {
-      throw new AuthError('No active session');
-    }
+export const completeOnboardingAction = authedAction
+  .inputSchema(completeOnboardingSchema)
+  .action(async ({ parsedInput, ctx }) => {
+    const userId = ctx.session.user.id;
 
     let savedLevel = null;
     let savedPreferences = null;
 
-    if (input.selectedLevel) {
+    if (parsedInput.selectedLevel) {
       savedLevel = await addExperienceLevelEvent(
-        input.selectedLevel.id,
+        parsedInput.selectedLevel.id,
         userId,
       );
     }
-    if (input.selectedGamificationElements) {
+    if (parsedInput.selectedGamificationElements) {
       const preferences: {
         enableStreaks?: boolean;
         enableQuests?: boolean;
         enableAIFeedback?: boolean;
         isAnonymous?: boolean;
       } = {};
-      input.selectedGamificationElements.forEach((element) => {
+      parsedInput.selectedGamificationElements.forEach((element) => {
         switch (element.id) {
           case 'streaks':
             preferences.enableStreaks = element.enabled;
@@ -111,7 +101,8 @@ export const completeOnboardingAction = createAction({
       savedPreferences = await addUserPreferences(userId, preferences);
     }
     await updateFirstLogin(userId, false);
-    await loadAuthenticatedSession(headers, true);
+    await loadAuthenticatedSession(await headers(), true);
+    revalidatePath('/hub');
     return {
       userId,
       savedLevel,
@@ -119,23 +110,16 @@ export const completeOnboardingAction = createAction({
       onboardingCompleted: true,
       redirectTo: '/hub/user/dashboard',
     };
-  },
-});
+  });
 
-export const saveContributionTutorialProgressAction = createAction({
-  inputSchema: stepFlowDataSchema,
-  handler: async ({ input, headers }) => {
-    const session = await loadAuthenticatedSession(headers);
-    if (!session.session) {
-      throw new AuthError('No active session');
-    }
-
+export const saveContributionTutorialProgressAction = authedAction
+  .inputSchema(stepFlowDataSchema)
+  .action(async ({ parsedInput, ctx }) => {
     await addStepFlowProgress<FairteilerTutorialStep>({
-      ...input,
-      userId: session.user.id,
+      ...parsedInput,
+      userId: ctx.session.user.id,
     });
-  },
-});
+  });
 
 const preferencesSchema = z.object({
   formTableView: z.enum(formTableViewEnum.enumValues).default('wizard'),
@@ -144,40 +128,31 @@ const preferencesSchema = z.object({
   enableAIFeedback: z.boolean().default(false),
 });
 
-export const updateUserPreferencesAction = createAction({
-  inputSchema: preferencesSchema,
-  revalidate: '/hub/user/settings',
-  handler: async ({ input, headers }) => {
-    const session = await loadAuthenticatedSession(headers);
-    const userId = session.user.id;
-    if (!userId) {
-      throw new AuthError('No active session');
-    }
-
-    if (!input) {
+export const updateUserPreferencesAction = authedAction
+  .inputSchema(preferencesSchema)
+  .action(async ({ parsedInput, ctx }) => {
+    if (!parsedInput) {
       throw new ValidationError('Keine Einträge gefunden.');
     }
+    const result = await updateUserPreferences(
+      ctx.session.user.id,
+      parsedInput,
+    );
+    revalidatePath('/hub/user/settings');
+    return result;
+  });
 
-    return await updateUserPreferences(userId, input);
-  },
-});
-
-export const submitFeedbackAction = createAction({
-  inputSchema: feedbackSchema,
-  handler: async ({ input, headers }) => {
-    const session = await loadAuthenticatedSession(headers);
-    const userId = session.user.id;
-    if (!userId) {
-      throw new AuthError('No active session');
-    }
-
-    const fairteilerId = session.session.activeOrganizationId ?? null;
+export const submitFeedbackAction = authedAction
+  .inputSchema(feedbackSchema)
+  .action(async ({ parsedInput, ctx }) => {
+    const userId = ctx.session.user.id;
+    const fairteilerId = ctx.session.session.activeOrganizationId ?? null;
 
     const result = await submitUserFeedbackWithDetails(
       userId,
       fairteilerId,
-      input.category,
-      input.message,
+      parsedInput.category,
+      parsedInput.message,
     );
 
     if (!result) {
@@ -209,5 +184,4 @@ export const submitFeedbackAction = createAction({
     }
 
     return result;
-  },
-});
+  });
