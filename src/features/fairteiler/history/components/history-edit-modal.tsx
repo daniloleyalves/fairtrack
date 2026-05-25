@@ -37,13 +37,7 @@ import { editContributionAction } from '@/server/contribution/actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
-import {
-  Dispatch,
-  SetStateAction,
-  Suspense,
-  useEffect,
-  useTransition,
-} from 'react';
+import { Dispatch, SetStateAction, useEffect, useTransition } from 'react';
 import { useForm, UseFormReturn } from 'react-hook-form';
 import { useSWRConfig } from 'swr';
 import * as z from 'zod';
@@ -264,11 +258,7 @@ function EditFormContent({
                 Versionsverlauf
               </AccordionTrigger>
               <AccordionContent className='mx-auto max-w-3/5'>
-                <Suspense
-                  fallback={<Loader2 className='mx-auto animate-spin' />}
-                >
-                  <HistoryVersionHistory checkinId={checkinId} />
-                </Suspense>
+                <HistoryVersionHistory checkinId={checkinId} />
               </AccordionContent>
             </AccordionItem>
           </Accordion>

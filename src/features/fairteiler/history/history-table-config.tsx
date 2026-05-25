@@ -19,16 +19,9 @@ import { formatNumber } from '@/lib/utils';
 import { vContribution } from '@/server/db/db-types';
 import type { ColumnDef, Row } from '@tanstack/react-table';
 import { formatInTimeZone } from 'date-fns-tz';
-import {
-  ArrowUpDown,
-  Edit,
-  Eye,
-  History,
-  Loader2,
-  MoreHorizontal,
-} from 'lucide-react';
+import { ArrowUpDown, Edit, Eye, History, MoreHorizontal } from 'lucide-react';
 import Image from 'next/image';
-import { Suspense, useState } from 'react';
+import { useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { preload } from 'swr';
 import { HistoryEditModal } from './components/history-edit-modal';
@@ -195,9 +188,7 @@ const RowActions = ({ row }: { row: Row<vContribution> }) => {
               className='w-80'
               onFocusOutside={(e) => e.preventDefault()}
             >
-              <Suspense fallback={<Loader2 className='mx-auto animate-spin' />}>
-                <HistoryVersionHistory checkinId={historyItem.checkinId} />
-              </Suspense>
+              <HistoryVersionHistory checkinId={historyItem.checkinId} />
             </PopoverContent>
           </Popover>
         </DropdownMenuContent>
