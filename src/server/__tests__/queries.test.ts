@@ -145,7 +145,9 @@ describe('DTO Layer', () => {
       });
 
       it('should fail when DAL returns null', async () => {
-        vi.mocked(fairteilerDal.loadActiveMembership).mockResolvedValue(null);
+        vi.mocked(fairteilerDal.loadActiveMembership).mockResolvedValue(
+          null as never,
+        );
 
         await expect(getActiveMembership(mockHeaders)).rejects.toThrow(
           new NotFoundError('membership'),
@@ -489,10 +491,7 @@ describe('DTO Layer', () => {
           mockContributionVersionHistory,
         );
 
-        const result = await getVersionHistoryByCheckinId(
-          mockHeaders,
-          'checkin-001',
-        );
+        const result = await getVersionHistoryByCheckinId('checkin-001');
 
         const expectedResult = mockContributionVersionHistory.map((item) => ({
           id: item.id,

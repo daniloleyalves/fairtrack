@@ -3,7 +3,7 @@
 import { USER_DASHBOARD_KEY } from '@/lib/config/api-routes';
 import useSWRSuspense, { fetcher } from '@/lib/services/swr';
 import { UserDashboard } from './user-dashboard';
-import { MilestoneData } from '../gamification/milestones/milestone-processor';
+import { MilestoneData } from '../gamification/milestones/milestone-utils';
 
 export interface UserDashboardData {
   keyFigures: {
