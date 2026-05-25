@@ -100,8 +100,8 @@ export async function getVersionHistoryByCheckinId(checkinId: string) {
     checkinId,
   });
 
-  const formattedContributionVersionHistory = contributionVersionHistory?.map(
-    (item) => ({
+  return (
+    contributionVersionHistory?.map((item) => ({
       id: item.id,
       checkinId: item.checkinId,
       fairteilerId: item.fairteilerId,
@@ -112,10 +112,8 @@ export async function getVersionHistoryByCheckinId(checkinId: string) {
       newValue: item.newValue,
       field: item.field,
       changeDate: item.createdAt,
-    }),
+    })) ?? []
   );
-
-  return formattedContributionVersionHistory;
 }
 
 export async function getKeyFigures() {
