@@ -10,7 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import React, { startTransition } from 'react';
 import { DefaultValues, SubmitHandler, useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
-import { handleAsyncAction } from '@/lib/client-error-handling';
+import { useFormAction } from '@/lib/hooks/use-form-action';
 import {
   FAIRTEILER_DASHBOARD_KEY,
   USER_DASHBOARD_KEY,
@@ -44,6 +44,21 @@ export function ContributionForm({
     mode: 'onChange',
   });
 
+  const submitContribution = useFormAction(submitContributionAction, form, {
+    successMessage: 'Lebensmittel erfolgreich beigetragen!',
+    onSuccess: (data) => {
+      const cacheKeys = config?.cacheKeys ?? [
+        FAIRTEILER_DASHBOARD_KEY,
+        USER_DASHBOARD_KEY,
+      ];
+      cacheKeys.forEach((key) => mutate(key));
+
+      if (data?.redirectTo) {
+        router.push(data.redirectTo);
+      }
+    },
+  });
+
   const onSubmit: SubmitHandler<ContributionFormValues> = (
     data: ContributionFormValues,
   ) => {
@@ -64,22 +79,7 @@ export function ContributionForm({
     };
 
     startTransition(() => {
-      handleAsyncAction(() => submitContributionAction(submissionData), form, {
-        successMessage: 'Lebensmittel erfolgreich beigetragen!',
-        setFormError: true,
-        onSuccess: (data) => {
-          // Use configured cache keys or defaults
-          const cacheKeys = config?.cacheKeys ?? [
-            FAIRTEILER_DASHBOARD_KEY,
-            USER_DASHBOARD_KEY,
-          ];
-          cacheKeys.forEach((key) => mutate(key));
-
-          if (data?.redirectTo) {
-            router.push(data.redirectTo);
-          }
-        },
-      });
+      submitContribution.execute(submissionData);
     });
   };
 

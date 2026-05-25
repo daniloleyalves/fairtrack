@@ -2,12 +2,12 @@
 
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import {
   addVersionHistoryRecord,
   checkinContribution,
   loadContributions,
 } from './dal';
-import { loadAuthenticatedSession } from '../user/dal';
 import {
   contributionEditSchema,
   contributionFormSchema,
@@ -18,31 +18,26 @@ import {
   ValidationError,
 } from '../error-handling';
 import { AuthError } from '../api-helpers';
-import { createAction } from '../action-helpers';
+import { authedAction, fairteilerAction } from '../_lib/safe-action';
 import { vContribution } from '../db/db-types';
 import { checkPermissionOnServer } from '@/lib/auth/auth';
 import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
 
-export const submitContributionAction = createAction({
-  inputSchema: contributionFormSchema,
-  handler: async ({ input, headers }) => {
-    const session = await loadAuthenticatedSession(headers);
-    if (!session) {
-      throw new AuthError('No active session');
-    }
-
-    if (!input.config?.fairteilerId) {
+export const submitContributionAction = authedAction
+  .inputSchema(contributionFormSchema)
+  .action(async ({ parsedInput, ctx }) => {
+    if (!parsedInput.config?.fairteilerId) {
       throw new AuthError('FairteilerId cannot be undefined');
     }
 
-    if (input.contributions.length <= 0) {
+    if (parsedInput.contributions.length <= 0) {
       throw new ValidationError('Keine Einträge gefunden.');
     }
 
-    let contributingUserId = session.user.id;
+    let contributingUserId = ctx.session.user.id;
 
-    if (input.config.submitAsAccessViewId) {
-      const permissionResult = await checkPermissionOnServer(headers, {
+    if (parsedInput.config.submitAsAccessViewId) {
+      const permissionResult = await checkPermissionOnServer(await headers(), {
         member: ['create'],
       });
 
@@ -52,50 +47,48 @@ export const submitContributionAction = createAction({
         );
       }
 
-      contributingUserId = input.config.submitAsAccessViewId;
+      contributingUserId = parsedInput.config.submitAsAccessViewId;
     }
 
     await checkinContribution(
-      input.config.fairteilerId,
+      parsedInput.config.fairteilerId,
       contributingUserId,
-      input.contributions,
+      parsedInput.contributions,
     );
 
     const defaultRevalidatePaths = ['/hub/user/dashboard'];
     const defaultSuccessRedirect = '/hub/user/contribution/success';
 
     const revalidatePaths =
-      input.config?.revalidatePaths ?? defaultRevalidatePaths;
+      parsedInput.config?.revalidatePaths ?? defaultRevalidatePaths;
     let successRedirect =
-      input.config?.successRedirect ?? defaultSuccessRedirect;
+      parsedInput.config?.successRedirect ?? defaultSuccessRedirect;
 
-    if (input.config?.submitAsAccessViewId) {
+    if (parsedInput.config?.submitAsAccessViewId) {
       const url = new URL(successRedirect, process.env.NEXT_PUBLIC_ENV_URL);
-      url.searchParams.set('submitAsUserId', input.config.submitAsAccessViewId);
+      url.searchParams.set(
+        'submitAsUserId',
+        parsedInput.config.submitAsAccessViewId,
+      );
       successRedirect = url.pathname + url.search;
     }
 
     revalidatePaths.forEach((path) => revalidatePath(path));
 
     return { redirectTo: successRedirect };
-  },
-});
+  });
 
-export const editContributionAction = createAction({
-  inputSchema: contributionEditSchema,
-  revalidate: '/hub/fairteiler/dashboard',
-  handler: async ({ input, headers }) => {
-    const session = await loadAuthenticatedSession(headers);
-    const fairteilerId = session.session.activeOrganizationId;
-    if (!fairteilerId) {
-      throw new AuthError('No active organization');
-    }
-
-    await addVersionHistoryRecord(fairteilerId, session.user.id, input);
-
-    return input;
-  },
-});
+export const editContributionAction = fairteilerAction
+  .inputSchema(contributionEditSchema)
+  .action(async ({ parsedInput, ctx }) => {
+    await addVersionHistoryRecord(
+      ctx.fairteilerId,
+      ctx.session.user.id,
+      parsedInput,
+    );
+    revalidatePath('/hub/fairteiler/dashboard');
+    return parsedInput;
+  });
 
 const exportContributionsSchema = z.object({
   dateRange: z
@@ -107,26 +100,24 @@ const exportContributionsSchema = z.object({
   scope: z.enum(['fairteiler', 'platform']).default('fairteiler'),
 });
 
-export const exportContributionsAction = createAction({
-  inputSchema: exportContributionsSchema,
-  handler: async ({ input, headers }) => {
-    const session = await loadAuthenticatedSession(headers);
-
+export const exportContributionsAction = authedAction
+  .inputSchema(exportContributionsSchema)
+  .action(async ({ parsedInput, ctx }) => {
     let fairteilerId: string | null = null;
-    if (input.scope === 'fairteiler') {
-      fairteilerId = session.session.activeOrganizationId ?? null;
+    if (parsedInput.scope === 'fairteiler') {
+      fairteilerId = ctx.session.session.activeOrganizationId ?? null;
       if (!fairteilerId) {
         throw new AuthError('No active organization');
       }
     } else {
-      if (session.user.role !== 'admin') {
+      if (ctx.session.user.role !== 'admin') {
         throw new AuthError('Admin access required for platform export');
       }
     }
 
     const contributionsResult = await loadContributions({
       fairteilerId,
-      dateRange: input.dateRange,
+      dateRange: parsedInput.dateRange,
     });
 
     if (!contributionsResult?.data?.length) {
@@ -147,8 +138,5 @@ export const exportContributionsAction = createAction({
       return contribution;
     });
 
-    const typecheckedData = anonymizedData satisfies vContribution[];
-
-    return typecheckedData;
-  },
-});
+    return anonymizedData satisfies vContribution[];
+  });

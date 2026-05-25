@@ -115,23 +115,15 @@ export function TutorialStepForm({
   }, [editorReady, state.editingStep]);
 
   const onSubmit = (data: TutorialStepFormData) => {
+    if (!tutorialId) return;
     handleClientOperation(
       async () => {
-        const formData = new FormData();
-
-        formData.append('title', data.title);
-        formData.append('content', data.content);
-        formData.append('sortIndex', data.sortIndex.toString());
-
-        if (data.media) formData.append('media', data.media);
-        if (data.id) formData.append('id', data.id);
-        if (tutorialId) formData.append('tutorialId', tutorialId);
-
         try {
-          if (state.editingStep?.id) {
-            await updateStep(formData);
+          if (state.editingStep?.id && data.id) {
+            await updateStep({ ...data, id: data.id, tutorialId });
           } else {
-            await addStep(formData);
+            const { id: _ignored, ...rest } = data;
+            await addStep({ ...rest, tutorialId });
           }
           clearStepForm();
           clearForm();
@@ -141,7 +133,7 @@ export function TutorialStepForm({
       },
       setIsSubmitting,
       (error) => {
-        console.error('Error checking invitation:', error);
+        console.error('Error submitting step:', error);
       },
     );
   };
