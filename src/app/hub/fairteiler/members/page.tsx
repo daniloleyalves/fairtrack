@@ -1,6 +1,4 @@
-import { Skeleton } from '@components/ui/skeleton';
 import { DataErrorBoundary } from '@components/error-boundary';
-import { Suspense } from 'react';
 import { MemberTablesWrapper } from '@/features/fairteiler/members/components/member-tables-wrapper';
 
 export default function FairteilerMemebersPage() {
@@ -20,19 +18,8 @@ export default function FairteilerMemebersPage() {
         </p>
       </div>
       <DataErrorBoundary>
-        <Suspense fallback={<MemberTablesSkeleton />}>
-          <MemberTablesWrapper />
-        </Suspense>
+        <MemberTablesWrapper />
       </DataErrorBoundary>
     </div>
-  );
-}
-
-function MemberTablesSkeleton() {
-  return (
-    <>
-      <Skeleton className='h-[250px] w-full' />
-      <Skeleton className='h-[250px] w-full' />
-    </>
   );
 }
