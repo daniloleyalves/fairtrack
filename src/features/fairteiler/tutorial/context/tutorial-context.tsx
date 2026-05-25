@@ -14,10 +14,17 @@ import {
   updateFairteilerTutorialStepAction,
 } from '@/server/tutorial/actions';
 import { toast } from 'sonner';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 import {
   TutorialFormData,
   TutorialStepFormData,
 } from '../schemas/fairteiler-tutorial-schema';
+
+type AddStepInput = Omit<TutorialStepFormData, 'id'> & { tutorialId: string };
+type UpdateStepInput = TutorialStepFormData & {
+  id: string;
+  tutorialId: string;
+};
 
 interface TutorialState {
   currentStepIndex: number;
@@ -105,8 +112,8 @@ interface TutorialContextValue {
   toggleTutorialActive: (
     tutorial: FairteilerTutorialWithSteps,
   ) => Promise<void>;
-  addStep: (data: FormData) => Promise<void>;
-  updateStep: (data: FormData) => Promise<void>;
+  addStep: (data: AddStepInput) => Promise<void>;
+  updateStep: (data: UpdateStepInput) => Promise<void>;
   removeStep: (data: { id: string }) => Promise<void>;
 }
 
@@ -126,7 +133,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
   const { trigger: addTutorialTrigger } = useSWRMutation(
     FAIRTEILER_TUTORIAL_KEY,
     (_key, { arg }: { arg: TutorialFormData }) =>
-      addFairteilerTutorialAction(arg),
+      invokeAction(addFairteilerTutorialAction, arg),
     {
       revalidate: false,
       rollbackOnError: true,
@@ -144,7 +151,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
   const { trigger: updateTutorialTrigger } = useSWRMutation(
     FAIRTEILER_TUTORIAL_KEY,
     (_key, { arg }: { arg: TutorialFormData }) =>
-      updateFairteilerTutorialAction(arg),
+      invokeAction(updateFairteilerTutorialAction, arg),
     {
       revalidate: false,
       rollbackOnError: true,
@@ -162,7 +169,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
   const { trigger: removeTutorialTrigger } = useSWRMutation(
     FAIRTEILER_TUTORIAL_KEY,
     (_key, { arg }: { arg: { id: string } }) =>
-      removeFairteilerTutorialAction(arg),
+      invokeAction(removeFairteilerTutorialAction, arg),
     {
       revalidate: false,
       rollbackOnError: true,
@@ -179,20 +186,18 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
 
   const { trigger: addStepTrigger } = useSWRMutation(
     FAIRTEILER_TUTORIAL_KEY,
-    (_key, { arg }: { arg: FormData }) => addFairteilerTutorialStepAction(arg),
+    (_key, { arg }: { arg: AddStepInput }) =>
+      invokeAction(addFairteilerTutorialStepAction, arg),
     {
       revalidate: true,
       rollbackOnError: true,
       onSuccess: (result) => {
-        if (result.success && result.data) {
-          toast.success(result.message ?? 'Schritt erfolgreich hinzugefügt!');
+        if (result) {
+          toast.success('Schritt erfolgreich hinzugefügt!');
           dispatch({
             type: 'SET_CURRENT_STEP',
-            payload: result.data.sortIndex - 1,
+            payload: result.sortIndex - 1,
           });
-        }
-        if (!result.success && result.error) {
-          toast.error(result.error);
         }
       },
       onError: (err) => {
@@ -205,21 +210,18 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
 
   const { trigger: updateStepTrigger } = useSWRMutation(
     FAIRTEILER_TUTORIAL_KEY,
-    (_key, { arg }: { arg: FormData }) =>
-      updateFairteilerTutorialStepAction(arg),
+    (_key, { arg }: { arg: UpdateStepInput }) =>
+      invokeAction(updateFairteilerTutorialStepAction, arg),
     {
       revalidate: true,
       rollbackOnError: true,
       onSuccess: (result) => {
-        if (result.success && result.data) {
-          toast.success(result.message ?? 'Schritt erfolgreich aktualisiert!');
+        if (result) {
+          toast.success('Schritt erfolgreich aktualisiert!');
           dispatch({
             type: 'SET_CURRENT_STEP',
-            payload: result.data.sortIndex - 1,
+            payload: result.sortIndex - 1,
           });
-        }
-        if (!result.success && result.error) {
-          toast.error(result.error);
         }
       },
       onError: (err) => {
@@ -233,7 +235,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
   const { trigger: removeStepTrigger } = useSWRMutation(
     FAIRTEILER_TUTORIAL_KEY,
     (_key, { arg }: { arg: { id: string } }) =>
-      removeFairteilerTutorialStepAction(arg),
+      invokeAction(removeFairteilerTutorialStepAction, arg),
     {
       revalidate: true,
       rollbackOnError: true,
