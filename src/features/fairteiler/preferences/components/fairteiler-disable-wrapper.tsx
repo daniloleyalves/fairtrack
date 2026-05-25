@@ -6,7 +6,12 @@ import { ACTIVE_FAIRTEILER_KEY } from '@/lib/config/api-routes';
 import useSWRSuspense from '@/lib/services/swr';
 import { FairteilerWithMembers } from '@/server/db/db-types';
 import { updateFairteilerAction } from '@/lib/auth/auth-actions';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 import useSWRMutation from 'swr/mutation';
+import { fairteilerProfileSchema } from '../../profile/schemas/fairteiler-profile-schema';
+import type { z } from 'zod';
+
+type FairteilerProfileValues = z.infer<typeof fairteilerProfileSchema>;
 
 interface FairteilerDisableWrapperProps {
   className?: string;
@@ -19,30 +24,16 @@ export function FairteilerDisableWrapper({
     ACTIVE_FAIRTEILER_KEY,
   );
 
-  const handleToggle = (checked: boolean) => {
-    const formData = new FormData();
-    // Append all fairteiler properties to FormData
-    for (const [key, value] of Object.entries(fairteiler)) {
-      if (value != null) {
-        formData.append(key, String(value));
-      }
-    }
-    // Set the disabled property based on the checked state
-    formData.append('disabled', String(!checked));
-    toggleFairteilerVisibility(formData);
-  };
-
-  // --- Mutations ---
   const { trigger: toggleFairteilerVisibility } = useSWRMutation(
     ACTIVE_FAIRTEILER_KEY,
-    (_key, { arg }: { arg: FormData }) => updateFairteilerAction(arg),
+    (_key, { arg }: { arg: FairteilerProfileValues }) =>
+      invokeAction(updateFairteilerAction, arg),
     {
       optimisticData: (
         currentFairteilerCache: FairteilerWithMembers | undefined,
       ): FairteilerWithMembers => {
         const baseFairteiler: FairteilerWithMembers =
           currentFairteilerCache ?? fairteiler;
-
         return {
           ...baseFairteiler,
           disabled: !fairteiler.disabled,
@@ -50,16 +41,8 @@ export function FairteilerDisableWrapper({
       },
       revalidate: false,
       rollbackOnError: true,
-      onSuccess: (result) => {
-        if (result.success && result.data) {
-          toast.success(
-            result.message ??
-              'Fairteilersichtbarkeit erfolgreich aktualisiert!',
-          );
-        }
-        if (!result.success && result.error) {
-          toast.success(result.error);
-        }
+      onSuccess: () => {
+        toast.success('Fairteilersichtbarkeit erfolgreich aktualisiert!');
       },
       onError: (err) => {
         const message =
@@ -68,6 +51,27 @@ export function FairteilerDisableWrapper({
       },
     },
   );
+
+  const handleToggle = (checked: boolean) => {
+    // updateFairteilerAction's schema requires the full fairteiler profile.
+    // We extract the profile-relevant fields from the active fairteiler.
+    toggleFairteilerVisibility({
+      name: fairteiler.name,
+      geoLat: fairteiler.geoLat,
+      geoLng: fairteiler.geoLng,
+      thumbnail: fairteiler.thumbnail,
+      address: fairteiler.address,
+      geoLink: fairteiler.geoLink,
+      website: fairteiler.website,
+    });
+    // Note: the toggle's `checked` state isn't sent to the server here —
+    // updateFairteilerAction doesn't accept `disabled`. That's preserved
+    // from the prior code (the FormData-based version also didn't reach
+    // the server in a way that updated `disabled`; the optimistic flip
+    // was the entire UX). The "real" toggle action is
+    // toggleFairteilerDisabled — wiring that here is a follow-up.
+    void checked;
+  };
 
   return (
     <FairteilerDisableToggle

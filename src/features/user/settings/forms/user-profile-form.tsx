@@ -23,6 +23,7 @@ import { userProfileSchema } from '../schemas/user-profile-schema';
 import useSWRMutation from 'swr/mutation';
 import { USER_PROFILE_KEY } from '@/lib/config/api-routes';
 import { updateUserAction } from '@/lib/auth/auth-actions';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 import { toast } from 'sonner';
 
 export default function UserProfileForm({
@@ -32,21 +33,19 @@ export default function UserProfileForm({
 }: React.ComponentProps<'div'> & {
   user: User;
 }) {
-  // --- Mutations ---
+  type UserProfileValues = z.infer<typeof userProfileSchema>;
   const { trigger: updateTrigger, isMutating } = useSWRMutation(
     USER_PROFILE_KEY,
-    (_key, { arg }: { arg: FormData }) => updateUserAction(arg),
+    (_key, { arg }: { arg: UserProfileValues }) =>
+      invokeAction(updateUserAction, arg),
     {
       optimisticData: (currentUserCache: User | undefined): User => {
         const baseUser: User = currentUserCache ?? user;
-
         const values = form.getValues();
-
         const updatedAvatar =
           values.avatar instanceof File
             ? URL.createObjectURL(values.avatar)
             : values.avatar;
-
         return {
           ...baseUser,
           ...values,
@@ -55,15 +54,9 @@ export default function UserProfileForm({
       },
       revalidate: false,
       rollbackOnError: true,
-      onSuccess: (result) => {
-        if (result.success && result.data) {
-          toast.success(result.message ?? 'Profil erfolgreich aktualisiert!');
-          form.reset(result.data);
-        }
-        if (!result.success && result.error) {
-          toast.success(result.error);
-          form.reset();
-        }
+      onSuccess: (data) => {
+        toast.success('Profil erfolgreich aktualisiert!');
+        form.reset(data);
       },
       onError: (err) => {
         const message =
@@ -97,17 +90,7 @@ export default function UserProfileForm({
   }, [avatar]);
 
   async function onSubmit(values: z.infer<typeof userProfileSchema>) {
-    const formData = new FormData();
-    for (const key in values) {
-      const value = values[key as keyof typeof values];
-      if (value instanceof File) {
-        formData.append(key, value);
-      } else if (value != null) {
-        formData.append(key, String(value));
-      }
-    }
-
-    await updateTrigger(formData);
+    await updateTrigger(values);
   }
   const removeAvatar = () => {
     form.setValue('avatar', null, { shouldDirty: true });
