@@ -1,29 +1,57 @@
 'use client';
 
 import { useAction } from 'next-safe-action/hooks';
-import type { HookCallbacks, HookSafeActionFn } from 'next-safe-action/hooks';
+import type {
+  HookCallbacks,
+  HookSafeActionFn,
+  UseActionHookReturn,
+} from 'next-safe-action/hooks';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+import type { SafeActionFn } from 'next-safe-action';
 import { FieldValues, Path, UseFormReturn } from 'react-hook-form';
 import { toast } from 'sonner';
 import { ERROR_MESSAGES } from '@/lib/client-error-handling';
 
 /**
- * Convenience wrapper around `next-safe-action/hooks#useAction` that adds:
- * - Success toast (via `successMessage`)
- * - Auto-map `validationErrors.fieldErrors` → `form.setError(path)` when a
- *   form is supplied
- * - Server-error toast (when no form-level handling is appropriate)
- *
- * This is the modern replacement for `handleAsyncAction` — the action layer
- * is now `next-safe-action`-based, so client call sites use this hook in
- * place of the old `handleAsyncAction(() => action(input), form, opts)`
- * pattern. Returns the full `useAction` hook value (`execute`,
- * `executeAsync`, `isPending`, `result`, …).
- *
- * All actions in this codebase set `serverError: string` (via
- * `handleServerError` in `safe-action.ts`) and `defaultValidationErrorsShape:
- * 'flattened'`, so the generic constraints below match what every action
- * produces.
+ * Validation-errors shape produced by every action in this codebase, set by
+ * `defaultValidationErrorsShape: 'flattened'` in `src/server/_lib/safe-action.ts`.
+ * Mirrors `next-safe-action`'s flattened format so we can constrain wrapper
+ * generics without re-running its formatter.
  */
+export interface FlattenedValidationErrors {
+  formErrors: string[];
+  fieldErrors: Record<string, string[] | undefined>;
+}
+
+/**
+ * The action shape every procedure in this codebase produces: `serverError`
+ * is a `string` (set by `handleServerError(e) => e.message`), validation
+ * errors are flattened. Schema and Data flow through generic inference at
+ * the call site of `useFormAction`/`invokeAction`.
+ */
+export type AppHookActionFn<
+  TSchema extends StandardSchemaV1 | undefined,
+  TData,
+> = HookSafeActionFn<string, TSchema, FlattenedValidationErrors, TData>;
+
+/**
+ * Same shape, but for direct invocation (no hook). Mirrors
+ * `next-safe-action`'s `SafeActionFn` with our fixed `serverError: string`
+ * and `validationErrors: FlattenedValidationErrors`. `BindArgsSchemas` is
+ * `readonly []` because none of our actions use bound args (we're not on
+ * the React 19 `useFormState` paradigm).
+ */
+export type AppActionFn<
+  TSchema extends StandardSchemaV1 | undefined,
+  TData,
+> = SafeActionFn<
+  string,
+  TSchema,
+  readonly [],
+  FlattenedValidationErrors,
+  TData
+>;
+
 export interface UseFormActionOptions<TData> {
   /** Toast text on success. Omit to skip the success toast. */
   successMessage?: string;
@@ -40,13 +68,8 @@ export interface UseFormActionOptions<TData> {
   /** Called on any error (validation OR server). */
   onError?: (error: {
     serverError?: string;
-    validationErrors?: FlattenedValidationErrors | undefined;
+    validationErrors?: FlattenedValidationErrors;
   }) => void | Promise<void>;
-}
-
-export interface FlattenedValidationErrors {
-  formErrors: string[];
-  fieldErrors: Record<string, string[] | undefined>;
 }
 
 function isFlattenedValidationErrors(
@@ -79,22 +102,25 @@ function mapValidationErrorsToForm<TFieldValues extends FieldValues>(
 }
 
 /**
- * Schema generic stays loose (`unknown`) — `useAction` infers it from the
- * action argument anyway, and the wrapper doesn't need to read the schema
- * type. Same for shaped errors: we narrow at runtime via
- * `isFlattenedValidationErrors`.
+ * Convenience wrapper around `next-safe-action/hooks#useAction` that adds:
+ * - Success toast (`successMessage`)
+ * - Auto-map `validationErrors.fieldErrors` → `form.setError(path)` when a
+ *   form is supplied
+ * - Server-error toast (when no form-level handling is appropriate)
+ *
+ * Replaces the old `handleAsyncAction` helper. The Schema and Data generics
+ * flow from the action argument — call sites get full type safety on
+ * `execute(input)` and `result.data`.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyAction<TData> = HookSafeActionFn<string, any, any, TData>;
-
 export function useFormAction<
+  TSchema extends StandardSchemaV1 | undefined,
   TData,
   TFieldValues extends FieldValues = FieldValues,
 >(
-  action: AnyAction<TData>,
+  action: AppHookActionFn<TSchema, TData>,
   form?: UseFormReturn<TFieldValues>,
   options: UseFormActionOptions<TData> = {},
-) {
+): UseActionHookReturn<string, TSchema, FlattenedValidationErrors, TData> {
   const {
     successMessage,
     showToast = true,
@@ -104,8 +130,12 @@ export function useFormAction<
     onError,
   } = options;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const callbacks: HookCallbacks<string, any, any, TData> = {
+  const callbacks: HookCallbacks<
+    string,
+    TSchema,
+    FlattenedValidationErrors,
+    TData
+  > = {
     onExecute: () => {
       form?.clearErrors();
     },
@@ -144,24 +174,25 @@ export function useFormAction<
 
 /**
  * Non-hook helper for invoking a next-safe-action procedure from a context
- * where hooks aren't available (e.g. step-flow callbacks, event handlers
- * outside React). Returns the action's `data` on success, throws a regular
- * Error carrying the server error message on failure. Validation errors
- * surface as Error too — call sites needing field-level errors should use
+ * where hooks aren't available (e.g. step-flow callbacks, SWR mutation
+ * fetchers, RSC pages). Returns the action's `data` on success, throws an
+ * `Error` carrying the server error message on failure. Validation errors
+ * surface as `Error` too — call sites needing field-level errors should use
  * `useFormAction` instead.
  */
-export async function invokeAction<TData, TInput>(
-  action: (input: TInput) => Promise<
-    | {
-        data?: TData;
-        serverError?: string;
-        validationErrors?: unknown;
-      }
-    | undefined
-  >,
-  input: TInput,
+export async function invokeAction<
+  TSchema extends StandardSchemaV1 | undefined,
+  TData,
+>(
+  action: AppActionFn<TSchema, TData>,
+  input: TSchema extends StandardSchemaV1<infer Input> ? Input : void,
 ): Promise<TData> {
-  const result = await action(input);
+  // The action's SafeActionFn signature accepts variadic bind-args + input.
+  // Since our `BindArgsSchemas` is `readonly []`, the call collapses to a
+  // single-arg call; cast required because TS can't reduce the tuple type.
+  const result = await (
+    action as (input: unknown) => ReturnType<typeof action>
+  )(input);
   if (result?.serverError) {
     throw new Error(result.serverError);
   }
