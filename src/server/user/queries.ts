@@ -26,6 +26,14 @@ import { calculateUserAllTimeStreaks } from '@/features/user/gamification/streak
 import { gamificationElements } from '@/features/user/gamification/gamification-config';
 import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
 
+export async function getUserProfile() {
+  const session = await getSession(await headers());
+  if (!session?.user) {
+    throw new AuthError('No active session');
+  }
+  return session.user;
+}
+
 export async function getSession(
   headers: Headers,
   invalidateCookieCache?: boolean,
