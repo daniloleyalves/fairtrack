@@ -28,7 +28,6 @@ export const COMPANY_KEY = '/api/platform/companies';
 
 // ------- USER API ROUTES -------
 
-export const USER_PROFILE_KEY = '/api/user/profile';
 export const USER_DASHBOARD_KEY = '/api/user/dashboard';
 export const USER_PREFERENCES_KEY = '/api/user/preferences';
 export const USER_CONTRIBUTIONS_KEY = '/api/user/contributions';

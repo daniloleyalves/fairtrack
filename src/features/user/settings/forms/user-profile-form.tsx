@@ -24,8 +24,6 @@ import { updateUserAction } from '@/lib/auth/auth-actions';
 import { useFormAction } from '@/lib/hooks/use-form-action';
 import { userKeys } from '@/server/user/query-keys';
 import { useQueryClient } from '@tanstack/react-query';
-import { useSWRConfig } from 'swr';
-import { USER_PROFILE_KEY } from '@/lib/config/api-routes';
 
 export default function UserProfileForm({
   user,
@@ -40,16 +38,12 @@ export default function UserProfileForm({
   });
 
   const queryClient = useQueryClient();
-  const { mutate: swrMutate } = useSWRConfig();
 
   const { execute, isPending } = useFormAction(updateUserAction, form, {
     successMessage: 'Profil erfolgreich aktualisiert!',
     onSuccess: (data) => {
       if (data) form.reset(data);
       void queryClient.invalidateQueries({ queryKey: userKeys.all().queryKey });
-      // Transitional: user-settings-wrapper still reads USER_PROFILE_KEY via
-      // SWR Suspense. Drop once slice 2 migrates that wrapper to useQuery.
-      void swrMutate(USER_PROFILE_KEY);
     },
   });
 

@@ -1,22 +1,17 @@
 'use client';
 
-import {
-  USER_PREFERENCES_KEY,
-  USER_PROFILE_KEY,
-} from '@/lib/config/api-routes';
+import { USER_PREFERENCES_KEY } from '@/lib/config/api-routes';
 import useSWRSuspense, { fetcher } from '@/lib/services/swr';
 import { User, UserPreferences } from '@/server/db/db-types';
 import { UserPreferencesProvider } from '@/lib/services/preferences-service';
 import UserPreferencesCard from './user-preferences';
 import UserAccountCard from './user-account';
-import useSWRMutation from 'swr/mutation';
 import { updateUserAction } from '@/lib/auth/auth-actions';
 import { invokeAction } from '@/lib/hooks/use-form-action';
-import { userProfileSchema } from '../schemas/user-profile-schema';
-import type { z } from 'zod';
+import { userKeys } from '@/server/user/query-keys';
+import { getUserProfile } from '@/server/user/queries';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-
-type UserProfileValues = z.infer<typeof userProfileSchema>;
 
 export default function UserSettingsWrapper({ user }: { user: User }) {
   const { data: userPreferences } = useSWRSuspense<UserPreferences>(
@@ -28,30 +23,50 @@ export default function UserSettingsWrapper({ user }: { user: User }) {
     },
   );
 
-  const { data: userData } = useSWRSuspense<User>(USER_PROFILE_KEY, {
-    fetcher,
-    fallback: user,
-    revalidateIfStale: true,
-    revalidateOnMount: true,
+  const queryClient = useQueryClient();
+  const profileKey = userKeys.profile().queryKey;
+
+  const { data: userData = user } = useQuery({
+    ...userKeys.profile(),
+    queryFn: getUserProfile,
+    initialData: user,
   });
 
-  const { trigger: updateUserTrigger } = useSWRMutation(
-    USER_PROFILE_KEY,
-    (_key, { arg }: { arg: UserProfileValues }) =>
-      invokeAction(updateUserAction, arg),
-    {
-      revalidate: false,
-      rollbackOnError: true,
-      onSuccess: () => {
-        toast.success('Profil erfolgreich aktualisiert!');
-      },
-      onError: (err) => {
-        const message =
-          err instanceof Error ? err.message : 'Aktualisierung fehlgeschlagen.';
-        toast.error(message);
-      },
+  const updateUserMutation = useMutation({
+    mutationFn: (input: Parameters<typeof updateUserAction>[0]) =>
+      invokeAction(updateUserAction, input),
+    onMutate: async (input) => {
+      await queryClient.cancelQueries({ queryKey: profileKey });
+      const previous = queryClient.getQueryData<User>(profileKey);
+      queryClient.setQueryData<User>(profileKey, (current) => {
+        const base = current ?? previous ?? user;
+        return {
+          ...base,
+          name: input.name,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          isAnonymous: input.isAnonymous,
+          avatar: typeof input.avatar === 'string' ? input.avatar : base.avatar,
+        };
+      });
+      return { previous };
     },
-  );
+    onError: (err, _input, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(profileKey, context.previous);
+      }
+      toast.error(
+        err instanceof Error ? err.message : 'Aktualisierung fehlgeschlagen.',
+      );
+    },
+    onSuccess: (data) => {
+      if (data) queryClient.setQueryData(profileKey, data);
+      toast.success('Profil erfolgreich aktualisiert!');
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: userKeys.all().queryKey });
+    },
+  });
 
   return (
     <UserPreferencesProvider initialData={userPreferences}>
@@ -59,26 +74,15 @@ export default function UserSettingsWrapper({ user }: { user: User }) {
         <UserPreferencesCard />
         <UserAccountCard
           user={userData}
-          onUpdateUser={(updatedUser, isAnonymous) =>
-            updateUserTrigger(
-              {
-                name: updatedUser.name,
-                firstName: updatedUser.firstName,
-                lastName: updatedUser.lastName,
-                isAnonymous: updatedUser.isAnonymous,
-                avatar: updatedUser.avatar ?? null,
-              },
-              {
-                optimisticData: (currentUserCache: User | undefined): User => {
-                  const baseUser: User = currentUserCache ?? user;
-                  return {
-                    ...baseUser,
-                    isAnonymous,
-                  };
-                },
-              },
-            )
-          }
+          onUpdateUser={(updatedUser) => {
+            updateUserMutation.mutate({
+              name: updatedUser.name,
+              firstName: updatedUser.firstName,
+              lastName: updatedUser.lastName,
+              isAnonymous: updatedUser.isAnonymous,
+              avatar: updatedUser.avatar ?? null,
+            });
+          }}
         />
       </div>
     </UserPreferencesProvider>
