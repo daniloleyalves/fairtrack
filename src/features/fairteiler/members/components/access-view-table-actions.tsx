@@ -12,14 +12,16 @@ import {
 } from '@ui/tooltip';
 import { startTransition } from 'react';
 import { useFormAction } from '@/lib/hooks/use-form-action';
-import { ACTIVE_FAIRTEILER_KEY } from '@/lib/config/api-routes';
-import { useSWRConfig } from 'swr';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function AccessViewTableActions({ member }: { member: Member }) {
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
   const disableAccessView = useFormAction(disableAccessViewAction, undefined, {
     onSuccess: () => {
-      mutate(ACTIVE_FAIRTEILER_KEY);
+      void queryClient.invalidateQueries({
+        queryKey: fairteilerKeys.all().queryKey,
+      });
     },
   });
   const isPending = disableAccessView.isPending;
