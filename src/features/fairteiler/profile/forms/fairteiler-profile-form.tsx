@@ -21,28 +21,13 @@ import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { FairteilerWithMembers } from '@server/db/db-types';
-import { preload, SWRConfig, useSWRConfig } from 'swr';
+import { SWRConfig, useSWRConfig } from 'swr';
 import { FairteilerTagsWrapper } from '../components/fairteiler-tags-wrapper';
-import {
-  ACTIVE_FAIRTEILER_KEY,
-  CATEGORIES_BY_FAIRTEILER_KEY,
-  CATEGORY_KEY,
-  COMPANIES_BY_FAIRTEILER_KEY,
-  COMPANY_KEY,
-  ORIGIN_KEY,
-  ORIGINS_BY_FAIRTEILER_KEY,
-} from '@/lib/config/api-routes';
+import { ACTIVE_FAIRTEILER_KEY } from '@/lib/config/api-routes';
 import useSWRSuspense, { fetcher } from '@/lib/services/swr';
 import { useFormAction } from '@/lib/hooks/use-form-action';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { useQueryClient } from '@tanstack/react-query';
-
-preload(ORIGIN_KEY, fetcher);
-preload(CATEGORY_KEY, fetcher);
-preload(COMPANY_KEY, fetcher);
-preload(ORIGINS_BY_FAIRTEILER_KEY, fetcher);
-preload(CATEGORIES_BY_FAIRTEILER_KEY, fetcher);
-preload(COMPANIES_BY_FAIRTEILER_KEY, fetcher);
 
 // --- 2. Data Fetching Component ---
 export function ProfileFormWrapper() {
