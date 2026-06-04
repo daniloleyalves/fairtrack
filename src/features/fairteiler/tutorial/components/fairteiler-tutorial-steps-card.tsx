@@ -84,7 +84,6 @@ export function FairteilerTutorialStepsCard({
     }
     try {
       await removeStep({ id: stepId });
-      // Adjust current step index if needed
       if (state.currentStepIndex >= steps.length - 1) {
         setCurrentStep(Math.max(0, steps.length - 2));
       }
