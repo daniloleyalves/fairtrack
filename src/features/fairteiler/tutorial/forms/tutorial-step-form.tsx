@@ -116,20 +116,16 @@ export function TutorialStepForm({
 
   const onSubmit = (data: TutorialStepFormData) => {
     if (!tutorialId) return;
-    handleClientOperation(
+    void handleClientOperation(
       async () => {
-        try {
-          if (state.editingStep?.id && data.id) {
-            await updateStep({ ...data, id: data.id, tutorialId });
-          } else {
-            const { id: _ignored, ...rest } = data;
-            await addStep({ ...rest, tutorialId });
-          }
-          clearStepForm();
-          clearForm();
-        } catch (error) {
-          console.error('Error submitting step:', error);
+        if (state.editingStep?.id && data.id) {
+          await updateStep({ ...data, id: data.id, tutorialId });
+        } else {
+          const { id: _ignored, ...rest } = data;
+          await addStep({ ...rest, tutorialId });
         }
+        clearStepForm();
+        clearForm();
       },
       setIsSubmitting,
       (error) => {

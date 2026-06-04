@@ -16,8 +16,6 @@ export const FAIRTEILER_CONTRIBUTION_VERSION_HISTORY =
 
 export const FAIRTEILER_CONTRIBUTIONS_KEY = '/api/fairteiler/contributions';
 
-export const FAIRTEILER_TUTORIAL_KEY = '/api/fairteiler/tutorial';
-
 // ------- PLATFORM API ROUTES -------
 
 export const CATEGORY_KEY = '/api/platform/categories';
