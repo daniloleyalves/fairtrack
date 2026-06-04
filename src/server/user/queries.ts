@@ -251,24 +251,16 @@ export async function getOnboardingData(
 /**
  * Get user preferences for the authenticated user
  */
-export async function getUserPreferences(
-  headers: Headers,
-): Promise<UserPreferences | null | undefined> {
-  const session = await loadAuthenticatedSession(headers);
+export async function getUserPreferences(): Promise<
+  UserPreferences | null | undefined
+> {
+  const session = await loadAuthenticatedSession(await headers());
   const userId = session.user.id;
   if (!userId) {
     throw new AuthError('No active session.');
   }
 
-  const userPreferences = loadUserPreferences(userId);
-
-  if (!userPreferences) {
-    throw new NotFoundError(
-      'ExperienceLevels, userPreferences or stepFlowProgress not found',
-    );
-  }
-
-  return userPreferences;
+  return await loadUserPreferences(userId);
 }
 
 export async function getUserStreak(headers: Headers) {

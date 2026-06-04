@@ -88,14 +88,14 @@ function ResultCardLayout({
 
 // --- 4. Specific UI Components ---
 async function SuccessDisplay({ checkins }: { checkins: RecentCheckin[] }) {
-  const nextHeaders = await headers();
-  const userPreferences = await getUserPreferences(nextHeaders);
+  const userPreferences = await getUserPreferences();
 
   let feedbackData = null;
 
   if (userPreferences?.enableAIFeedback) {
     // Get user's latest contributions and milestone data for AI feedback
     try {
+      const nextHeaders = await headers();
       const [latestContributions, milestoneData] = await Promise.all([
         getLatestContributions(nextHeaders, 5),
         getMilestoneData(),
