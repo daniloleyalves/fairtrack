@@ -1,8 +1,6 @@
 'use client';
 
-import { USER_PREFERENCES_KEY } from '@/lib/config/api-routes';
-import useSWRSuspense, { fetcher } from '@/lib/services/swr';
-import { User, UserPreferences } from '@/server/db/db-types';
+import { User } from '@/server/db/db-types';
 import { UserPreferencesProvider } from '@/lib/services/preferences-service';
 import UserPreferencesCard from './user-preferences';
 import UserAccountCard from './user-account';
@@ -14,15 +12,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 export default function UserSettingsWrapper({ user }: { user: User }) {
-  const { data: userPreferences } = useSWRSuspense<UserPreferences>(
-    USER_PREFERENCES_KEY,
-    {
-      fetcher,
-      revalidateIfStale: true,
-      revalidateOnMount: true,
-    },
-  );
-
   const queryClient = useQueryClient();
   const profileKey = userKeys.profile().queryKey;
 
@@ -69,7 +58,7 @@ export default function UserSettingsWrapper({ user }: { user: User }) {
   });
 
   return (
-    <UserPreferencesProvider initialData={userPreferences}>
+    <UserPreferencesProvider>
       <div className='flex flex-col gap-4'>
         <UserPreferencesCard />
         <UserAccountCard

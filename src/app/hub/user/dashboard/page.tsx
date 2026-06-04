@@ -21,7 +21,7 @@ export default async function UserDashboardPage() {
     return <UnauthorizedAccess />;
   }
 
-  const userPreferences = await getUserPreferences(nextHeaders);
+  const userPreferences = await getUserPreferences();
   let userStreak = null;
 
   if (userPreferences?.enableStreaks) {
