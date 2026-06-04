@@ -19,7 +19,7 @@ import { SignOutMenuItem } from '../sidebar/nav-user';
 export function HeaderAuth() {
   const { user, session, isLoading } = useSession();
   if (isLoading) {
-    return <Skeleton className='h-8 w-[153px] bg-secondary' />;
+    return <Skeleton variant='onCard' className='h-8 w-[153px]' />;
   }
 
   return user ? (
