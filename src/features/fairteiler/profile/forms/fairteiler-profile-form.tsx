@@ -21,42 +21,29 @@ import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { FairteilerWithMembers } from '@server/db/db-types';
-import { SWRConfig, useSWRConfig } from 'swr';
 import { FairteilerTagsWrapper } from '../components/fairteiler-tags-wrapper';
-import { ACTIVE_FAIRTEILER_KEY } from '@/lib/config/api-routes';
-import useSWRSuspense, { fetcher } from '@/lib/services/swr';
 import { useFormAction } from '@/lib/hooks/use-form-action';
+import { getActiveFairteiler } from '@/server/fairteiler/queries';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // --- 2. Data Fetching Component ---
 export function ProfileFormWrapper() {
-  const { data: fairteiler } = useSWRSuspense<FairteilerWithMembers>(
-    ACTIVE_FAIRTEILER_KEY,
-    {
-      fetcher,
-      suspense: true,
-      revalidateIfStale: false,
-      revalidateOnFocus: false,
-      revalidateOnMount: false,
-    },
-  );
+  const { data: fairteiler, isPending } = useQuery({
+    ...fairteilerKeys.active(),
+    queryFn: () => getActiveFairteiler(),
+  });
+
+  if (isPending || !fairteiler) {
+    return <Skeleton className='h-[484px] w-full' />;
+  }
 
   return (
-    <SWRConfig
-      value={{
-        fetcher,
-        revalidateOnFocus: false,
-        revalidateOnMount: false,
-        revalidateIfStale: false,
-        revalidateOnReconnect: true,
-      }}
-    >
-      <div className='space-y-6'>
-        <FairteilerProfileForm fairteiler={fairteiler} />
-        <FairteilerTagsWrapper />
-      </div>
-    </SWRConfig>
+    <div className='space-y-6'>
+      <FairteilerProfileForm fairteiler={fairteiler} />
+      <FairteilerTagsWrapper />
+    </div>
   );
 }
 
@@ -73,7 +60,6 @@ function FairteilerProfileForm({
   });
 
   const queryClient = useQueryClient();
-  const { mutate: swrMutate } = useSWRConfig();
 
   const { execute, isPending } = useFormAction(updateFairteilerAction, form, {
     successMessage: 'Profil erfolgreich aktualisiert!',
@@ -82,9 +68,6 @@ function FairteilerProfileForm({
       void queryClient.invalidateQueries({
         queryKey: fairteilerKeys.all().queryKey,
       });
-      // Transitional: ProfileFormWrapper + sibling components still read
-      // ACTIVE_FAIRTEILER_KEY via SWR. Drop the bridge once those move.
-      void swrMutate(ACTIVE_FAIRTEILER_KEY);
     },
   });
 
