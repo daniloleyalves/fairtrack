@@ -38,7 +38,7 @@ interface UseCatalogResourceConfig<
   chosenQueryFn: () => Promise<TChosen[] | null | undefined>;
   addToFairteiler: (item: TChosen) => Promise<TChosen>;
   removeFromFairteiler: (item: TChosen) => Promise<TChosen>;
-  updatePlatformItem: (item: TAll) => Promise<TAll>;
+  updatePlatformItem: (item: TChosen) => Promise<TChosen>;
   suggestPlatformItem: (item: TAll) => Promise<TAll>;
   messages?: CatalogMessages;
 }
@@ -126,7 +126,7 @@ export function useCatalogResource<
         queryClient.getQueryData<TChosen[]>(chosenKey.queryKey) ?? [];
       queryClient.setQueryData<TChosen[]>(
         chosenKey.queryKey,
-        previousChosen.map((c) => (c.id === item.id ? { ...c, ...item } : c)),
+        previousChosen.map((c) => (c.id === item.id ? item : c)),
       );
       return { previousChosen };
     },
