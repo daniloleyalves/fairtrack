@@ -14,7 +14,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { fetcher } from '@/lib/services/swr';
 import { formatNumber } from '@/lib/utils';
 import { vContribution } from '@/server/db/db-types';
 import type { ColumnDef, Row } from '@tanstack/react-table';
@@ -23,10 +22,8 @@ import { ArrowUpDown, Edit, Eye, History, MoreHorizontal } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import { DateRange } from 'react-day-picker';
-import { preload } from 'swr';
 import { HistoryEditModal } from './components/history-edit-modal';
 import { HistoryVersionHistory } from './components/history-version-history';
-import { FAIRTEILER_CONTRIBUTION_VERSION_HISTORY } from '@/lib/config/api-routes';
 
 export const columns: ColumnDef<vContribution>[] = [
   {
@@ -144,22 +141,11 @@ const RowActions = ({ row }: { row: Row<vContribution> }) => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
 
-  const preloadContributionVersionHistory = () => {
-    preload(
-      `${FAIRTEILER_CONTRIBUTION_VERSION_HISTORY}?checkinId=${row.original.checkinId}`,
-      fetcher,
-    );
-  };
-
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant='ghost'
-            className='size-8 p-0'
-            onPointerDown={preloadContributionVersionHistory}
-          >
+          <Button variant='ghost' className='size-8 p-0'>
             <span className='sr-only'>Menü öffnen</span>
             <MoreHorizontal className='size-4' />
           </Button>
