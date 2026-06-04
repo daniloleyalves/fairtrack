@@ -75,18 +75,15 @@ export async function getLatestContributions(headers: Headers, limit?: number) {
   return contributions;
 }
 
-export async function getUserContributions(
-  headers: Headers,
-  options?: {
-    dateRange?: {
-      from: Date;
-      to: Date;
-    };
-    limit?: number;
-    offset?: number;
-  },
-) {
-  const session = await loadAuthenticatedSession(headers);
+export async function getUserContributions(options?: {
+  dateRange?: {
+    from: Date;
+    to: Date;
+  };
+  limit?: number;
+  offset?: number;
+}) {
+  const session = await loadAuthenticatedSession(await headers());
   const userId = session.user.id;
 
   const contributions = await loadUserContributions({
