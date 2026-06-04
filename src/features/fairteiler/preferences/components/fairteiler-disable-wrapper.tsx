@@ -2,14 +2,12 @@
 
 import { toast } from 'sonner';
 import { FairteilerDisableToggle } from './fairteiler-disable-toggle';
-import { ACTIVE_FAIRTEILER_KEY } from '@/lib/config/api-routes';
-import useSWRSuspense from '@/lib/services/swr';
 import { FairteilerWithMembers } from '@/server/db/db-types';
 import { toggleFairteilerDisabled } from '@/lib/auth/auth-actions';
 import { invokeAction } from '@/lib/hooks/use-form-action';
+import { getActiveFairteiler } from '@/server/fairteiler/queries';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSWRConfig } from 'swr';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface FairteilerDisableWrapperProps {
   className?: string;
@@ -18,26 +16,29 @@ interface FairteilerDisableWrapperProps {
 export function FairteilerDisableWrapper({
   className,
 }: FairteilerDisableWrapperProps) {
-  const { data: fairteiler } = useSWRSuspense<FairteilerWithMembers>(
-    ACTIVE_FAIRTEILER_KEY,
-  );
-
   const queryClient = useQueryClient();
-  const { mutate: swrMutate } = useSWRConfig();
   const activeKey = fairteilerKeys.active().queryKey;
 
+  const { data: fairteiler } = useQuery({
+    ...fairteilerKeys.active(),
+    queryFn: () => getActiveFairteiler(),
+  });
+
   const toggle = useMutation({
-    mutationFn: (disabled: boolean) =>
-      invokeAction(toggleFairteilerDisabled, {
+    mutationFn: (disabled: boolean) => {
+      if (!fairteiler) throw new Error('No active fairteiler');
+      return invokeAction(toggleFairteilerDisabled, {
         fairteilerId: fairteiler.id,
         disabled,
-      }),
+      });
+    },
     onMutate: async (disabled) => {
       await queryClient.cancelQueries({ queryKey: activeKey });
       const previous =
         queryClient.getQueryData<FairteilerWithMembers>(activeKey);
       queryClient.setQueryData<FairteilerWithMembers>(activeKey, (current) => {
         const base = current ?? previous ?? fairteiler;
+        if (!base) return current;
         return { ...base, disabled };
       });
       return { previous };
@@ -57,11 +58,10 @@ export function FairteilerDisableWrapper({
       void queryClient.invalidateQueries({
         queryKey: fairteilerKeys.all().queryKey,
       });
-      // Transitional: sibling components still read ACTIVE_FAIRTEILER_KEY
-      // via SWR. Drop once those move.
-      void swrMutate(ACTIVE_FAIRTEILER_KEY);
     },
   });
+
+  if (!fairteiler) return null;
 
   return (
     <FairteilerDisableToggle
