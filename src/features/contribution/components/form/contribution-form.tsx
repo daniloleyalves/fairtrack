@@ -11,17 +11,14 @@ import React, { startTransition } from 'react';
 import { DefaultValues, SubmitHandler, useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { useFormAction } from '@/lib/hooks/use-form-action';
-import {
-  FAIRTEILER_DASHBOARD_KEY,
-  USER_DASHBOARD_KEY,
-} from '@/lib/config/api-routes';
-import { useSWRConfig } from 'swr';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
+import { userKeys } from '@/server/user/query-keys';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ContributionFormConfig {
   fairteilerId: string;
   successRedirect?: string;
   revalidatePaths?: string[];
-  cacheKeys?: string[];
   context?: 'fairteiler' | 'user' | 'admin';
   submitAsAccessViewId?: string | null;
 }
@@ -36,7 +33,7 @@ export function ContributionForm({
   config: ContributionFormConfig;
 }) {
   const router = useRouter();
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
 
   const form = useForm<ContributionFormValues>({
     resolver: zodResolver(contributionFormSchema),
@@ -47,11 +44,12 @@ export function ContributionForm({
   const submitContribution = useFormAction(submitContributionAction, form, {
     successMessage: 'Lebensmittel erfolgreich beigetragen!',
     onSuccess: (data) => {
-      const cacheKeys = config?.cacheKeys ?? [
-        FAIRTEILER_DASHBOARD_KEY,
-        USER_DASHBOARD_KEY,
-      ];
-      cacheKeys.forEach((key) => mutate(key));
+      void queryClient.invalidateQueries({
+        queryKey: fairteilerKeys.dashboard().queryKey,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: userKeys.dashboard().queryKey,
+      });
 
       if (data?.redirectTo) {
         router.push(data.redirectTo);

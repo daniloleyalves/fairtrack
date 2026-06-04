@@ -17,11 +17,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Send } from 'lucide-react';
 import { Dispatch, SetStateAction, startTransition } from 'react';
 import { useForm } from 'react-hook-form';
-import { useSWRConfig } from 'swr';
+import { useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { RoleSelector } from '../components/role-selector';
 import { inviteMemberSchema } from '../schemas/members-schema';
-import { ACTIVE_FAIRTEILER_KEY } from '@/lib/config/api-routes';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { useFormAction } from '@/lib/hooks/use-form-action';
 
 export function InviteMemberForm({
@@ -31,7 +31,7 @@ export function InviteMemberForm({
 }: React.ComponentProps<'form'> & {
   setOpen: Dispatch<SetStateAction<boolean>>;
 }) {
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof inviteMemberSchema>>({
     resolver: zodResolver(inviteMemberSchema),
@@ -43,7 +43,9 @@ export function InviteMemberForm({
 
   const inviteMember = useFormAction(inviteMemberAction, form, {
     onSuccess: async () => {
-      await mutate(ACTIVE_FAIRTEILER_KEY);
+      await queryClient.invalidateQueries({
+        queryKey: fairteilerKeys.all().queryKey,
+      });
       form.reset();
       setOpen(false);
     },

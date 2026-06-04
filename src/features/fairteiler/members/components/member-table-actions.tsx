@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { IdCard, Loader2, MoreHorizontal, Save, Trash2 } from 'lucide-react';
 import { Dispatch, SetStateAction, startTransition, useState } from 'react';
 
-import { useSWRConfig } from 'swr';
+import { useQueryClient } from '@tanstack/react-query';
 import { ConfirmModal } from '@components/confirm-modal';
 import { Button, buttonVariants } from '@ui/button';
 import {
@@ -42,18 +42,20 @@ import {
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@ui/form';
 import { RoleSelector } from './role-selector';
 import { changeRoleSchema } from '../schemas/members-schema';
-import { ACTIVE_FAIRTEILER_KEY } from '@/lib/config/api-routes';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { useFormAction } from '@/lib/hooks/use-form-action';
 
 export function MemberTableActions({ member }: { member: Member }) {
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
 
   const [isChangeRoleModalOpen, setChangeRoleModalOpen] = useState(false);
   const [isRemoveMemberModalOpen, setRemoveMemberModalOpen] = useState(false);
 
   const removeMember = useFormAction(removeMemberAction, undefined, {
     onSuccess: async () => {
-      await mutate(ACTIVE_FAIRTEILER_KEY);
+      await queryClient.invalidateQueries({
+        queryKey: fairteilerKeys.all().queryKey,
+      });
       setRemoveMemberModalOpen(false);
     },
   });
@@ -138,7 +140,7 @@ function ChangeRoleModal({
   setOpen: Dispatch<SetStateAction<boolean>>;
 }) {
   const isMobile = useIsMobile();
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof changeRoleSchema>>({
     resolver: zodResolver(changeRoleSchema),
@@ -151,7 +153,9 @@ function ChangeRoleModal({
 
   const updateRole = useFormAction(updateMemberRoleAction, form, {
     onSuccess: async () => {
-      await mutate(ACTIVE_FAIRTEILER_KEY);
+      await queryClient.invalidateQueries({
+        queryKey: fairteilerKeys.all().queryKey,
+      });
       setOpen(false);
     },
   });
