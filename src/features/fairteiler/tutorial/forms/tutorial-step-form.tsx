@@ -334,5 +334,5 @@ export function TutorialStepForm({
 }
 
 function EditorSkeleton() {
-  return <Skeleton className='absolute h-[400px] w-full bg-secondary' />;
+  return <Skeleton variant='onCard' className='absolute h-[400px] w-full' />;
 }
