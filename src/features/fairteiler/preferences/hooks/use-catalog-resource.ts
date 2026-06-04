@@ -6,6 +6,18 @@ import { toast } from 'sonner';
 const PERMISSION_ERROR =
   'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen';
 
+interface CatalogMessages {
+  removeSuccess?: string;
+  updateSuccess?: string;
+  suggestError?: string;
+}
+
+const DEFAULT_MESSAGES = {
+  removeSuccess: 'Änderung erfolgreich gespeichert.',
+  updateSuccess: 'Änderung erfolgreich gespeichert.',
+  suggestError: 'Fehlgeschlagen, Vorschlag konnte nicht gespeichert werden.',
+} satisfies Required<CatalogMessages>;
+
 interface CatalogItemLike {
   id?: string;
   name: string;
@@ -28,6 +40,7 @@ interface UseCatalogResourceConfig<
   removeFromFairteiler: (item: TChosen) => Promise<TChosen>;
   updatePlatformItem: (item: TAll) => Promise<TAll>;
   suggestPlatformItem: (item: TAll) => Promise<TAll>;
+  messages?: CatalogMessages;
 }
 
 export function useCatalogResource<
@@ -42,8 +55,10 @@ export function useCatalogResource<
   removeFromFairteiler,
   updatePlatformItem,
   suggestPlatformItem,
+  messages,
 }: UseCatalogResourceConfig<TAll, TChosen>) {
   const queryClient = useQueryClient();
+  const m = { ...DEFAULT_MESSAGES, ...messages };
 
   const { data: allData } = useQuery({ ...allKey, queryFn: allQueryFn });
   const { data: chosenData } = useQuery({
@@ -96,7 +111,7 @@ export function useCatalogResource<
       toast.error(PERMISSION_ERROR);
     },
     onSuccess: () => {
-      toast.success('Änderung erfolgreich gespeichert.');
+      toast.success(m.removeSuccess);
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: chosenKey.queryKey });
@@ -122,7 +137,7 @@ export function useCatalogResource<
       toast.error(PERMISSION_ERROR);
     },
     onSuccess: () => {
-      toast.success('Änderung erfolgreich gespeichert.');
+      toast.success(m.updateSuccess);
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: chosenKey.queryKey });
@@ -142,7 +157,7 @@ export function useCatalogResource<
       if (context?.previous !== undefined) {
         queryClient.setQueryData(allKey.queryKey, context.previous);
       }
-      toast.error('Fehlgeschlagen, Vorschlag konnte nicht gespeichert werden.');
+      toast.error(m.suggestError);
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: allKey.queryKey });
