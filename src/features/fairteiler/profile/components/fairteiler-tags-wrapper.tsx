@@ -2,80 +2,81 @@
 
 import { toast } from 'sonner';
 import { FairteilerTags } from './fairteiler-tags';
-import { FAIRTEILER_TAGS_KEY } from '@/lib/config/api-routes';
-import useSWRMutation from 'swr/mutation';
 import { Tag } from '@/server/db/db-types';
 import {
   addTagToFairteilerAction,
   removeTagFromFairteilerAction,
 } from '@/server/fairteiler/actions';
-import useSWRSuspense from '@/lib/services/swr';
 import { invokeAction } from '@/lib/hooks/use-form-action';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
+import { getTags } from '@/server/fairteiler/queries';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface FairteilerTagsWrapperProps {
   className?: string;
 }
 
+const PERMISSION_ERROR_MESSAGE =
+  'Fehlgeschlagen. Möglicherweise bist du nicht befug, diese Aktion auszuführen';
+
 export function FairteilerTagsWrapper({
   className,
 }: FairteilerTagsWrapperProps) {
-  const { data: tags } = useSWRSuspense<Tag[]>(FAIRTEILER_TAGS_KEY);
+  const queryClient = useQueryClient();
+  const tagsKey = fairteilerKeys.tags().queryKey;
 
-  // --- Mutations  ---
-  const { trigger: addTagTrigger } = useSWRMutation(
-    FAIRTEILER_TAGS_KEY,
-    (_key, { arg }: { arg: Tag }) =>
-      invokeAction(addTagToFairteilerAction, arg),
-    {
-      populateCache: (addedTag: Tag, currentTags: Tag[] = []) => {
-        if (!currentTags.length) {
-          return [addedTag];
-        }
-        return [...currentTags, addedTag];
-      },
-      revalidate: false,
-      rollbackOnError: true,
-      onError: () =>
-        toast.error(
-          'Fehlgeschlagen. Möglicherweise bist du nicht befug, diese Aktion auszuführen',
-        ),
-    },
-  );
+  const { data: tagsData } = useQuery({
+    ...fairteilerKeys.tags(),
+    queryFn: getTags,
+  });
+  const tags = tagsData ?? [];
 
-  const { trigger: removeTagTrigger } = useSWRMutation(
-    FAIRTEILER_TAGS_KEY,
-    (_key, { arg }: { arg: Tag }) =>
-      invokeAction(removeTagFromFairteilerAction, arg),
-    {
-      populateCache: (removedTag: Tag, currentTags: Tag[] = []) => {
-        return (currentTags || []).filter((c) => c.id !== removedTag.id);
-      },
-      revalidate: false,
-      rollbackOnError: true,
-      onError: () =>
-        toast.error(
-          'Fehlgeschlagen. Möglicherweise bist du nicht befug, diese Aktion auszuführen',
-        ),
+  const addTag = useMutation({
+    mutationFn: (tag: Tag) => invokeAction(addTagToFairteilerAction, tag),
+    onMutate: async (tag) => {
+      await queryClient.cancelQueries({ queryKey: tagsKey });
+      const previous = queryClient.getQueryData<Tag[]>(tagsKey) ?? [];
+      queryClient.setQueryData<Tag[]>(tagsKey, [...previous, tag]);
+      return { previous };
     },
-  );
+    onError: (_err, _tag, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(tagsKey, context.previous);
+      }
+      toast.error(PERMISSION_ERROR_MESSAGE);
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: tagsKey });
+    },
+  });
+
+  const removeTag = useMutation({
+    mutationFn: (tag: Tag) => invokeAction(removeTagFromFairteilerAction, tag),
+    onMutate: async (tag) => {
+      await queryClient.cancelQueries({ queryKey: tagsKey });
+      const previous = queryClient.getQueryData<Tag[]>(tagsKey) ?? [];
+      queryClient.setQueryData<Tag[]>(
+        tagsKey,
+        previous.filter((c) => c.id !== tag.id),
+      );
+      return { previous };
+    },
+    onError: (_err, _tag, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(tagsKey, context.previous);
+      }
+      toast.error(PERMISSION_ERROR_MESSAGE);
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: tagsKey });
+    },
+  });
 
   return (
     <FairteilerTags
       tags={tags}
-      onAddTag={(newTag) =>
-        addTagTrigger(newTag, {
-          optimisticData: (currentTags: Tag[] = []) => {
-            return [...currentTags, newTag];
-          },
-        })
-      }
-      onRemoveTag={(tagToRemove) =>
-        removeTagTrigger(tagToRemove, {
-          optimisticData: (currentTags: Tag[] = []) => {
-            return currentTags.filter((c) => c.id !== tagToRemove.id);
-          },
-        })
-      }
+      onAddTag={(newTag) => addTag.mutate(newTag)}
+      onRemoveTag={(tagToRemove) => removeTag.mutate(tagToRemove)}
       className={className}
     />
   );

@@ -57,8 +57,8 @@ export async function getFairteilers() {
   })) satisfies Fairteiler[];
 }
 
-export async function getTags(headers: Headers) {
-  const session = await loadAuthenticatedSession(headers);
+export async function getTags() {
+  const session = await loadAuthenticatedSession(await headers());
   const fairteilerId = session.session.activeOrganizationId;
   if (!fairteilerId) {
     throw new AuthError('No active organization selected.');
