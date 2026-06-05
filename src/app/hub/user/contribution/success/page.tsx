@@ -236,28 +236,23 @@ function ContributionSuccessCardSkeleton() {
     <div className='mt-24 flex h-max min-h-[calc(100vh-64px)] w-full justify-center p-4'>
       <Card className='h-max w-full max-w-md'>
         <CardContent className='flex flex-col items-center p-8 pb-4 text-center'>
-          {/* Icon skeleton - circle to match CheckCircle icon */}
           <div className='mb-6 flex size-16 items-center justify-center'>
-            <Skeleton className='size-16 rounded-full bg-secondary' />
+            <Skeleton variant='onCard' className='size-16 rounded-full' />
           </div>
 
-          {/* Title skeleton - matches "Super!" width */}
-          <Skeleton className='mb-2 h-8 w-24 bg-secondary' />
+          <Skeleton variant='onCard' className='mb-2 h-8 w-24' />
 
-          {/* Description skeleton - matches actual description length */}
-          <Skeleton className='mb-6 h-5 w-80 max-w-full bg-secondary' />
+          <Skeleton variant='onCard' className='mb-6 h-5 w-80 max-w-full' />
 
-          {/* Button skeletons - match actual button sizes */}
           <div className='w-full space-y-3'>
-            <Skeleton className='h-10 w-full bg-secondary' />
-            <Skeleton className='h-10 w-full bg-secondary' />
+            <Skeleton variant='onCard' className='h-10 w-full' />
+            <Skeleton variant='onCard' className='h-10 w-full' />
           </div>
 
-          {/* Accordion trigger skeleton - matches actual accordion styling */}
           <div className='mt-4 w-full'>
             <div className='flex h-[76px] items-center justify-around py-4'>
               <span className='h-px w-full bg-secondary'></span>
-              <Skeleton className='mx-4 h-4 w-32 bg-secondary' />
+              <Skeleton variant='onCard' className='mx-4 h-4 w-32' />
               <span className='h-px w-full bg-secondary'></span>
             </div>
           </div>

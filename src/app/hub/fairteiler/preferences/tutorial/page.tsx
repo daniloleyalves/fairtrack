@@ -37,9 +37,9 @@ function TutorialCardSkeleton() {
             <BookOpen className='size-5 text-primary' />
           </div>
           <div>
-            <Skeleton className='mb-2 h-6 w-48 bg-secondary' />
-            <Skeleton className='h-3 w-full bg-secondary' />
-            <Skeleton className='mt-1 h-3 w-full bg-secondary' />
+            <Skeleton variant='onCard' className='mb-2 h-6 w-48' />
+            <Skeleton variant='onCard' className='h-3 w-full' />
+            <Skeleton variant='onCard' className='mt-1 h-3 w-full' />
           </div>
         </div>
       </CardHeader>
@@ -47,14 +47,14 @@ function TutorialCardSkeleton() {
         <div className='space-y-4'>
           <div className='flex items-start justify-between'>
             <div className='space-y-2'>
-              <Skeleton className='h-5 w-32 bg-secondary' />
-              <Skeleton className='h-3 w-24 bg-secondary' />
-              <Skeleton className='h-3 w-40 bg-secondary' />
+              <Skeleton variant='onCard' className='h-5 w-32' />
+              <Skeleton variant='onCard' className='h-3 w-24' />
+              <Skeleton variant='onCard' className='h-3 w-40' />
             </div>
             <div className='flex gap-2'>
-              <Skeleton className='h-8 w-8 bg-secondary' />
-              <Skeleton className='h-8 w-8 bg-secondary' />
-              <Skeleton className='h-8 w-8 bg-secondary' />
+              <Skeleton variant='onCard' className='h-8 w-8' />
+              <Skeleton variant='onCard' className='h-8 w-8' />
+              <Skeleton variant='onCard' className='h-8 w-8' />
             </div>
           </div>
         </div>
