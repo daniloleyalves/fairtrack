@@ -3,7 +3,6 @@ import { render } from '@testing-library/react';
 import {
   CardSkeleton,
   ListSkeleton,
-  PieChartSkeleton,
   Skeleton,
   StatSkeleton,
   TableSkeleton,
@@ -107,24 +106,6 @@ describe('Skeleton primitives', () => {
       // toolbar (2) + header (3) + 2×3 body + pagination (3) = 14
       expect(container.querySelectorAll('[data-slot="skeleton"]').length).toBe(
         14,
-      );
-    });
-  });
-
-  describe('PieChartSkeleton', () => {
-    it('renders the pie + default 6 legend rows', () => {
-      const { container } = render(<PieChartSkeleton />);
-      // 1 pie + 6 legend rows × (swatch + bar) = 13
-      expect(container.querySelectorAll('[data-slot="skeleton"]').length).toBe(
-        13,
-      );
-    });
-
-    it('respects legendItems', () => {
-      const { container } = render(<PieChartSkeleton legendItems={3} />);
-      // 1 pie + 3 × 2 = 7
-      expect(container.querySelectorAll('[data-slot="skeleton"]').length).toBe(
-        7,
       );
     });
   });

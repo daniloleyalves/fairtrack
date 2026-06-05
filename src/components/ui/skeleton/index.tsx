@@ -3,4 +3,3 @@ export { CardSkeleton } from './card';
 export { StatSkeleton } from './stat';
 export { ListSkeleton } from './list';
 export { TableSkeleton } from './table';
-export { PieChartSkeleton } from './pie-chart';
