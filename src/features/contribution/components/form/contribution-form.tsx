@@ -1,7 +1,7 @@
 'use client';
 
 import { Form } from '@components/ui/form';
-import { submitContributionAction } from '@server/actions';
+import { submitContributionAction } from '@server/contribution/actions';
 import {
   contributionFormSchema,
   ContributionFormValues,
@@ -10,18 +10,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import React, { startTransition } from 'react';
 import { DefaultValues, SubmitHandler, useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
-import { handleAsyncAction } from '@/lib/client-error-handling';
-import {
-  FAIRTEILER_DASHBOARD_KEY,
-  USER_DASHBOARD_KEY,
-} from '@/lib/config/api-routes';
-import { useSWRConfig } from 'swr';
+import { useFormAction } from '@/lib/hooks/use-form-action';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
+import { userKeys } from '@/server/user/query-keys';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ContributionFormConfig {
   fairteilerId: string;
   successRedirect?: string;
   revalidatePaths?: string[];
-  cacheKeys?: string[];
   context?: 'fairteiler' | 'user' | 'admin';
   submitAsAccessViewId?: string | null;
 }
@@ -36,12 +33,28 @@ export function ContributionForm({
   config: ContributionFormConfig;
 }) {
   const router = useRouter();
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
 
   const form = useForm<ContributionFormValues>({
     resolver: zodResolver(contributionFormSchema),
     defaultValues: { contributions: [], config, ...defaultValues },
     mode: 'onChange',
+  });
+
+  const submitContribution = useFormAction(submitContributionAction, form, {
+    successMessage: 'Lebensmittel erfolgreich beigetragen!',
+    onSuccess: (data) => {
+      void queryClient.invalidateQueries({
+        queryKey: fairteilerKeys.dashboard().queryKey,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: userKeys.dashboard().queryKey,
+      });
+
+      if (data?.redirectTo) {
+        router.push(data.redirectTo);
+      }
+    },
   });
 
   const onSubmit: SubmitHandler<ContributionFormValues> = (
@@ -64,22 +77,7 @@ export function ContributionForm({
     };
 
     startTransition(() => {
-      handleAsyncAction(() => submitContributionAction(submissionData), form, {
-        showToast: true,
-        setFormError: true,
-        onSuccess: (result) => {
-          // Use configured cache keys or defaults
-          const cacheKeys = config?.cacheKeys ?? [
-            FAIRTEILER_DASHBOARD_KEY,
-            USER_DASHBOARD_KEY,
-          ];
-          cacheKeys.forEach((key) => mutate(key));
-
-          if (result.data?.redirectTo) {
-            router.push(result.data.redirectTo);
-          }
-        },
-      });
+      submitContribution.execute(submissionData);
     });
   };
 

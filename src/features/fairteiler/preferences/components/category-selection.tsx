@@ -1,16 +1,17 @@
 'use client';
 
-import {
-  CATEGORIES_BY_FAIRTEILER_KEY,
-  CATEGORY_KEY,
-} from '@/lib/config/api-routes';
-import useSWRSuspense from '@/lib/services/swr';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 import {
   addFairteilerCategoryAction,
   removeFairteilerCategoryAction,
   suggestNewCategoryAction,
   updateCategoryAction,
-} from '@server/actions';
+} from '@server/fairteiler/actions';
+import {
+  getCategories,
+  getCategoriesByFairteiler,
+} from '@server/fairteiler/queries';
+import { categoryKeys } from '@server/fairteiler/query-keys';
 import { GenericItem } from '@server/db/db-types';
 import { Badge } from '@ui/badge';
 import { Button } from '@ui/button';
@@ -19,152 +20,38 @@ import { ScrollArea } from '@ui/scroll-area';
 import { Loader2, Plus, Pencil } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import useSWRMutation from 'swr/mutation';
 import { FormSelectionItem } from './form-selection-item';
 import { v4 as uuidv4 } from 'uuid';
 import { EditItemDialog } from './edit-item-dialog';
-import { useSWRConfig } from 'swr';
+import { useCatalogResource } from '../hooks/use-catalog-resource';
 
 // --- Main Component ---
 
 export function CategorySelectionWrapper() {
-  const { data: allCategories } = useSWRSuspense<GenericItem[]>(CATEGORY_KEY);
-
-  const { data: chosenCategories } = useSWRSuspense<GenericItem[]>(
-    CATEGORIES_BY_FAIRTEILER_KEY,
-  );
-
-  return (
-    <CategorySelection
-      allCategories={allCategories}
-      chosenCategories={chosenCategories}
-    />
-  );
-}
-
-function CategorySelection({
-  allCategories,
-  chosenCategories,
-}: {
-  allCategories: GenericItem[];
-  chosenCategories: GenericItem[];
-}) {
-  const { mutate } = useSWRConfig();
-
-  // --- Mutations ---
-  const { trigger: addFairteilerCategoryTrigger, isMutating: isAdding } =
-    useSWRMutation(
-      CATEGORIES_BY_FAIRTEILER_KEY,
-      (_key, { arg }: { arg: GenericItem }) => addFairteilerCategoryAction(arg),
-      {
-        populateCache: (
-          addedCategory: GenericItem,
-          currentCategories: GenericItem[] = [],
-        ) => {
-          if (!currentCategories.length) {
-            return [addedCategory];
-          }
-          return [...currentCategories, addedCategory];
-        },
-        revalidate: false,
-        rollbackOnError: true,
-        onError: () => {
-          return toast.error(
-            'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen',
-          );
-        },
-      },
-    );
-
-  const { trigger: removeFairteilerCategoryTrigger, isMutating: isRemoving } =
-    useSWRMutation(
-      CATEGORIES_BY_FAIRTEILER_KEY,
-      (_key, { arg }: { arg: GenericItem }) =>
-        removeFairteilerCategoryAction(arg),
-      {
-        populateCache: (
-          removedCategory: GenericItem,
-          currentChosen: GenericItem[] = [],
-        ) => {
-          return (currentChosen || []).filter(
-            (c) => c.id !== removedCategory.id,
-          );
-        },
-        revalidate: false,
-        rollbackOnError: true,
-        onSuccess: () => {
-          toast.success('Kategorie erfolgreich entfernt');
-        },
-        onError: () =>
-          toast.error(
-            'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen',
-          ),
-      },
-    );
-
-  const { trigger: updateCategoryTrigger, isMutating: isUpdating } =
-    useSWRMutation(
-      CATEGORIES_BY_FAIRTEILER_KEY,
-      (_key, { arg }: { arg: GenericItem }) => updateCategoryAction(arg),
-      {
-        populateCache: (
-          updatedCategory: GenericItem,
-          currentCategories: GenericItem[] = [],
-        ) => {
-          return currentCategories.map((c) =>
-            c.id === updatedCategory.id ? updatedCategory : c,
-          );
-        },
-        revalidate: false,
-        rollbackOnError: true,
-        onSuccess: () => {
-          mutate(CATEGORY_KEY);
-          toast.success('Kategorie erfolgreich aktualisiert');
-        },
-        onError: () => {
-          return toast.error(
-            'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen',
-          );
-        },
-      },
-    );
-
-  // --- Handlers with Optimistic Updates ---
-
-  const handleAddCategory = (categoryToAdd: GenericItem) => {
-    addFairteilerCategoryTrigger(categoryToAdd, {
-      optimisticData: (currentChosen: GenericItem[] = []) => {
-        return [...currentChosen, categoryToAdd];
-      },
-    });
-  };
-
-  const handleRemoveCategory = (categoryToRemove: GenericItem) => {
-    removeFairteilerCategoryTrigger(categoryToRemove, {
-      optimisticData: (currentChosen: GenericItem[] = []) => {
-        return currentChosen.filter((c) => c.id !== categoryToRemove.id);
-      },
-    });
-  };
-
-  const handleUpdateCategory = (categoryToUpdate: GenericItem) => {
-    updateCategoryTrigger(categoryToUpdate, {
-      optimisticData: (currentCategories: GenericItem[] = []) => {
-        return currentCategories.map((c) =>
-          c.id === categoryToUpdate.id ? categoryToUpdate : c,
-        );
-      },
-    });
-  };
+  const categories = useCatalogResource<GenericItem, GenericItem>({
+    allKey: categoryKeys.all(),
+    allQueryFn: getCategories,
+    chosenKey: categoryKeys.byFairteiler(),
+    chosenQueryFn: getCategoriesByFairteiler,
+    addToFairteiler: (item) => invokeAction(addFairteilerCategoryAction, item),
+    removeFromFairteiler: (item) =>
+      invokeAction(removeFairteilerCategoryAction, item),
+    updatePlatformItem: (item) => invokeAction(updateCategoryAction, item),
+    suggestPlatformItem: (item) => invokeAction(suggestNewCategoryAction, item),
+    messages: {
+      removeSuccess: 'Kategorie erfolgreich entfernt',
+      updateSuccess: 'Kategorie erfolgreich aktualisiert',
+    },
+  });
 
   // --- Derived State  ---
 
-  const chosenCategoryIds = new Set(chosenCategories.map((c) => c.id));
-  const availableCategories = allCategories.filter(
+  const chosenCategoryIds = new Set(categories.chosen.map((c) => c.id));
+  const availableCategories = categories.all.filter(
     (category) =>
       !chosenCategoryIds.has(category.id) && category.status !== 'pending',
   );
-  const pendingCategories = allCategories.filter(
+  const pendingCategories = categories.all.filter(
     (category) => category.status === 'pending',
   );
 
@@ -183,11 +70,11 @@ function CategorySelection({
                 erscheinen im Rette-Formular.
               </p>
               <ChosenCategories
-                categories={chosenCategories}
-                onRemoveAction={handleRemoveCategory}
-                onUpdateAction={handleUpdateCategory}
-                isRemoving={isRemoving}
-                isUpdating={isUpdating}
+                categories={categories.chosen}
+                onRemoveAction={categories.removeFromFairteiler}
+                onUpdateAction={categories.updatePlatformItem}
+                isRemoving={categories.flags.isRemoving}
+                isUpdating={categories.flags.isUpdating}
               />
             </div>
 
@@ -204,8 +91,8 @@ function CategorySelection({
                       <FormSelectionItem
                         key={category.id}
                         item={category}
-                        onAdd={() => handleAddCategory(category)}
-                        isAdding={isAdding}
+                        onAdd={() => categories.addToFairteiler(category)}
+                        isAdding={categories.flags.isAdding}
                       />
                     ))
                   ) : (
@@ -223,7 +110,11 @@ function CategorySelection({
             <p className='mb-3 text-sm text-muted-foreground'>
               Ist die gewünschte Kategorie nicht dabei? Schlage eine neue vor.
             </p>
-            <SuggestCategoryForm pendingCategories={pendingCategories} />
+            <SuggestCategoryForm
+              pendingCategories={pendingCategories}
+              onSuggest={categories.suggestPlatformItem}
+              isSuggesting={categories.flags.isSuggesting}
+            />
           </div>
         </div>
       </div>
@@ -301,21 +192,16 @@ export function ChosenCategories({
 
 export function SuggestCategoryForm({
   pendingCategories,
+  onSuggest,
+  isSuggesting,
 }: {
   pendingCategories: GenericItem[];
+  onSuggest: (item: GenericItem) => void;
+  isSuggesting: boolean;
 }) {
   const [newCategoryText, setNewCategoryText] = useState('');
 
-  const { trigger: addTrigger, isMutating: isAdding } = useSWRMutation(
-    CATEGORY_KEY,
-    (_key, { arg }: { arg: GenericItem }) => suggestNewCategoryAction(arg),
-    {
-      revalidate: false,
-      rollbackOnError: true,
-    },
-  );
-
-  const handleAddCategory = async (e: React.FormEvent) => {
+  const handleAddCategory = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCategoryText.trim()) {
       toast.info('Bitte geben Sie einen Namen für die Kategorie ein.');
@@ -328,18 +214,8 @@ export function SuggestCategoryForm({
       status: 'active',
     };
 
-    try {
-      await addTrigger(newSuggestion, {
-        optimisticData: (currentCategories: GenericItem[] = []) => {
-          return [...currentCategories, newSuggestion];
-        },
-      });
-
-      setNewCategoryText('');
-    } catch (e) {
-      console.error('Failed to suggest category:', e);
-      toast.error('Fehlgeschlagen, ' + String(e));
-    }
+    onSuggest(newSuggestion);
+    setNewCategoryText('');
   };
 
   return (
@@ -364,17 +240,17 @@ export function SuggestCategoryForm({
           value={newCategoryText}
           onChange={(e) => setNewCategoryText(e.target.value)}
           placeholder='Name der neuen Kategorie...'
-          disabled={isAdding}
+          disabled={isSuggesting}
         />
         <Button
           size='icon'
           type='submit'
           variant='outline'
-          disabled={isAdding || newCategoryText.length <= 0}
+          disabled={isSuggesting || newCategoryText.length <= 0}
           className='shrink-0'
           aria-label='Suggest new category'
         >
-          {isAdding ? <Loader2 className='animate-spin' /> : <Plus />}
+          {isSuggesting ? <Loader2 className='animate-spin' /> : <Plus />}
         </Button>
       </form>
     </div>

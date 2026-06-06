@@ -14,8 +14,8 @@ const nextConfig: NextConfig = {
     },
   },
   reactCompiler: true,
+  cacheComponents: true,
   experimental: {
-    ppr: true,
     useCache: true,
     serverActions: {
       bodySizeLimit: '3mb',

@@ -13,8 +13,7 @@ import {
 import { UserAvatar } from '../user-avatar';
 import { routes } from '@/lib/config/routes';
 import Link from 'next/link';
-import { useTransition } from 'react';
-import { handleAsyncAction } from '@/lib/client-error-handling';
+import { useFormAction } from '@/lib/hooks/use-form-action';
 import { signOutAction } from '@/lib/auth/auth-actions';
 import { ChevronsUpDown, Loader2, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -86,24 +85,18 @@ export function UserNavContent({
 
 // --- 4. The Sign Out Item Component ---
 function SignOutMenuItem() {
-  const [isPending, startTransition] = useTransition();
   const router = useRouter();
-
-  const handleSignOut = () => {
-    startTransition(() => {
-      handleAsyncAction(() => signOutAction({}), undefined, {
-        showToast: false,
-        onSuccess: (result) => {
-          if (result.data?.redirectTo) {
-            router.push(result.data.redirectTo);
-          }
-        },
-      });
-    });
-  };
+  const { execute, isPending } = useFormAction(signOutAction, undefined, {
+    showToast: false,
+    onSuccess: (data) => {
+      if (data?.redirectTo) {
+        router.push(data.redirectTo);
+      }
+    },
+  });
 
   return (
-    <DropdownMenuItem onClick={handleSignOut} disabled={isPending}>
+    <DropdownMenuItem onClick={() => execute({})} disabled={isPending}>
       {isPending ? (
         <Loader2 className='mr-2 size-4 animate-spin' />
       ) : (

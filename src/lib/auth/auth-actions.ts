@@ -1,22 +1,24 @@
 'use server';
 
 import { headers } from 'next/headers';
-import z, { ZodError } from 'zod';
+import { revalidatePath } from 'next/cache';
+import z from 'zod';
+import { checkInvitationAndUser } from '@server/contribution/dal';
 import {
-  checkInvitationAndUser,
-  loadAuthenticatedSession,
-  loadUserByEmail,
   toggleFairteilerVisibility,
   updateFairteiler,
-  validateResetPasswordToken,
-} from '@server/dal';
-import { getActiveFairteiler } from '@server/dto';
+} from '@server/fairteiler/dal';
+import { loadUserByEmail, validateResetPasswordToken } from '@server/user/dal';
+import { getActiveFairteiler } from '@server/fairteiler/queries';
 import { auth, checkPermissionOnServer } from './auth';
 import { generatePassword, getErrorMessage } from './auth-helpers';
 import { MemberRolesEnum } from './auth-permissions';
 import { fairteilerProfileSchema } from '../../features/fairteiler/profile/schemas/fairteiler-profile-schema';
-import { ActionState, createAction } from '@server/action-helpers';
-import { BetterAuthError } from 'better-auth';
+import {
+  action,
+  authedAction,
+  fairteilerAction,
+} from '@server/_lib/safe-action';
 import {
   accessViewSchema,
   changeRoleSchema,
@@ -25,60 +27,32 @@ import {
   removeMemberSchema,
 } from '@/features/fairteiler/members/schemas/members-schema';
 import { NotFoundError, PermissionError } from '@/server/error-handling';
-import { AuthError, handleImageUpload } from '@/server/api-helpers';
+import { handleImageUpload } from '@/server/api-helpers';
 import { userProfileSchema } from '@/features/user/settings/schemas/user-profile-schema';
 
-export const signOutAction = createAction({
-  inputSchema: z.object({}),
-  handler: async ({ headers }) => {
-    await auth.api.signOut({ headers });
-
+export const signOutAction = action
+  .inputSchema(z.object({}))
+  .action(async () => {
+    await auth.api.signOut({ headers: await headers() });
     return {
-      message: 'Erfolgreich abgemeldet.',
-      data: {
-        redirectTo: '/sign-in',
-        shouldRefresh: true,
-      },
+      redirectTo: '/sign-in',
+      shouldRefresh: true,
     };
-  },
-});
+  });
 
-// Custom action for FormData handling (can't use createAction with FormData directly)
-export async function updateFairteilerAction(
-  formData: FormData,
-): Promise<ActionState<z.infer<typeof fairteilerProfileSchema>>> {
-  try {
-    const rawData = Object.fromEntries(formData.entries());
+export const updateFairteilerAction = fairteilerAction
+  .inputSchema(fairteilerProfileSchema)
+  .action(async ({ parsedInput }) => {
+    const currentFairteiler = await getActiveFairteiler();
 
-    const validation = fairteilerProfileSchema.safeParse({
-      ...rawData,
-      thumbnail: rawData.thumbnail ?? null,
-    });
-
-    if (!validation.success) {
-      return {
-        success: false,
-        error: 'Ungültige Eingabedaten.',
-        issues: validation.error.issues,
-      };
-    }
-
-    const nextHeaders = await headers();
-
-    const currentFairteiler = await getActiveFairteiler(nextHeaders);
-    if (!currentFairteiler) {
-      throw new AuthError('Authentifizierung fehlgeschlagen.');
-    }
-
-    const permissionResult = await checkPermissionOnServer(nextHeaders, {
+    const permissionResult = await checkPermissionOnServer(await headers(), {
       organization: ['update'],
     });
-
     if (!permissionResult.success) {
       throw new PermissionError('cannot update fairteiler');
     }
 
-    const { thumbnail, ...otherValues } = validation.data;
+    const { thumbnail, ...otherValues } = parsedInput;
     const newThumbnailUrl = await handleImageUpload(
       thumbnail,
       currentFairteiler.thumbnail,
@@ -87,210 +61,81 @@ export async function updateFairteilerAction(
 
     const finalData = { ...otherValues, thumbnail: newThumbnailUrl };
     await updateFairteiler(currentFairteiler.id, finalData);
-
-    return {
-      success: true,
-      message: 'Profil erfolgreich aktualisiert!',
-      data: finalData,
-    };
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        success: false,
-        error: 'Ungültige Eingabedaten.',
-        issues: error.issues,
-      };
-    }
-    if (error instanceof BetterAuthError) {
-      const message = getErrorMessage(
-        typeof error.cause === 'string' ? error.cause : undefined,
-        'de',
-      );
-      console.error(
-        'Update Fairteiler BetterAuthError:',
-        error.message,
-        'Cause:',
-        error.cause,
-        error,
-      );
-      return { success: false, error: `Update fehlgeschlagen: ${message}` };
-    }
-    if (error instanceof PermissionError) {
-      const message = getErrorMessage(
-        'YOU_ARE_NOT_ALLOWED_TO_UPDATE_THIS_ORGANIZATION',
-        'de',
-      );
-      console.error('Update Fairteiler failed:', message);
-      return { success: false, error: `Update fehlgeschlagen: ${message}` };
-    }
-    const message =
-      error instanceof Error
-        ? error.message
-        : 'Ein unerwarteter Fehler ist aufgetreten.';
-    console.error('Update Fairteiler Unexpected Error:', message, error);
-    return { success: false, error: `Update fehlgeschlagen: ${message}` };
-  }
-}
+    return finalData;
+  });
 
 const toggleDisabledSchema = z.object({
   fairteilerId: z.string(),
   disabled: z.boolean(),
 });
 
-export const toggleFairteilerDisabled = createAction({
-  inputSchema: toggleDisabledSchema,
-  handler: async ({ input }) => {
+export const toggleFairteilerDisabled = action
+  .inputSchema(toggleDisabledSchema)
+  .action(async ({ parsedInput }) => {
     const result = await toggleFairteilerVisibility(
-      input.fairteilerId,
-      input.disabled,
+      parsedInput.fairteilerId,
+      parsedInput.disabled,
     );
-
     if (!result) {
       throw new NotFoundError('Toggle of Fairteiler visibility failed');
     }
+    return result;
+  });
 
-    return {
-      message: 'Visibility of Fairteiler changed successfully',
-      data: result,
-    };
-  },
-});
-
-// Custom action for FormData handling (can't use createAction with FormData directly)
-export async function updateUserAction(
-  formData: FormData,
-): Promise<ActionState<z.infer<typeof userProfileSchema>>> {
-  try {
-    const rawData = Object.fromEntries(formData.entries());
-
-    const validation = userProfileSchema.safeParse({
-      ...rawData,
-      name: `${rawData.firstName as string} ${rawData.lastName as string}`,
-      isAnonymous: rawData.isAnonymous === 'true',
-      avatar: rawData.avatar ?? null,
-    });
-
-    if (!validation.success) {
-      return {
-        success: false,
-        error: 'Ungültige Eingabedaten.',
-        issues: validation.error.issues,
-      };
-    }
-
-    const nextHeaders = await headers();
-
-    const session = await loadAuthenticatedSession(nextHeaders);
-    const currentUser = session.user;
-    if (!currentUser) {
-      throw new AuthError('Authentifizierung fehlgeschlagen.');
-    }
-
-    const { avatar, ...otherValues } = validation.data;
+export const updateUserAction = authedAction
+  .inputSchema(userProfileSchema)
+  .action(async ({ parsedInput, ctx }) => {
+    const { avatar, ...otherValues } = parsedInput;
     const newAvatarUrl = await handleImageUpload(
       avatar,
-      currentUser.image ?? null,
+      ctx.session.user.image ?? null,
       'userAvatars',
     );
 
     const finalData = { ...otherValues, avatar: newAvatarUrl };
 
     await auth.api.updateUser({
-      headers: nextHeaders,
+      headers: await headers(),
       body: {
         ...otherValues,
         image: newAvatarUrl ?? undefined,
       },
     });
 
-    return {
-      success: true,
-      message: 'Profil erfolgreich aktualisiert!',
-      data: finalData,
-    };
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        success: false,
-        error: 'Ungültige Eingabedaten.',
-        issues: error.issues,
-      };
-    }
-    if (error instanceof BetterAuthError) {
-      const message = getErrorMessage(
-        typeof error.cause === 'string' ? error.cause : undefined,
-        'de',
-      );
-      console.error(
-        'Update User BetterAuthError:',
-        error.message,
-        'Cause:',
-        error.cause,
-        error,
-      );
-      return { success: false, error: `Update fehlgeschlagen: ${message}` };
-    }
-    if (error instanceof PermissionError) {
-      const message = getErrorMessage(
-        'YOU_ARE_NOT_ALLOWED_TO_UPDATE_USERS',
-        'de',
-      );
-      console.error('Update User failed:', message);
-      return { success: false, error: `Update fehlgeschlagen: ${message}` };
-    }
-    const message =
-      error instanceof Error
-        ? error.message
-        : 'Ein unerwarteter Fehler ist aufgetreten.';
-    console.error('Update User Unexpected Error:', message, error);
-    return { success: false, error: `Update fehlgeschlagen: ${message}` };
-  }
-}
+    return finalData;
+  });
 
-// Invitation check action
 const checkInvitationSchema = z.object({
   invitationId: z.string().min(1),
 });
 
-export const checkInvitationAndUserAction = createAction({
-  inputSchema: checkInvitationSchema,
-  handler: async ({ input }) => {
-    const result = await checkInvitationAndUser(input.invitationId);
-
+export const checkInvitationAndUserAction = action
+  .inputSchema(checkInvitationSchema)
+  .action(async ({ parsedInput }) => {
+    const result = await checkInvitationAndUser(parsedInput.invitationId);
     if (!result) {
       throw new NotFoundError('Invitation data');
     }
+    return result;
+  });
 
-    return {
-      message: 'Invitation details retrieved successfully',
-      data: result,
-    };
-  },
-});
-
-export const addAccessViewAction = createAction({
-  inputSchema: accessViewSchema,
-  revalidate: '/hub/fairteiler/members',
-  handler: async ({ input, headers }) => {
-    const { name, role } = input;
+export const addAccessViewAction = fairteilerAction
+  .inputSchema(accessViewSchema)
+  .action(async ({ parsedInput }) => {
+    const { name, role } = parsedInput;
     let newUserId: string | null = null;
 
     try {
-      const permissionResult = await checkPermissionOnServer(headers, {
+      const permissionResult = await checkPermissionOnServer(await headers(), {
         member: ['create'],
       });
-
       if (!permissionResult.success) {
         throw new PermissionError(
           getErrorMessage('YOU_ARE_NOT_ALLOWED_TO_CREATE_USERS', 'de'),
         );
       }
 
-      const fairteiler = await getActiveFairteiler(headers);
-      if (!fairteiler) {
-        throw new NotFoundError('Fairteiler nicht gefunden.');
-      }
-
+      const fairteiler = await getActiveFairteiler();
       const viewCount =
         fairteiler.members.filter((m) => m.user.email.startsWith(`${role}-`))
           .length + 1;
@@ -314,10 +159,8 @@ export const addAccessViewAction = createAction({
         body: { userId: newUserId, organizationId: fairteiler.id, role },
       });
 
-      return {
-        message: 'Zugangsprofil erfolgreich erstellt!',
-        data: { email, password },
-      };
+      revalidatePath('/hub/fairteiler/members');
+      return { email, password };
     } catch (error) {
       if (newUserId) {
         console.warn(`Attempting to clean up orphaned user: ${newUserId}`);
@@ -332,75 +175,68 @@ export const addAccessViewAction = createAction({
       }
       throw error;
     }
-  },
-});
+  });
 
-export const removeMemberAction = createAction({
-  inputSchema: removeMemberSchema,
-  revalidate: '/hub/fairteiler/members',
-  handler: async ({ input, headers }) => {
+export const removeMemberAction = authedAction
+  .inputSchema(removeMemberSchema)
+  .action(async ({ parsedInput }) => {
     await auth.api.removeMember({
-      headers,
+      headers: await headers(),
       body: {
-        organizationId: input.organizationId,
-        memberIdOrEmail: input.email,
+        organizationId: parsedInput.organizationId,
+        memberIdOrEmail: parsedInput.email,
       },
     });
-    return { message: `Mitglied ${input.email} wurde erfolgreich entfernt.` };
-  },
-});
+    revalidatePath('/hub/fairteiler/members');
+  });
 
-export const updateMemberRoleAction = createAction({
-  inputSchema: changeRoleSchema,
-  revalidate: '/hub/fairteiler/members',
-  handler: async ({ input, headers }) => {
+export const updateMemberRoleAction = authedAction
+  .inputSchema(changeRoleSchema)
+  .action(async ({ parsedInput }) => {
+    const reqHeaders = await headers();
     await auth.api.updateMemberRole({
-      headers,
-      body: { memberId: input.memberId, role: input.role },
+      headers: reqHeaders,
+      body: { memberId: parsedInput.memberId, role: parsedInput.role },
     });
 
-    if (input.role === MemberRolesEnum.OWNER) {
+    if (parsedInput.role === MemberRolesEnum.OWNER) {
       await auth.api.setRole({
-        headers,
-        body: { role: 'admin', userId: input.userId },
+        headers: reqHeaders,
+        body: { role: 'admin', userId: parsedInput.userId },
       });
     }
-    return { message: 'Rolle erfolgreich aktualisiert.' };
-  },
-});
+    revalidatePath('/hub/fairteiler/members');
+  });
 
-export const inviteMemberAction = createAction({
-  inputSchema: inviteMemberSchema,
-  handler: async ({ input, headers }) => {
+export const inviteMemberAction = authedAction
+  .inputSchema(inviteMemberSchema)
+  .action(async ({ parsedInput }) => {
     await auth.api.createInvitation({
-      headers,
-      body: { email: input.email, role: input.role, resend: true },
+      headers: await headers(),
+      body: {
+        email: parsedInput.email,
+        role: parsedInput.role,
+        resend: true,
+      },
     });
-    return { message: `Einladung erfolgreich an ${input.email} gesendet!` };
-  },
-});
+  });
 
-export const disableAccessViewAction = createAction({
-  inputSchema: disableAccessViewSchema,
-  revalidate: '/hub/fairteiler/members',
-  handler: async ({ input, headers }) => {
+export const disableAccessViewAction = authedAction
+  .inputSchema(disableAccessViewSchema)
+  .action(async ({ parsedInput }) => {
+    const reqHeaders = await headers();
     await auth.api.banUser({
-      headers,
-      body: { userId: input.userId, banReason: 'DISABLED ACCESS VIEW' },
+      headers: reqHeaders,
+      body: { userId: parsedInput.userId, banReason: 'DISABLED ACCESS VIEW' },
     });
     const result = await auth.api.updateMemberRole({
-      headers,
-      body: { memberId: input.memberId, role: MemberRolesEnum.DISABLED },
+      headers: reqHeaders,
+      body: { memberId: parsedInput.memberId, role: MemberRolesEnum.DISABLED },
     });
-    return {
-      success: true,
-      message: 'Zugang erfolgreich deaktiviert.',
-      data: result,
-    };
-  },
-});
+    revalidatePath('/hub/fairteiler/members');
+    return result;
+  });
 
-// Token validation action
 const validateResetTokenSchema = z.object({
   token: z.string().min(1),
 });
@@ -410,27 +246,16 @@ interface TokenValidationResult {
   reason?: 'invalid_or_expired' | 'validation_error';
 }
 
-export const validateResetPasswordTokenAction = createAction({
-  inputSchema: validateResetTokenSchema,
-  handler: async ({
-    input,
-  }): Promise<{ message: string; data: TokenValidationResult }> => {
-    const result = await validateResetPasswordToken(input.token);
+export const validateResetPasswordTokenAction = action
+  .inputSchema(validateResetTokenSchema)
+  .action(async ({ parsedInput }): Promise<TokenValidationResult> => {
+    const result = await validateResetPasswordToken(parsedInput.token);
     if (!result) {
-      return {
-        message: 'Token validation completed',
-        data: { isValid: false, reason: 'invalid_or_expired' },
-      };
+      return { isValid: false, reason: 'invalid_or_expired' };
     }
+    return { isValid: true };
+  });
 
-    return {
-      message: 'Token validation completed',
-      data: { isValid: true },
-    };
-  },
-});
-
-// User security check action
 const checkUserSecureStatusSchema = z.object({
   email: z.string().email({ message: 'Ungültige E-Mail-Adresse.' }),
 });
@@ -440,26 +265,15 @@ interface UserSecureStatusResult {
   isSecure?: boolean;
 }
 
-export const checkUserSecureStatusAction = createAction({
-  inputSchema: checkUserSecureStatusSchema,
-  handler: async ({
-    input,
-  }): Promise<{ message: string; data: UserSecureStatusResult }> => {
-    const result = await loadUserByEmail(input.email);
-
+export const checkUserSecureStatusAction = action
+  .inputSchema(checkUserSecureStatusSchema)
+  .action(async ({ parsedInput }): Promise<UserSecureStatusResult> => {
+    const result = await loadUserByEmail(parsedInput.email);
     if (!result) {
-      return {
-        message: 'User check completed',
-        data: { userExists: false },
-      };
+      return { userExists: false };
     }
-
     return {
-      message: 'User check completed',
-      data: {
-        userExists: true,
-        isSecure: result.secure,
-      },
+      userExists: true,
+      isSecure: result.secure,
     };
-  },
-});
+  });

@@ -1,66 +1,54 @@
 'use client';
 
-import useSWRSuspense, { fetcher } from '@/lib/services/swr';
-import { USER_CONTRIBUTIONS_KEY } from '@/lib/config/api-routes';
-import { vContribution } from '@/server/db/db-types';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import useSWR from 'swr';
+import { getUserContributions } from '@/server/user/queries';
+import { userKeys } from '@/server/user/query-keys';
 
-interface PaginatedResponse {
-  data: vContribution[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    hasMore: boolean;
-  };
-}
+const INITIAL_OPTIONS = { limit: 100 } as const;
+const ALL_OPTIONS = { limit: 100000 } as const;
 
 export function useUserHistoryData() {
   const [loadingMode, setLoadingMode] = useState<'initial' | 'all'>('initial');
+  const queryClient = useQueryClient();
 
-  // SWR with Suspense for initial 100 items
-  const initialData = useSWRSuspense<PaginatedResponse>(
-    `${USER_CONTRIBUTIONS_KEY}?limit=100`,
-    {
-      fetcher,
-      revalidateIfStale: false,
-      revalidateOnFocus: false,
-    },
-  );
+  const initialQuery = useQuery({
+    ...userKeys.contributions(INITIAL_OPTIONS),
+    queryFn: () => getUserContributions(INITIAL_OPTIONS),
+  });
 
-  // SWR with Suspense for all data (only when requested)
-  const allData = useSWR<PaginatedResponse>(
-    loadingMode === 'all' && `${USER_CONTRIBUTIONS_KEY}?limit=100000`,
-    fetcher,
-    {
-      revalidateIfStale: false,
-      revalidateOnFocus: false,
-    },
-  );
+  const allQuery = useQuery({
+    ...userKeys.contributions(ALL_OPTIONS),
+    queryFn: () => getUserContributions(ALL_OPTIONS),
+    enabled: loadingMode === 'all',
+  });
 
-  // Use allData only if it has successfully loaded, otherwise fall back to initialData
-  const currentData =
-    loadingMode === 'all' && allData.data ? allData.data : initialData.data;
+  const current =
+    loadingMode === 'all' && allQuery.data ? allQuery.data : initialQuery.data;
 
-  const totalCount = currentData?.pagination?.total ?? 0;
-  const loadedCount = currentData?.data?.length ?? 0;
+  const totalCount = current?.total ?? 0;
+  const loadedCount = current?.data?.length ?? 0;
 
   return {
-    contributions: currentData?.data ?? [],
+    contributions: current?.data ?? [],
     totalCount,
     loadedCount,
-    isLoadingAll: loadingMode === 'all' && allData.isLoading,
+    isLoadingAll: loadingMode === 'all' && allQuery.isPending,
     hasLoadedAll:
-      (loadingMode === 'all' && !allData.isLoading && !!allData.data) ||
+      (loadingMode === 'all' && !allQuery.isPending && !!allQuery.data) ||
       loadedCount === totalCount,
-    isEmpty: currentData?.data?.length === 0,
+    isEmpty: current?.data?.length === 0,
 
-    // Actions
     loadAll: () => setLoadingMode('all'),
     refresh: () => {
-      initialData.mutate();
-      if (loadingMode === 'all') allData.mutate();
+      void queryClient.invalidateQueries({
+        queryKey: userKeys.contributions(INITIAL_OPTIONS).queryKey,
+      });
+      if (loadingMode === 'all') {
+        void queryClient.invalidateQueries({
+          queryKey: userKeys.contributions(ALL_OPTIONS).queryKey,
+        });
+      }
     },
   };
 }

@@ -1,16 +1,14 @@
+import { getFairteilerBySlug } from '@/server/fairteiler/queries';
+import { getUserPreferences } from '@/server/user/queries';
 import {
-  getFairteilerBySlug,
   getFairteilerTutorialWithSteps,
-} from '@/server/dto';
+  getContributionTutorialProgress,
+} from '@/server/tutorial/queries';
 import { notFound } from 'next/navigation';
 import { ContributionProvider } from '@/features/contribution/context/contribution-context';
 import { ContributionHeader } from '@/features/contribution/components/contribution-header';
 import { ContributionContent } from '@/features/contribution/components/contribution-content';
 import { UserPreferencesProvider } from '@/lib/services/preferences-service';
-import {
-  getUserPreferences,
-  getContributionTutorialProgress,
-} from '@/server/dto';
 import { headers } from 'next/headers';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Suspense } from 'react';
@@ -41,7 +39,7 @@ export default async function UserContributionPage({
 
   const nextHeaders = await headers();
 
-  const userPreferences = await getUserPreferences(nextHeaders);
+  const userPreferences = await getUserPreferences();
 
   if (!userPreferences?.userId) {
     return <UnauthorizedAccess />;
@@ -50,7 +48,6 @@ export default async function UserContributionPage({
   const fairteilerData = await getFairteilerBySlug(fairteilerSlug);
 
   const tutorial = await getFairteilerTutorialWithSteps(
-    nextHeaders,
     fairteilerData.fairteiler.id,
   );
 
@@ -119,29 +116,29 @@ function ContributionTutorialSkeleton() {
       <Card className='w-full max-w-4xl'>
         <CardHeader className='space-y-4 text-center'>
           <div className='flex items-center justify-between text-sm text-muted-foreground'>
-            <Skeleton className='h-4 w-20 bg-secondary' />
+            <Skeleton variant='onCard' className='h-4 w-20' />
           </div>
-          <Skeleton className='h-2 w-full rounded-full bg-secondary' />
+          <Skeleton variant='onCard' className='h-2 w-full rounded-full' />
         </CardHeader>
         <Separator />
         <CardContent className='h-[calc(100vh-220px)] space-y-8 md:h-[400px]'>
-          {/* Title skeleton */}
-          <Skeleton className='mx-auto mt-4 h-10 w-3/4 bg-secondary' />
+          <Skeleton variant='onCard' className='mx-auto mt-4 h-10 w-3/4' />
 
-          {/* Description skeleton */}
           <div className='mx-auto max-w-2xl space-y-2'>
-            <Skeleton className='h-4 w-full bg-secondary' />
-            <Skeleton className='mx-auto h-4 w-5/6 bg-secondary' />
+            <Skeleton variant='onCard' className='h-4 w-full' />
+            <Skeleton variant='onCard' className='mx-auto h-4 w-5/6' />
           </div>
 
-          {/* Content area skeleton */}
           <div className='space-y-4'>
             <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'>
               {[1, 2, 3].map((i) => (
                 <div key={i} className='space-y-3'>
-                  <Skeleton className='h-32 w-full rounded-lg bg-secondary' />
-                  <Skeleton className='h-4 w-3/4 bg-secondary' />
-                  <Skeleton className='h-3 w-1/2 bg-secondary' />
+                  <Skeleton
+                    variant='onCard'
+                    className='h-32 w-full rounded-lg'
+                  />
+                  <Skeleton variant='onCard' className='h-4 w-3/4' />
+                  <Skeleton variant='onCard' className='h-3 w-1/2' />
                 </div>
               ))}
             </div>
@@ -149,14 +146,10 @@ function ContributionTutorialSkeleton() {
         </CardContent>
         <Separator />
         <CardFooter className='z-50 flex justify-between'>
-          {/* Back button skeleton */}
-          <Skeleton className='h-10 w-20 bg-secondary' />
-
+          <Skeleton variant='onCard' className='h-10 w-20' />
           <div className='flex gap-2'>
-            {/* Skip button skeleton */}
-            <Skeleton className='h-10 w-24 bg-secondary' />
-            {/* Next button skeleton */}
-            <Skeleton className='h-10 w-16 bg-secondary' />
+            <Skeleton variant='onCard' className='h-10 w-24' />
+            <Skeleton variant='onCard' className='h-10 w-16' />
           </div>
         </CardFooter>
       </Card>

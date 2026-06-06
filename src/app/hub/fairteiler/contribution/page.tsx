@@ -4,14 +4,20 @@ import { Suspense } from 'react';
 import { Skeleton } from '@ui/skeleton';
 import { UserPreferencesProvider } from '@/lib/services/preferences-service';
 import { headers } from 'next/headers';
-import { getSession } from '@/server/dto';
+import { getSession } from '@/server/user/queries';
 
 export default async function FairteilerContributionPage() {
   const session = await getSession(await headers());
   return (
+    // Suspense still catches UserPreferencesProvider's SWR-Suspense read
+    // (preferences migrate to useQuery in Phase 5). ContributionProvider's
+    // five queries no longer throw — pendingFallback handles their loading.
     <Suspense fallback={<ContributionPageSkeleton />}>
       <UserPreferencesProvider>
-        <ContributionProvider user={session ? session.user : null}>
+        <ContributionProvider
+          user={session ? session.user : null}
+          pendingFallback={<ContributionPageSkeleton />}
+        >
           <ContributionContent />
         </ContributionProvider>
       </UserPreferencesProvider>

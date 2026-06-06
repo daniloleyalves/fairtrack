@@ -1,7 +1,7 @@
 import { Dock } from '@/components/ui/dock';
 import { DockButton } from '@/components/ui/dock-button';
 import { Separator } from '@/components/ui/separator';
-import { getSession } from '@/server/dto';
+import { getSession } from '@/server/user/queries';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 

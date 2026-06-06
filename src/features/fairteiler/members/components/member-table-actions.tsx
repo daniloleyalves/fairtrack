@@ -4,9 +4,9 @@ import { removeMemberAction } from '@/lib/auth/auth-actions';
 import { Member } from '@server/db/db-types';
 import { cn } from '@/lib/utils';
 import { IdCard, Loader2, MoreHorizontal, Save, Trash2 } from 'lucide-react';
-import { Dispatch, SetStateAction, useState, useTransition } from 'react';
+import { Dispatch, SetStateAction, startTransition, useState } from 'react';
 
-import { useSWRConfig } from 'swr';
+import { useQueryClient } from '@tanstack/react-query';
 import { ConfirmModal } from '@components/confirm-modal';
 import { Button, buttonVariants } from '@ui/button';
 import {
@@ -42,33 +42,31 @@ import {
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@ui/form';
 import { RoleSelector } from './role-selector';
 import { changeRoleSchema } from '../schemas/members-schema';
-import { ACTIVE_FAIRTEILER_KEY } from '@/lib/config/api-routes';
-import { handleAsyncAction } from '@/lib/client-error-handling';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
+import { useFormAction } from '@/lib/hooks/use-form-action';
 
 export function MemberTableActions({ member }: { member: Member }) {
-  const { mutate } = useSWRConfig();
-  const [isPending, startTransition] = useTransition();
+  const queryClient = useQueryClient();
 
   const [isChangeRoleModalOpen, setChangeRoleModalOpen] = useState(false);
   const [isRemoveMemberModalOpen, setRemoveMemberModalOpen] = useState(false);
 
+  const removeMember = useFormAction(removeMemberAction, undefined, {
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: fairteilerKeys.all().queryKey,
+      });
+      setRemoveMemberModalOpen(false);
+    },
+  });
+  const isPending = removeMember.isPending;
+
   const handleRemoveMember = () => {
     startTransition(() => {
-      handleAsyncAction(
-        () =>
-          removeMemberAction({
-            organizationId: member.fairteilerId,
-            email: member.user.email,
-          }),
-        undefined,
-        {
-          showToast: true,
-          onSuccess: async () => {
-            await mutate(ACTIVE_FAIRTEILER_KEY);
-            setRemoveMemberModalOpen(false);
-          },
-        },
-      );
+      removeMember.execute({
+        organizationId: member.fairteilerId,
+        email: member.user.email,
+      });
     });
   };
 
@@ -142,8 +140,7 @@ function ChangeRoleModal({
   setOpen: Dispatch<SetStateAction<boolean>>;
 }) {
   const isMobile = useIsMobile();
-  const { mutate } = useSWRConfig();
-  const [isPending, startTransition] = useTransition();
+  const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof changeRoleSchema>>({
     resolver: zodResolver(changeRoleSchema),
@@ -154,25 +151,23 @@ function ChangeRoleModal({
     },
   });
 
+  const updateRole = useFormAction(updateMemberRoleAction, form, {
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: fairteilerKeys.all().queryKey,
+      });
+      setOpen(false);
+    },
+  });
+  const isPending = updateRole.isPending;
+
   function onSubmit(values: z.infer<typeof changeRoleSchema>) {
     startTransition(() => {
-      handleAsyncAction(
-        () =>
-          updateMemberRoleAction({
-            userId: values.userId,
-            memberId: values.memberId,
-            role: values.role,
-          }),
-        form,
-        {
-          showToast: true,
-          setFormError: true,
-          onSuccess: async () => {
-            await mutate(ACTIVE_FAIRTEILER_KEY);
-            setOpen(false);
-          },
-        },
-      );
+      updateRole.execute({
+        userId: values.userId,
+        memberId: values.memberId,
+        role: values.role,
+      });
     });
   }
 

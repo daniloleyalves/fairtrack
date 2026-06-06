@@ -14,24 +14,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { fetcher } from '@/lib/services/swr';
 import { formatNumber } from '@/lib/utils';
 import { vContribution } from '@/server/db/db-types';
 import type { ColumnDef, Row } from '@tanstack/react-table';
 import { formatInTimeZone } from 'date-fns-tz';
-import {
-  ArrowUpDown,
-  Eye,
-  History,
-  Loader2,
-  MoreHorizontal,
-} from 'lucide-react';
+import { ArrowUpDown, Eye, History, MoreHorizontal } from 'lucide-react';
 import Image from 'next/image';
-import { Suspense, useState } from 'react';
+import { useState } from 'react';
 import { DateRange } from 'react-day-picker';
-import { preload } from 'swr';
 import { HistoryVersionHistory } from '@/features/fairteiler/history/components/history-version-history';
-import { FAIRTEILER_CONTRIBUTION_VERSION_HISTORY } from '@/lib/config/api-routes';
 
 export const userHistoryColumns: ColumnDef<vContribution>[] = [
   {
@@ -156,22 +147,11 @@ const UserHistoryRowActions = ({ row }: { row: Row<vContribution> }) => {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
 
-  const preloadContributionVersionHistory = () => {
-    preload(
-      `${FAIRTEILER_CONTRIBUTION_VERSION_HISTORY}?checkinId=${row.original.checkinId}`,
-      fetcher,
-    );
-  };
-
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant='ghost'
-            className='size-8 p-0'
-            onPointerDown={preloadContributionVersionHistory}
-          >
+          <Button variant='ghost' className='size-8 p-0'>
             <span className='sr-only'>Menü öffnen</span>
             <MoreHorizontal className='size-4' />
           </Button>
@@ -196,9 +176,7 @@ const UserHistoryRowActions = ({ row }: { row: Row<vContribution> }) => {
               className='w-80'
               onFocusOutside={(e) => e.preventDefault()}
             >
-              <Suspense fallback={<Loader2 className='mx-auto animate-spin' />}>
-                <HistoryVersionHistory checkinId={historyItem.checkinId} />
-              </Suspense>
+              <HistoryVersionHistory checkinId={historyItem.checkinId} />
             </PopoverContent>
           </Popover>
         </DropdownMenuContent>

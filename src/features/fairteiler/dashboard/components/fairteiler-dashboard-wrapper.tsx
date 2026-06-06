@@ -1,20 +1,12 @@
 'use client';
 
-import { preload } from 'swr';
-import {
-  CATEGORIES_BY_FAIRTEILER_KEY,
-  COMPANIES_BY_FAIRTEILER_KEY,
-  FAIRTEILER_DASHBOARD_KEY,
-  ORIGINS_BY_FAIRTEILER_KEY,
-} from '@/lib/config/api-routes';
-import useSWRSuspense, { fetcher } from '@/lib/services/swr';
+import { useQuery } from '@tanstack/react-query';
+import { Card } from '@/components/ui/card';
+import { ListSkeleton, Skeleton } from '@/components/ui/skeleton';
+import { getFairteilerDashboardData } from '@/server/fairteiler/queries';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { FairteilerDashboard } from './fairteiler-dashboard';
 
-preload(ORIGINS_BY_FAIRTEILER_KEY, fetcher);
-preload(CATEGORIES_BY_FAIRTEILER_KEY, fetcher);
-preload(COMPANIES_BY_FAIRTEILER_KEY, fetcher);
-
-// --- Type Definition for our API data ---
 export interface DashboardData {
   keyFigures: {
     value: number;
@@ -33,7 +25,7 @@ export interface DashboardData {
   leaderboardEntries: {
     id: string;
     name: string;
-    email: string;
+    email: string | null;
     image: string | null;
     totalQuantity: number;
   }[];
@@ -51,11 +43,72 @@ export interface DashboardData {
 }
 
 export default function FairteilerDashboardWrapper() {
-  const { data } = useSWRSuspense<DashboardData>(FAIRTEILER_DASHBOARD_KEY, {
-    fetcher,
-    revalidateIfStale: true,
-    revalidateOnMount: true,
+  const { data, isPending } = useQuery({
+    ...fairteilerKeys.dashboard(),
+    queryFn: () => getFairteilerDashboardData(),
   });
 
+  if (isPending || !data) {
+    return <FairteilerDashboardGridSkeleton />;
+  }
+
   return <FairteilerDashboard data={data} />;
+}
+
+function FairteilerDashboardGridSkeleton() {
+  return (
+    <div className='grid grid-cols-12 gap-4'>
+      {/* Left Column Content */}
+      <div className='col-span-12 flex flex-col gap-4 lg:col-span-7'>
+        <div className='flex gap-2'>
+          {Array.from({ length: 2 }).map((_, i) => (
+            <Card
+              key={i}
+              className='flex h-32 w-full flex-col items-center justify-center p-4'
+            >
+              <Skeleton variant='onCard' className='size-12 rounded-full' />
+              <Skeleton variant='onCard' className='h-4 w-1/3 rounded-md' />
+            </Card>
+          ))}
+        </div>
+
+        <Card className='flex flex-col gap-4 rounded-lg p-4'>
+          <div className='flex-1 space-y-4'>
+            <Skeleton variant='onCard' className='h-6 w-3/4 rounded-md' />
+            <Skeleton variant='onCard' className='h-28 w-full rounded-md' />
+          </div>
+          <div className='h-full w-px bg-border md:hidden' />
+          <div className='flex-1 space-y-4'>
+            <Skeleton variant='onCard' className='h-6 w-3/4 rounded-md' />
+            <Skeleton variant='onCard' className='h-28 w-full rounded-md' />
+          </div>
+        </Card>
+      </div>
+
+      {/* Right Column (Leaderboard) */}
+      <div className='relative col-span-12 lg:col-span-5'>
+        <Card className='h-full flex-col gap-4 rounded-lg p-4'>
+          <Skeleton variant='onCard' className='h-8 w-1/2 rounded-md' />
+          <ListSkeleton rows={9} showAvatar showTrailing />
+        </Card>
+      </div>
+
+      {/* Bottom Row */}
+      <div className='col-span-12 flex flex-col-reverse gap-4 lg:flex-row'>
+        <Card className='h-max flex-col gap-4 rounded-lg p-4 not-even:w-full'>
+          <Skeleton variant='onCard' className='h-8 w-1/2 rounded-md' />
+          <ListSkeleton rows={5} showAvatar showTrailing />
+        </Card>
+
+        <Card className='w-full flex-col gap-4 rounded-lg p-4'>
+          <Skeleton variant='onCard' className='h-8 w-1/3 rounded-md' />
+          <div className='grid h-full grid-cols-7 grid-rows-4 gap-1'>
+            {Array.from({ length: 28 }).map((_, i) => (
+              <Skeleton key={i} variant='onCard' className='aspect-square' />
+            ))}
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
 }

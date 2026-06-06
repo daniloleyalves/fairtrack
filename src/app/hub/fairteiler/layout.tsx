@@ -6,7 +6,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@components/ui/sidebar';
-import { getSession } from '@/server/dto';
+import { getSession } from '@/server/user/queries';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 

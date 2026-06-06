@@ -1,7 +1,8 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { exportContributionsAction } from '@/server/actions';
+import { exportContributionsAction } from '@/server/contribution/actions';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 import {
   exportContributionsToExcel,
   generateExportFilename,
@@ -30,17 +31,12 @@ export function ExportButton({ filters, scope, className }: ExportButtonProps) {
           ? { from: filters.dateRange.from, to: filters.dateRange.to }
           : undefined;
 
-      const result = await exportContributionsAction({
+      const data = await invokeAction(exportContributionsAction, {
         dateRange,
         scope,
       });
 
-      if (!result.success) {
-        toast.error(result.error);
-        return;
-      }
-
-      if (!result.data?.length) {
+      if (!data?.length) {
         const errorMessage =
           scope === 'fairteiler'
             ? 'Keine Fairteiler-Daten zum Exportieren gefunden'
@@ -50,10 +46,10 @@ export function ExportButton({ filters, scope, className }: ExportButtonProps) {
       }
 
       const fairteilerName =
-        scope === 'fairteiler' ? result.data[0].fairteilerName : undefined;
+        scope === 'fairteiler' ? data[0].fairteilerName : undefined;
 
       const buffer = await exportContributionsToExcel({
-        data: result.data,
+        data,
         fairteilerName,
       });
 

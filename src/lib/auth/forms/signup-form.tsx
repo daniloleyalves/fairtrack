@@ -29,6 +29,7 @@ import {
   checkInvitationAndUserAction,
   checkUserSecureStatusAction,
 } from '../auth-actions';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 
 export function SignUpForm({
   className,
@@ -69,22 +70,20 @@ export function SignUpForm({
     if (invitationId) {
       handleClientOperation(
         async () => {
-          const result = await checkInvitationAndUserAction({ invitationId });
+          const data = await invokeAction(checkInvitationAndUserAction, {
+            invitationId,
+          });
 
-          if (result.success && result.data) {
-            // If user already exists, redirect to sign-in with invitationId
-            if (result.data.userExists) {
-              router.push(`/sign-in?invitationId=${invitationId}`);
-              return;
-            }
-
-            setInvitationData(result.data);
-
-            // Pre-fill email for new user signup
-            form.setValue('email', result.data.invitation.email);
-          } else if (!result.success) {
-            throw new Error(result.error || 'Failed to check invitation');
+          // If user already exists, redirect to sign-in with invitationId
+          if (data.userExists) {
+            router.push(`/sign-in?invitationId=${invitationId}`);
+            return;
           }
+
+          setInvitationData(data);
+
+          // Pre-fill email for new user signup
+          form.setValue('email', data.invitation.email);
         },
         noop,
         (error) => {
@@ -105,8 +104,10 @@ export function SignUpForm({
     // when autoSignIn is false (anti-enumeration). Surface the duplicate here so
     // the user sees a clear error instead of being silently redirected to sign-in.
     setIsPending(true);
-    const existing = await checkUserSecureStatusAction({ email: values.email });
-    if (existing.success && existing.data?.userExists) {
+    const existing = await invokeAction(checkUserSecureStatusAction, {
+      email: values.email,
+    });
+    if (existing.userExists) {
       form.setError('root.serverError', {
         message: getErrorMessage('USER_ALREADY_EXISTS', 'de'),
       });
