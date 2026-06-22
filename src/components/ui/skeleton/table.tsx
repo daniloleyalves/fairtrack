@@ -2,13 +2,9 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from './skeleton';
 
 interface TableSkeletonProps {
-  /** Number of body row placeholders. */
   rows: number;
-  /** Number of column placeholders per row (also drives the header). */
   columns: number;
-  /** Render a top toolbar/filter bar above the table. */
   showToolbar?: boolean;
-  /** Render pagination controls below the table. */
   showPagination?: boolean;
   className?: string;
 }

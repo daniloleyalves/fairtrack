@@ -2,7 +2,6 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from './skeleton';
 
 interface PieChartSkeletonProps {
-  /** How many legend rows to render alongside the pie. Default 6. */
   legendItems?: number;
   className?: string;
 }

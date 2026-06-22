@@ -2,13 +2,9 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from './skeleton';
 
 interface ListSkeletonProps {
-  /** Number of row placeholders to render. */
   rows: number;
-  /** Render an avatar circle on the left of each row. */
   showAvatar?: boolean;
-  /** Render a small trailing bar on the right of each row (e.g. score/rank). */
   showTrailing?: boolean;
-  /** Optional header bar above the list. */
   title?: boolean;
   className?: string;
 }
