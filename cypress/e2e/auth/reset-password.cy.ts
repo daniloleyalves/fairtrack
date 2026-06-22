@@ -81,24 +81,7 @@ describe('Password Reset E2E', () => {
     cy.get('button[type="submit"]').should('be.disabled');
   });
 
-  // Skipped: this end-to-end flow (type new password → submit →
-  // redirect to /sign-in → login → reach /hub/user/dashboard) is broken
-  // by a Cypress 15 / React 19 / React Compiler interaction on the
-  // ResetPasswordForm's two adjacent FormField inputs:
-  //   - `cy.get('input[name=...]').type(...)` consistently reports
-  //     "subject contained 2 elements" — the React Compiler reconciles
-  //     in a way that briefly puts two input nodes for the same name in
-  //     the DOM during a render commit. `cy.focused()` routing dodges
-  //     this but the first keystroke is then dropped on the freshly
-  //     mounted input, asymmetrically (first focused field only).
-  //   - Native value-setter dispatch (`new Event('input')`) doesn't
-  //     update RHF state in this setup; React reverts the value on the
-  //     next render.
-  // The form itself works for real users — token validation and the
-  // surrounding error-path tests in this spec still cover the
-  // server-side reset behavior. Revisit after upgrading Cypress or
-  // re-evaluating React Compiler on this form.
-  it.skip('should complete password reset with valid token', () => {
+  it('should complete password reset with valid token', () => {
     cy.fixture('users').then((users: UsersFixture) => {
       const { validUser } = users;
 
@@ -125,10 +108,19 @@ describe('Password Reset E2E', () => {
         cy.contains('Passwort zurücksetzen').should('be.visible');
         cy.contains('Wähle ein neues Passwort').should('be.visible');
 
-        // Fill new password
+        // Fill new password. realType (CDP keyboard events) instead of
+        // cy.type — sidesteps the "subject contained 2 elements" race
+        // under Next 16 cacheComponents.
         const newPassword = 'NewSecurePass123';
-        cy.get('input[name="password"]').type(newPassword);
-        cy.get('input[name="passwordConfirm"]').type(newPassword);
+        cy.get('input[name="password"]').realClick().realType(newPassword);
+        cy.get('input[name="passwordConfirm"]')
+          .realClick()
+          .realType(newPassword);
+        cy.get('input[name="password"]').should('have.value', newPassword);
+        cy.get('input[name="passwordConfirm"]').should(
+          'have.value',
+          newPassword,
+        );
 
         // Submit form
         cy.get('button[type="submit"]').click();
@@ -140,6 +132,11 @@ describe('Password Reset E2E', () => {
 
         // Should redirect to login page with success message
         cy.url({ timeout: 10000 }).should('include', '/sign-in');
+
+        // Fresh load: router.push under Next 16 cacheComponents streams
+        // the new page in chunks that race cy.type's subject-stability
+        // check in the next fillTwoStepLoginForm step.
+        cy.visit('/sign-in');
 
         // Should be able to login with new password
         cy.fillTwoStepLoginForm({
