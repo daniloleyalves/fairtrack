@@ -19,8 +19,6 @@ export function useFairteilerCompanyActions() {
         invokeAction(removeFairteilerCompanyAction, item),
       updatePlatformItem: (item: GenericItem) =>
         invokeAction(updateCompanyAction, item),
-      // The suggest action's zod schema strips `originName`; preserve the
-      // full input for the optimistic-update display by returning `item`.
       suggestPlatformItem: async (item: CompanyWithOrigin) => {
         await invokeAction(suggestNewCompanyAction, item);
         return item;

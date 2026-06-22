@@ -27,9 +27,6 @@ interface MockedStorage {
 }
 const mockedStorage = storage as unknown as MockedStorage;
 
-// `useSubmissionSelection` falls back to `window.localStorage.removeItem`
-// when set to null; jsdom's `window.localStorage` doesn't expose removeItem
-// in this setup, so stub it.
 const removeItemSpy = vi.fn((key: string) => {
   mockedStorage.__store.delete(key);
 });

@@ -231,8 +231,6 @@ describe('invokeAction', () => {
   });
 
   it('resolves to undefined for void-returning actions (no throw)', async () => {
-    // next-safe-action returns `{ data: undefined }` when the handler has no
-    // return statement — this is a legit success, not a bug to flag.
     const action = vi.fn().mockResolvedValue({ data: undefined });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await invokeAction(action as any, undefined as any);

@@ -195,13 +195,8 @@ describe('Preferences Management E2E', () => {
       // Wait for content to load
       cy.contains('Herkünfte').should('be.visible');
 
-      // Attempt to add an origin from available options
       cy.get('[aria-label="Add Supermarkt"]').click();
 
-      // useCatalogResource catches the rejected invokeAction and toasts a
-      // generic permission error (PERMISSION_ERROR constant in
-      // use-catalog-resource.ts). That toast is the user-visible signal
-      // that the action was denied — assert on it directly.
       cy.contains(
         'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen',
       ).should('be.visible');

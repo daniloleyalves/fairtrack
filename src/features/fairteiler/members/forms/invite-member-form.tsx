@@ -42,8 +42,6 @@ export function InviteMemberForm({
     },
   });
 
-  // Capture the submitted email so the success toast can interpolate it
-  // after the form has been reset.
   const invitedEmailRef = useRef<string>('');
 
   const inviteMember = useFormAction(inviteMemberAction, form, {

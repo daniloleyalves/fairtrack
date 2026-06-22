@@ -146,23 +146,16 @@ describe('Access View Management E2E', () => {
 
       cy.get('button[type="submit"]').should('be.disabled');
 
-      // Intercept the next-safe-action POST specifically (identified by the
-      // `Next-Action` header). Bare URL filters also match RSC navigation
-      // POSTs, so without the header guard we'd see the page payload instead
-      // of the action response.
       cy.intercept({
         method: 'POST',
         url: '**/hub/fairteiler/members**',
         headers: { 'next-action': /.+/ },
       }).as('addAccessView');
 
-      // Need a role + name so submit is enabled
       cy.get('button[value="employee"]').click();
       cy.get('input[name="name"]').type('does-not-matter');
       cy.get('button[type="submit"]').contains('Zugangsprofil anlegen').click();
 
-      // next-safe-action returns HTTP 200 with `{ serverError: '...' }`
-      // body on permission denial (not 5xx).
       cy.wait('@addAccessView').then((interception) => {
         expect(interception.response).to.exist;
         expect(interception.response!.statusCode).to.equal(200);
