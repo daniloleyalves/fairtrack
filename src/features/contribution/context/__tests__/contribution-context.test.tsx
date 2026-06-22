@@ -51,14 +51,6 @@ afterEach(() => {
 });
 
 describe('ContributionProvider', () => {
-  // Regression: in earlier code, an early `return <>{pendingFallback}</>`
-  // branch sat BEFORE the location-tracking `useEffect`. On the first
-  // render the queries were pending so the effect was skipped; on the
-  // next render (data resolved) the effect ran — Rules-of-Hooks violation
-  // ("Rendered more hooks than during the previous render"). All hooks
-  // must run on every render, so the effect was hoisted above the early
-  // return. This test exercises the no-initialData client path so the
-  // ordering can't silently regress.
   it('renders without violating Rules of Hooks when initialData is absent', async () => {
     const { Wrapper } = makeWrapper();
     expect(() =>
@@ -98,8 +90,6 @@ describe('ContributionProvider', () => {
               name: 'Test',
               geoLat: '48.7',
               geoLng: '9.1',
-              // The rest of FairteilerWithMembers is intentionally narrowed
-              // — ContributionProvider only reads geoLat/geoLng off it.
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any,
             origins: [],

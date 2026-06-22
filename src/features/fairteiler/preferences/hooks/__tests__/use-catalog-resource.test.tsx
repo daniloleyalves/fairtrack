@@ -56,9 +56,6 @@ function setup({
 }: SetupOptions = {}) {
   const { client, Wrapper } = makeWrapper();
 
-  // Mutable server state — query refetches (e.g. after onSettled invalidate)
-  // see whatever the last successful mutation wrote, so the optimistic
-  // update isn't blown away by a stale fixture.
   let allState = [...initialAll];
   let chosenState = [...initialChosen];
 

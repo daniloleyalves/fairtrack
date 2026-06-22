@@ -5,9 +5,6 @@ import { useForm } from 'react-hook-form';
 
 import { useFormAction } from '../use-form-action';
 
-// Capture the callbacks `useFormAction` passes through to next-safe-action's
-// `useAction` so each test can invoke them directly and verify the wrapping
-// logic without standing up a real action runtime.
 type Callbacks = {
   onExecute?: () => void;
   onSuccess?: (args: { data: unknown }) => Promise<void> | void;
@@ -134,7 +131,6 @@ describe('useFormAction', () => {
     expect(setError).toHaveBeenCalledWith('name', {
       message: 'Name is required',
     });
-    // No serverError → no toast for validation-only errors
     expect(toastError).not.toHaveBeenCalled();
   });
 
