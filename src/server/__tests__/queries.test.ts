@@ -481,10 +481,7 @@ describe('DTO Layer', () => {
           mockContributionVersionHistory,
         );
 
-        const result = await getVersionHistoryByCheckinId(
-          mockHeaders,
-          'checkin-001',
-        );
+        const result = await getVersionHistoryByCheckinId('checkin-001');
 
         const expectedResult = mockContributionVersionHistory.map((item) => ({
           id: item.id,
