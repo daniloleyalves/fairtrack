@@ -15,10 +15,11 @@ import { Input } from '@components/ui/input';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Send } from 'lucide-react';
-import { Dispatch, SetStateAction, startTransition } from 'react';
+import { Dispatch, SetStateAction, startTransition, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
+import { toast } from 'sonner';
 import { RoleSelector } from '../components/role-selector';
 import { inviteMemberSchema } from '../schemas/members-schema';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
@@ -41,11 +42,18 @@ export function InviteMemberForm({
     },
   });
 
+  // Capture the submitted email so the success toast can interpolate it
+  // after the form has been reset.
+  const invitedEmailRef = useRef<string>('');
+
   const inviteMember = useFormAction(inviteMemberAction, form, {
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: fairteilerKeys.all().queryKey,
       });
+      toast.success(
+        `Einladung erfolgreich an ${invitedEmailRef.current} gesendet!`,
+      );
       form.reset();
       setOpen(false);
     },
@@ -53,6 +61,7 @@ export function InviteMemberForm({
   const isPending = inviteMember.isPending;
 
   function onSubmit(values: z.infer<typeof inviteMemberSchema>) {
+    invitedEmailRef.current = values.email;
     startTransition(() => {
       inviteMember.execute(values);
     });
