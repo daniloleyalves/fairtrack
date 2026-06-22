@@ -46,23 +46,16 @@ interface FairteilerData {
 }
 
 interface ContributionContextValue {
-  // Fairteiler data
   fairteiler: Fairteiler | FairteilerWithMembers;
   origins: GenericItem[];
   categories: (GenericItem & { image?: string })[];
   companies: (GenericItem & { originId?: string })[];
   tutorial?: FairteilerTutorialWithSteps;
-
-  // User data
   user: User | null;
-
-  // Location authentication
   locationStatus: LocationStatus;
   coordinates: Coordinates | null;
   isLocationVerified: boolean;
   error: string | null;
-
-  // Actions
   requestLocation: () => void;
 }
 
@@ -92,8 +85,6 @@ export function ContributionProvider({
   const [locationStatus, setLocationStatus] =
     useState<LocationStatus>('loading');
 
-  // Client-side TanStack Query reads, gated behind `!initialData`. Five
-  // independent hooks → no shared Suspense boundary → no SWR >3-call race.
   const clientEnabled = !initialData;
   const fairteilerQuery = useQuery({
     ...fairteilerKeys.active(),
@@ -121,9 +112,6 @@ export function ContributionProvider({
     enabled: clientEnabled,
   });
 
-  // Data resolution: prefer initialData (RSC path); otherwise wait for
-  // the four required queries to resolve. Tutorial is optional, so we
-  // don't gate on its loading state.
   let fairteiler: Fairteiler | FairteilerWithMembers;
   let origins: GenericItem[];
   let categories: (GenericItem & { image?: string })[];
@@ -192,8 +180,6 @@ export function ContributionProvider({
   ]);
 
   const requestLocation = () => {
-    // The useUserLocation hook automatically requests location
-    // This function can be used to trigger a manual refresh if needed
     window.location.reload();
   };
 
