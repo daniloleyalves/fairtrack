@@ -3,7 +3,7 @@ import type { Mock } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { useForm } from 'react-hook-form';
 
-import { useFormAction } from '../use-form-action';
+import { invokeAction, useFormAction } from '../use-form-action';
 
 // Capture the callbacks `useFormAction` passes through to next-safe-action's
 // `useAction` so each test can invoke them directly and verify the wrapping
@@ -219,5 +219,44 @@ describe('useFormAction', () => {
       capturedCallbacks?.onExecute?.();
     });
     expect(clearErrors).toHaveBeenCalled();
+  });
+});
+
+describe('invokeAction', () => {
+  it('returns the action data on success', async () => {
+    const action = vi.fn().mockResolvedValue({ data: { id: 'x' } });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = await invokeAction(action as any, { id: 'x' } as any);
+    expect(result).toEqual({ id: 'x' });
+  });
+
+  it('resolves to undefined for void-returning actions (no throw)', async () => {
+    // next-safe-action returns `{ data: undefined }` when the handler has no
+    // return statement — this is a legit success, not a bug to flag.
+    const action = vi.fn().mockResolvedValue({ data: undefined });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = await invokeAction(action as any, undefined as any);
+    expect(result).toBeUndefined();
+  });
+
+  it('throws with the serverError message', async () => {
+    const action = vi.fn().mockResolvedValue({ serverError: 'nope' });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await expect(invokeAction(action as any, {} as any)).rejects.toThrow(
+      'nope',
+    );
+  });
+
+  it('throws with the first validation message when present', async () => {
+    const action = vi.fn().mockResolvedValue({
+      validationErrors: {
+        formErrors: ['form is broken'],
+        fieldErrors: {},
+      },
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await expect(invokeAction(action as any, {} as any)).rejects.toThrow(
+      'form is broken',
+    );
   });
 });

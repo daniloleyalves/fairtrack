@@ -178,7 +178,7 @@ export function useFormAction<
  * fetchers, RSC pages). Returns the action's `data` on success, throws an
  * `Error` carrying the server error message on failure. Validation errors
  * surface as `Error` too — call sites needing field-level errors should use
- * `useFormAction` instead.
+ * `useFormAction` instead. Void-returning actions resolve to `undefined`.
  */
 export async function invokeAction<
   TSchema extends StandardSchemaV1 | undefined,
@@ -205,8 +205,5 @@ export async function invokeAction<
     ];
     throw new Error(allMessages[0] ?? ERROR_MESSAGES.VALIDATION_ERROR);
   }
-  if (result?.data === undefined) {
-    throw new Error('Action returned no data and no error');
-  }
-  return result.data;
+  return result.data as TData;
 }
