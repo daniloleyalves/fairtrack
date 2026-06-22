@@ -49,7 +49,12 @@ export const updateFairteilerAction = fairteilerAction
       organization: ['update'],
     });
     if (!permissionResult.success) {
-      throw new PermissionError('cannot update fairteiler');
+      throw new PermissionError(
+        getErrorMessage(
+          'YOU_ARE_NOT_ALLOWED_TO_UPDATE_THIS_ORGANIZATION',
+          'de',
+        ),
+      );
     }
 
     const { thumbnail, ...otherValues } = parsedInput;
