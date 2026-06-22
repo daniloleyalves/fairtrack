@@ -1,12 +1,5 @@
 'use client';
 
-import { invokeAction } from '@/lib/hooks/use-form-action';
-import {
-  addFairteilerCategoryAction,
-  removeFairteilerCategoryAction,
-  suggestNewCategoryAction,
-  updateCategoryAction,
-} from '@server/fairteiler/actions';
 import { categoryKeys } from '@server/fairteiler/query-keys';
 import { GenericItem } from '@server/db/db-types';
 import { Badge } from '@ui/badge';
@@ -20,6 +13,7 @@ import { FormSelectionItem } from './form-selection-item';
 import { v4 as uuidv4 } from 'uuid';
 import { EditItemDialog } from './edit-item-dialog';
 import { useCatalogResource } from '../hooks/use-catalog-resource';
+import { useFairteilerCategoryActions } from '../hooks/use-fairteiler-category-actions';
 
 // --- Main Component ---
 
@@ -27,11 +21,7 @@ export function CategorySelectionWrapper() {
   const categories = useCatalogResource<GenericItem, GenericItem>({
     allQuery: categoryKeys.all(),
     chosenQuery: categoryKeys.byFairteiler(),
-    addToFairteiler: (item) => invokeAction(addFairteilerCategoryAction, item),
-    removeFromFairteiler: (item) =>
-      invokeAction(removeFairteilerCategoryAction, item),
-    updatePlatformItem: (item) => invokeAction(updateCategoryAction, item),
-    suggestPlatformItem: (item) => invokeAction(suggestNewCategoryAction, item),
+    ...useFairteilerCategoryActions(),
     messages: {
       removeSuccess: 'Kategorie erfolgreich entfernt',
       updateSuccess: 'Kategorie erfolgreich aktualisiert',

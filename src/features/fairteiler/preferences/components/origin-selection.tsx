@@ -1,12 +1,5 @@
 'use client';
 
-import { invokeAction } from '@/lib/hooks/use-form-action';
-import {
-  addFairteilerOriginAction,
-  removeFairteilerOriginAction,
-  suggestNewOriginAction,
-  updateOriginAction,
-} from '@server/fairteiler/actions';
 import { originKeys } from '@server/fairteiler/query-keys';
 import { GenericItem } from '@server/db/db-types';
 import { Badge } from '@ui/badge';
@@ -20,6 +13,7 @@ import { FormSelectionItem } from './form-selection-item';
 import { v4 as uuidv4 } from 'uuid';
 import { EditItemDialog } from './edit-item-dialog';
 import { useCatalogResource } from '../hooks/use-catalog-resource';
+import { useFairteilerOriginActions } from '../hooks/use-fairteiler-origin-actions';
 
 // --- Main Component ---
 
@@ -27,11 +21,7 @@ export function OriginSelectionWrapper() {
   const origins = useCatalogResource<GenericItem, GenericItem>({
     allQuery: originKeys.all(),
     chosenQuery: originKeys.byFairteiler(),
-    addToFairteiler: (item) => invokeAction(addFairteilerOriginAction, item),
-    removeFromFairteiler: (item) =>
-      invokeAction(removeFairteilerOriginAction, item),
-    updatePlatformItem: (item) => invokeAction(updateOriginAction, item),
-    suggestPlatformItem: (item) => invokeAction(suggestNewOriginAction, item),
+    ...useFairteilerOriginActions(),
   });
 
   // --- Derived State ---

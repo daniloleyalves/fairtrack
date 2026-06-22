@@ -1,11 +1,5 @@
 'use client';
 
-import {
-  addFairteilerCompanyAction,
-  removeFairteilerCompanyAction,
-  suggestNewCompanyAction,
-  updateCompanyAction,
-} from '@server/fairteiler/actions';
 import { companyKeys, originKeys } from '@server/fairteiler/query-keys';
 import { CompanyWithOrigin, GenericItem } from '@server/db/db-types';
 import { toast } from 'sonner';
@@ -24,11 +18,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@ui/select';
-import { invokeAction } from '@/lib/hooks/use-form-action';
 import { v4 as uuidv4 } from 'uuid';
 import { EditItemDialog } from './edit-item-dialog';
 import { useQuery } from '@tanstack/react-query';
 import { useCatalogResource } from '../hooks/use-catalog-resource';
+import { useFairteilerCompanyActions } from '../hooks/use-fairteiler-company-actions';
 
 // --- Main Component ---
 
@@ -36,14 +30,7 @@ export function CompanySelectionWrapper() {
   const companies = useCatalogResource<CompanyWithOrigin, GenericItem>({
     allQuery: companyKeys.all(),
     chosenQuery: companyKeys.byFairteiler(),
-    addToFairteiler: (item) => invokeAction(addFairteilerCompanyAction, item),
-    removeFromFairteiler: (item) =>
-      invokeAction(removeFairteilerCompanyAction, item),
-    updatePlatformItem: (item) => invokeAction(updateCompanyAction, item),
-    suggestPlatformItem: async (item) => {
-      await invokeAction(suggestNewCompanyAction, item);
-      return item;
-    },
+    ...useFairteilerCompanyActions(),
     messages: {
       removeSuccess: 'Betrieb erfolgreich entfernt',
       updateSuccess: 'Betrieb erfolgreich aktualisiert',
