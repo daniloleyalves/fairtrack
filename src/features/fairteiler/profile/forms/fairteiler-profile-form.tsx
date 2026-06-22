@@ -23,17 +23,13 @@ import { z } from 'zod';
 import { FairteilerWithMembers } from '@server/db/db-types';
 import { FairteilerTagsWrapper } from '../components/fairteiler-tags-wrapper';
 import { useFormAction } from '@/lib/hooks/use-form-action';
-import { getActiveFairteiler } from '@/server/fairteiler/queries';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // --- 2. Data Fetching Component ---
 export function ProfileFormWrapper() {
-  const { data: fairteiler, isPending } = useQuery({
-    ...fairteilerKeys.active(),
-    queryFn: () => getActiveFairteiler(),
-  });
+  const { data: fairteiler, isPending } = useQuery(fairteilerKeys.active());
 
   if (isPending || !fairteiler) {
     return <Skeleton className='h-[484px] w-full' />;

@@ -16,18 +16,11 @@ import {
   Fairteiler,
 } from '@/server/db/db-types';
 import {
-  getActiveFairteiler,
-  getCategoriesByFairteiler,
-  getCompaniesByFairteiler,
-  getOriginsByFairteiler,
-} from '@/server/fairteiler/queries';
-import {
   categoryKeys,
   companyKeys,
   fairteilerKeys,
   originKeys,
 } from '@/server/fairteiler/query-keys';
-import { getFairteilerTutorialWithSteps } from '@/server/tutorial/queries';
 import { tutorialKeys } from '@/server/tutorial/query-keys';
 
 export type LocationStatus =
@@ -97,27 +90,22 @@ export function ContributionProvider({
   const clientEnabled = !initialData;
   const fairteilerQuery = useQuery({
     ...fairteilerKeys.active(),
-    queryFn: () => getActiveFairteiler(),
     enabled: clientEnabled,
   });
   const originsQuery = useQuery({
     ...originKeys.byFairteiler(),
-    queryFn: () => getOriginsByFairteiler(),
     enabled: clientEnabled,
   });
   const categoriesQuery = useQuery({
     ...categoryKeys.byFairteiler(),
-    queryFn: () => getCategoriesByFairteiler(),
     enabled: clientEnabled,
   });
   const companiesQuery = useQuery({
     ...companyKeys.byFairteiler(),
-    queryFn: () => getCompaniesByFairteiler(),
     enabled: clientEnabled,
   });
   const tutorialQuery = useQuery({
     ...tutorialKeys.fairteilerTutorial(),
-    queryFn: () => getFairteilerTutorialWithSteps(),
     enabled: clientEnabled,
   });
 

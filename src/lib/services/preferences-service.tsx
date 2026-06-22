@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { formTableViewEnum } from '@/server/db/schema';
 import { updateUserPreferencesAction } from '@/server/user/actions';
-import { getUserPreferences } from '@/server/user/queries';
 import { userKeys } from '@/server/user/query-keys';
 import { invokeAction } from '@/lib/hooks/use-form-action';
 import { toast } from 'sonner';
@@ -58,7 +57,6 @@ export function UserPreferencesProvider({
     error,
   } = useQuery({
     ...userKeys.preferences(),
-    queryFn: getUserPreferences,
     initialData: initialData ?? undefined,
   });
 

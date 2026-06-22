@@ -3,7 +3,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { ListSkeleton, Skeleton } from '@/components/ui/skeleton';
-import { getUserDashboardData } from '@/server/user/queries';
 import { userKeys } from '@/server/user/query-keys';
 import { UserDashboard } from './user-dashboard';
 import { MilestoneData } from '../gamification/milestones/milestone-utils';
@@ -38,10 +37,7 @@ export interface UserDashboardData {
 }
 
 export default function UserDashboardWrapper() {
-  const { data: dashboardData, isPending } = useQuery({
-    ...userKeys.dashboard(),
-    queryFn: () => getUserDashboardData(),
-  });
+  const { data: dashboardData, isPending } = useQuery(userKeys.dashboard());
 
   if (isPending || !dashboardData) {
     return <UserDashboardGridSkeleton />;

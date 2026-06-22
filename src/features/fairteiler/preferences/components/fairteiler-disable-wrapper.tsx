@@ -5,7 +5,6 @@ import { FairteilerDisableToggle } from './fairteiler-disable-toggle';
 import { FairteilerWithMembers } from '@/server/db/db-types';
 import { toggleFairteilerDisabled } from '@/lib/auth/auth-actions';
 import { invokeAction } from '@/lib/hooks/use-form-action';
-import { getActiveFairteiler } from '@/server/fairteiler/queries';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -19,10 +18,7 @@ export function FairteilerDisableWrapper({
   const queryClient = useQueryClient();
   const activeKey = fairteilerKeys.active().queryKey;
 
-  const { data: fairteiler } = useQuery({
-    ...fairteilerKeys.active(),
-    queryFn: () => getActiveFairteiler(),
-  });
+  const { data: fairteiler } = useQuery(fairteilerKeys.active());
 
   const toggle = useMutation({
     mutationFn: (disabled: boolean) => {

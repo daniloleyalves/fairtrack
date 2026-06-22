@@ -3,17 +3,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton, StatSkeleton } from '@/components/ui/skeleton';
-import { getContributions } from '@/server/contribution/queries';
 import { contributionKeys } from '@/server/contribution/query-keys';
 import { ReportingDashboard } from './reporting-dashboard';
 
 const REPORTING_QUERY_OPTIONS = { limit: 100000 } as const;
 
 export default function FairteilerReportingWrapper() {
-  const { data, isPending } = useQuery({
-    ...contributionKeys.list(REPORTING_QUERY_OPTIONS),
-    queryFn: () => getContributions(REPORTING_QUERY_OPTIONS),
-  });
+  const { data, isPending } = useQuery(
+    contributionKeys.list(REPORTING_QUERY_OPTIONS),
+  );
 
   if (isPending || !data) {
     return <ReportingGridSkeleton />;

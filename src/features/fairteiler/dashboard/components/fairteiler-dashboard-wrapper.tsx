@@ -3,7 +3,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { ListSkeleton, Skeleton } from '@/components/ui/skeleton';
-import { getFairteilerDashboardData } from '@/server/fairteiler/queries';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { FairteilerDashboard } from './fairteiler-dashboard';
 
@@ -43,10 +42,7 @@ export interface DashboardData {
 }
 
 export default function FairteilerDashboardWrapper() {
-  const { data, isPending } = useQuery({
-    ...fairteilerKeys.dashboard(),
-    queryFn: () => getFairteilerDashboardData(),
-  });
+  const { data, isPending } = useQuery(fairteilerKeys.dashboard());
 
   if (isPending || !data) {
     return <FairteilerDashboardGridSkeleton />;

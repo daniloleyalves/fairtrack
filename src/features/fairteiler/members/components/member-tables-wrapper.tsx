@@ -7,16 +7,12 @@ import {
   ACCESS_VIEW_ROLES,
   MemberRolesEnum,
 } from '@/lib/auth/auth-permissions';
-import { getActiveFairteiler } from '@/server/fairteiler/queries';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { AccessViewTable } from './access-view-table';
 import { MemberTable } from './member-table';
 
 export function MemberTablesWrapper() {
-  const { data: fairteiler, isPending } = useQuery({
-    ...fairteilerKeys.active(),
-    queryFn: () => getActiveFairteiler(),
-  });
+  const { data: fairteiler, isPending } = useQuery(fairteilerKeys.active());
 
   if (isPending || !fairteiler) {
     return (

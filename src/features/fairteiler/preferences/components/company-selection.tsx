@@ -6,11 +6,6 @@ import {
   suggestNewCompanyAction,
   updateCompanyAction,
 } from '@server/fairteiler/actions';
-import {
-  getCompanies,
-  getCompaniesByFairteiler,
-  getOrigins,
-} from '@server/fairteiler/queries';
 import { companyKeys, originKeys } from '@server/fairteiler/query-keys';
 import { CompanyWithOrigin, GenericItem } from '@server/db/db-types';
 import { toast } from 'sonner';
@@ -39,10 +34,8 @@ import { useCatalogResource } from '../hooks/use-catalog-resource';
 
 export function CompanySelectionWrapper() {
   const companies = useCatalogResource<CompanyWithOrigin, GenericItem>({
-    allKey: companyKeys.all(),
-    allQueryFn: getCompanies,
-    chosenKey: companyKeys.byFairteiler(),
-    chosenQueryFn: getCompaniesByFairteiler,
+    allQuery: companyKeys.all(),
+    chosenQuery: companyKeys.byFairteiler(),
     addToFairteiler: (item) => invokeAction(addFairteilerCompanyAction, item),
     removeFromFairteiler: (item) =>
       invokeAction(removeFairteilerCompanyAction, item),
@@ -57,10 +50,7 @@ export function CompanySelectionWrapper() {
     },
   });
 
-  const { data: allOriginsData } = useQuery({
-    ...originKeys.all(),
-    queryFn: getOrigins,
-  });
+  const { data: allOriginsData } = useQuery(originKeys.all());
   const allOrigins = allOriginsData ?? [];
 
   // --- Derived State  ---

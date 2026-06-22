@@ -2,7 +2,6 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { getUserContributions } from '@/server/user/queries';
 import { userKeys } from '@/server/user/query-keys';
 
 const INITIAL_OPTIONS = { limit: 100 } as const;
@@ -12,14 +11,10 @@ export function useUserHistoryData() {
   const [loadingMode, setLoadingMode] = useState<'initial' | 'all'>('initial');
   const queryClient = useQueryClient();
 
-  const initialQuery = useQuery({
-    ...userKeys.contributions(INITIAL_OPTIONS),
-    queryFn: () => getUserContributions(INITIAL_OPTIONS),
-  });
+  const initialQuery = useQuery(userKeys.contributions(INITIAL_OPTIONS));
 
   const allQuery = useQuery({
     ...userKeys.contributions(ALL_OPTIONS),
-    queryFn: () => getUserContributions(ALL_OPTIONS),
     enabled: loadingMode === 'all',
   });
 

@@ -7,7 +7,6 @@ import UserAccountCard from './user-account';
 import { updateUserAction } from '@/lib/auth/auth-actions';
 import { invokeAction } from '@/lib/hooks/use-form-action';
 import { userKeys } from '@/server/user/query-keys';
-import { getUserProfile } from '@/server/user/queries';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -17,7 +16,6 @@ export default function UserSettingsWrapper({ user }: { user: User }) {
 
   const { data: userData = user } = useQuery({
     ...userKeys.profile(),
-    queryFn: getUserProfile,
     initialData: user,
   });
 

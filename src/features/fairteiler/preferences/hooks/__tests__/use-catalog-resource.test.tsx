@@ -19,8 +19,8 @@ interface Item {
   name: string;
 }
 
-const allKey = { queryKey: ['catalog', 'all'] as const };
-const chosenKey = { queryKey: ['catalog', 'chosen'] as const };
+const ALL_QUERY_KEY = ['catalog', 'all'] as const;
+const CHOSEN_QUERY_KEY = ['catalog', 'chosen'] as const;
 
 function makeWrapper() {
   const client = new QueryClient({
@@ -80,12 +80,14 @@ function setup({
   };
 
   const config = {
-    allKey,
-    allQueryFn: vi.fn().mockImplementation(() => Promise.resolve(allState)),
-    chosenKey,
-    chosenQueryFn: vi
-      .fn()
-      .mockImplementation(() => Promise.resolve(chosenState)),
+    allQuery: {
+      queryKey: ALL_QUERY_KEY,
+      queryFn: vi.fn().mockImplementation(() => Promise.resolve(allState)),
+    },
+    chosenQuery: {
+      queryKey: CHOSEN_QUERY_KEY,
+      queryFn: vi.fn().mockImplementation(() => Promise.resolve(chosenState)),
+    },
     addToFairteiler: addImpl ?? vi.fn().mockImplementation(defaultAdd),
     removeFromFairteiler:
       removeImpl ?? vi.fn().mockImplementation(defaultRemove),
@@ -144,7 +146,7 @@ describe('useCatalogResource', () => {
       });
 
       await waitFor(() =>
-        expect(client.getQueryData<Item[]>(chosenKey.queryKey)).toEqual([
+        expect(client.getQueryData<Item[]>(CHOSEN_QUERY_KEY)).toEqual([
           { id: 'b', name: 'B' },
           { id: 'c', name: 'C' },
         ]),
@@ -163,7 +165,7 @@ describe('useCatalogResource', () => {
       });
 
       await waitFor(() => expect(toastError).toHaveBeenCalled());
-      expect(client.getQueryData<Item[]>(chosenKey.queryKey)).toEqual([
+      expect(client.getQueryData<Item[]>(CHOSEN_QUERY_KEY)).toEqual([
         { id: 'b', name: 'B' },
       ]);
     });
@@ -184,7 +186,7 @@ describe('useCatalogResource', () => {
       });
 
       await waitFor(() =>
-        expect(client.getQueryData<Item[]>(chosenKey.queryKey)).toEqual([
+        expect(client.getQueryData<Item[]>(CHOSEN_QUERY_KEY)).toEqual([
           { id: 'c', name: 'C' },
         ]),
       );
@@ -207,7 +209,7 @@ describe('useCatalogResource', () => {
       });
 
       await waitFor(() => expect(toastError).toHaveBeenCalled());
-      expect(client.getQueryData<Item[]>(chosenKey.queryKey)).toEqual([
+      expect(client.getQueryData<Item[]>(CHOSEN_QUERY_KEY)).toEqual([
         { id: 'b', name: 'B' },
       ]);
     });
@@ -228,7 +230,7 @@ describe('useCatalogResource', () => {
       });
 
       await waitFor(() =>
-        expect(client.getQueryData<Item[]>(chosenKey.queryKey)).toEqual([
+        expect(client.getQueryData<Item[]>(CHOSEN_QUERY_KEY)).toEqual([
           { id: 'b', name: 'New' },
           { id: 'c', name: 'C' },
         ]),
@@ -251,7 +253,7 @@ describe('useCatalogResource', () => {
           (c) => (c[0] as { queryKey?: readonly unknown[] }).queryKey,
         );
         expect(keys).toEqual(
-          expect.arrayContaining([chosenKey.queryKey, allKey.queryKey]),
+          expect.arrayContaining([CHOSEN_QUERY_KEY, ALL_QUERY_KEY]),
         );
       });
     });
@@ -268,7 +270,7 @@ describe('useCatalogResource', () => {
       });
 
       await waitFor(() => expect(toastError).toHaveBeenCalled());
-      expect(client.getQueryData<Item[]>(chosenKey.queryKey)).toEqual([
+      expect(client.getQueryData<Item[]>(CHOSEN_QUERY_KEY)).toEqual([
         { id: 'b', name: 'Original' },
       ]);
     });
@@ -286,7 +288,7 @@ describe('useCatalogResource', () => {
       });
 
       await waitFor(() =>
-        expect(client.getQueryData<Item[]>(allKey.queryKey)).toEqual([
+        expect(client.getQueryData<Item[]>(ALL_QUERY_KEY)).toEqual([
           { id: 'a', name: 'A' },
           { id: 'x', name: 'X' },
         ]),
@@ -309,7 +311,7 @@ describe('useCatalogResource', () => {
           'Fehlgeschlagen, Vorschlag konnte nicht gespeichert werden.',
         ),
       );
-      expect(client.getQueryData<Item[]>(allKey.queryKey)).toEqual([
+      expect(client.getQueryData<Item[]>(ALL_QUERY_KEY)).toEqual([
         { id: 'a', name: 'A' },
       ]);
     });

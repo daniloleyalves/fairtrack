@@ -23,8 +23,9 @@ interface CatalogItemLike {
   name: string;
 }
 
-interface QueryConfig {
+interface QueryDefinition<T> {
   queryKey: readonly unknown[];
+  queryFn: () => Promise<T[] | null | undefined>;
   staleTime?: number;
 }
 
@@ -32,10 +33,8 @@ interface UseCatalogResourceConfig<
   TAll extends CatalogItemLike,
   TChosen extends CatalogItemLike,
 > {
-  allKey: QueryConfig;
-  allQueryFn: () => Promise<TAll[] | null | undefined>;
-  chosenKey: QueryConfig;
-  chosenQueryFn: () => Promise<TChosen[] | null | undefined>;
+  allQuery: QueryDefinition<TAll>;
+  chosenQuery: QueryDefinition<TChosen>;
   addToFairteiler: (item: TChosen) => Promise<TChosen>;
   removeFromFairteiler: (item: TChosen) => Promise<TChosen>;
   updatePlatformItem: (item: TChosen) => Promise<TChosen>;
@@ -47,10 +46,8 @@ export function useCatalogResource<
   TAll extends CatalogItemLike,
   TChosen extends CatalogItemLike,
 >({
-  allKey,
-  allQueryFn,
-  chosenKey,
-  chosenQueryFn,
+  allQuery,
+  chosenQuery,
   addToFairteiler,
   removeFromFairteiler,
   updatePlatformItem,
@@ -59,12 +56,11 @@ export function useCatalogResource<
 }: UseCatalogResourceConfig<TAll, TChosen>) {
   const queryClient = useQueryClient();
   const m = { ...DEFAULT_MESSAGES, ...messages };
+  const allKey = allQuery.queryKey;
+  const chosenKey = chosenQuery.queryKey;
 
-  const { data: allData } = useQuery({ ...allKey, queryFn: allQueryFn });
-  const { data: chosenData } = useQuery({
-    ...chosenKey,
-    queryFn: chosenQueryFn,
-  });
+  const { data: allData } = useQuery(allQuery);
+  const { data: chosenData } = useQuery(chosenQuery);
 
   const all = allData ?? [];
   const chosen = chosenData ?? [];
@@ -72,41 +68,36 @@ export function useCatalogResource<
   const addMutation = useMutation({
     mutationFn: addToFairteiler,
     onMutate: async (item) => {
-      await queryClient.cancelQueries({ queryKey: chosenKey.queryKey });
-      const previous =
-        queryClient.getQueryData<TChosen[]>(chosenKey.queryKey) ?? [];
-      queryClient.setQueryData<TChosen[]>(chosenKey.queryKey, [
-        ...previous,
-        item,
-      ]);
+      await queryClient.cancelQueries({ queryKey: chosenKey });
+      const previous = queryClient.getQueryData<TChosen[]>(chosenKey) ?? [];
+      queryClient.setQueryData<TChosen[]>(chosenKey, [...previous, item]);
       return { previous };
     },
     onError: (_err, _item, context) => {
       if (context?.previous !== undefined) {
-        queryClient.setQueryData(chosenKey.queryKey, context.previous);
+        queryClient.setQueryData(chosenKey, context.previous);
       }
       toast.error(PERMISSION_ERROR);
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: chosenKey.queryKey });
+      void queryClient.invalidateQueries({ queryKey: chosenKey });
     },
   });
 
   const removeMutation = useMutation({
     mutationFn: removeFromFairteiler,
     onMutate: async (item) => {
-      await queryClient.cancelQueries({ queryKey: chosenKey.queryKey });
-      const previous =
-        queryClient.getQueryData<TChosen[]>(chosenKey.queryKey) ?? [];
+      await queryClient.cancelQueries({ queryKey: chosenKey });
+      const previous = queryClient.getQueryData<TChosen[]>(chosenKey) ?? [];
       queryClient.setQueryData<TChosen[]>(
-        chosenKey.queryKey,
+        chosenKey,
         previous.filter((c) => c.id !== item.id),
       );
       return { previous };
     },
     onError: (_err, _item, context) => {
       if (context?.previous !== undefined) {
-        queryClient.setQueryData(chosenKey.queryKey, context.previous);
+        queryClient.setQueryData(chosenKey, context.previous);
       }
       toast.error(PERMISSION_ERROR);
     },
@@ -114,25 +105,25 @@ export function useCatalogResource<
       toast.success(m.removeSuccess);
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: chosenKey.queryKey });
+      void queryClient.invalidateQueries({ queryKey: chosenKey });
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: updatePlatformItem,
     onMutate: async (item) => {
-      await queryClient.cancelQueries({ queryKey: chosenKey.queryKey });
+      await queryClient.cancelQueries({ queryKey: chosenKey });
       const previousChosen =
-        queryClient.getQueryData<TChosen[]>(chosenKey.queryKey) ?? [];
+        queryClient.getQueryData<TChosen[]>(chosenKey) ?? [];
       queryClient.setQueryData<TChosen[]>(
-        chosenKey.queryKey,
+        chosenKey,
         previousChosen.map((c) => (c.id === item.id ? item : c)),
       );
       return { previousChosen };
     },
     onError: (_err, _item, context) => {
       if (context?.previousChosen !== undefined) {
-        queryClient.setQueryData(chosenKey.queryKey, context.previousChosen);
+        queryClient.setQueryData(chosenKey, context.previousChosen);
       }
       toast.error(PERMISSION_ERROR);
     },
@@ -140,27 +131,27 @@ export function useCatalogResource<
       toast.success(m.updateSuccess);
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: chosenKey.queryKey });
-      void queryClient.invalidateQueries({ queryKey: allKey.queryKey });
+      void queryClient.invalidateQueries({ queryKey: chosenKey });
+      void queryClient.invalidateQueries({ queryKey: allKey });
     },
   });
 
   const suggestMutation = useMutation({
     mutationFn: suggestPlatformItem,
     onMutate: async (item) => {
-      await queryClient.cancelQueries({ queryKey: allKey.queryKey });
-      const previous = queryClient.getQueryData<TAll[]>(allKey.queryKey) ?? [];
-      queryClient.setQueryData<TAll[]>(allKey.queryKey, [...previous, item]);
+      await queryClient.cancelQueries({ queryKey: allKey });
+      const previous = queryClient.getQueryData<TAll[]>(allKey) ?? [];
+      queryClient.setQueryData<TAll[]>(allKey, [...previous, item]);
       return { previous };
     },
     onError: (_err, _item, context) => {
       if (context?.previous !== undefined) {
-        queryClient.setQueryData(allKey.queryKey, context.previous);
+        queryClient.setQueryData(allKey, context.previous);
       }
       toast.error(m.suggestError);
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: allKey.queryKey });
+      void queryClient.invalidateQueries({ queryKey: allKey });
     },
   });
 

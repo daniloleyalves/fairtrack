@@ -7,10 +7,6 @@ import {
   suggestNewCategoryAction,
   updateCategoryAction,
 } from '@server/fairteiler/actions';
-import {
-  getCategories,
-  getCategoriesByFairteiler,
-} from '@server/fairteiler/queries';
 import { categoryKeys } from '@server/fairteiler/query-keys';
 import { GenericItem } from '@server/db/db-types';
 import { Badge } from '@ui/badge';
@@ -29,10 +25,8 @@ import { useCatalogResource } from '../hooks/use-catalog-resource';
 
 export function CategorySelectionWrapper() {
   const categories = useCatalogResource<GenericItem, GenericItem>({
-    allKey: categoryKeys.all(),
-    allQueryFn: getCategories,
-    chosenKey: categoryKeys.byFairteiler(),
-    chosenQueryFn: getCategoriesByFairteiler,
+    allQuery: categoryKeys.all(),
+    chosenQuery: categoryKeys.byFairteiler(),
     addToFairteiler: (item) => invokeAction(addFairteilerCategoryAction, item),
     removeFromFairteiler: (item) =>
       invokeAction(removeFairteilerCategoryAction, item),

@@ -1,4 +1,9 @@
 import { STALE } from '../_lib/stale-times';
+import {
+  getContributions,
+  getKeyFigures,
+  getVersionHistoryByCheckinId,
+} from './queries';
 
 export const contributionKeys = {
   all: () => ({
@@ -12,10 +17,12 @@ export const contributionKeys = {
     offset?: number;
   }) => ({
     queryKey: ['contributions', 'list', params ?? {}] as const,
+    queryFn: () => getContributions(params),
     staleTime: STALE.DASHBOARD,
   }),
   versionHistory: (checkinId: string) => ({
     queryKey: ['contributions', 'version-history', checkinId] as const,
+    queryFn: () => getVersionHistoryByCheckinId(checkinId),
     staleTime: STALE.DASHBOARD,
   }),
   recentCheckins: () => ({
@@ -24,6 +31,7 @@ export const contributionKeys = {
   }),
   keyFigures: () => ({
     queryKey: ['contributions', 'key-figures'] as const,
+    queryFn: getKeyFigures,
     staleTime: STALE.DASHBOARD,
   }),
 };

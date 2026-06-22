@@ -7,7 +7,6 @@ import {
   suggestNewOriginAction,
   updateOriginAction,
 } from '@server/fairteiler/actions';
-import { getOrigins, getOriginsByFairteiler } from '@server/fairteiler/queries';
 import { originKeys } from '@server/fairteiler/query-keys';
 import { GenericItem } from '@server/db/db-types';
 import { Badge } from '@ui/badge';
@@ -26,10 +25,8 @@ import { useCatalogResource } from '../hooks/use-catalog-resource';
 
 export function OriginSelectionWrapper() {
   const origins = useCatalogResource<GenericItem, GenericItem>({
-    allKey: originKeys.all(),
-    allQueryFn: getOrigins,
-    chosenKey: originKeys.byFairteiler(),
-    chosenQueryFn: getOriginsByFairteiler,
+    allQuery: originKeys.all(),
+    chosenQuery: originKeys.byFairteiler(),
     addToFairteiler: (item) => invokeAction(addFairteilerOriginAction, item),
     removeFromFairteiler: (item) =>
       invokeAction(removeFairteilerOriginAction, item),

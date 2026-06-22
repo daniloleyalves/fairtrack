@@ -3,9 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton, StatSkeleton } from '@/components/ui/skeleton';
-import { getContributions } from '@/server/contribution/queries';
 import { contributionKeys } from '@/server/contribution/query-keys';
-import { getFairteilers } from '@/server/fairteiler/queries';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { PlatformReportingDashboard } from './platform-reporting-dashboard';
 
@@ -15,15 +13,11 @@ const PLATFORM_REPORTING_QUERY_OPTIONS = {
 } as const;
 
 export default function PlatformReportingWrapper() {
-  const contributionsQuery = useQuery({
-    ...contributionKeys.list(PLATFORM_REPORTING_QUERY_OPTIONS),
-    queryFn: () => getContributions(PLATFORM_REPORTING_QUERY_OPTIONS),
-  });
+  const contributionsQuery = useQuery(
+    contributionKeys.list(PLATFORM_REPORTING_QUERY_OPTIONS),
+  );
 
-  const fairteilersQuery = useQuery({
-    ...fairteilerKeys.list(),
-    queryFn: () => getFairteilers(),
-  });
+  const fairteilersQuery = useQuery(fairteilerKeys.list());
 
   if (
     contributionsQuery.isPending ||

@@ -11,7 +11,6 @@ import {
   updateFairteilerTutorialAction,
   updateFairteilerTutorialStepAction,
 } from '@/server/tutorial/actions';
-import { getFairteilerTutorialWithSteps } from '@/server/tutorial/queries';
 import { tutorialKeys } from '@/server/tutorial/query-keys';
 import { toast } from 'sonner';
 import { invokeAction } from '@/lib/hooks/use-form-action';
@@ -130,10 +129,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
   const invalidateTutorial = () =>
     queryClient.invalidateQueries({ queryKey: tutorialKey });
 
-  const { data: tutorialData } = useQuery({
-    ...tutorialKeys.fairteilerTutorial(),
-    queryFn: () => getFairteilerTutorialWithSteps(),
-  });
+  const { data: tutorialData } = useQuery(tutorialKeys.fairteilerTutorial());
   const tutorial = tutorialData ?? undefined;
 
   const addTutorialMutation = useMutation({

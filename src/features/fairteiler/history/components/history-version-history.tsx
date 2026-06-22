@@ -3,7 +3,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { formatInTimeZone } from 'date-fns-tz';
-import { getVersionHistoryByCheckinId } from '@/server/contribution/queries';
 import { contributionKeys } from '@/server/contribution/query-keys';
 
 interface VersionHistoryProps {
@@ -11,10 +10,9 @@ interface VersionHistoryProps {
 }
 
 export function HistoryVersionHistory({ checkinId }: VersionHistoryProps) {
-  const { data, isPending, error } = useQuery({
-    ...contributionKeys.versionHistory(checkinId),
-    queryFn: () => getVersionHistoryByCheckinId(checkinId),
-  });
+  const { data, isPending, error } = useQuery(
+    contributionKeys.versionHistory(checkinId),
+  );
 
   if (isPending) {
     return <Loader2 className='mx-auto animate-spin' />;

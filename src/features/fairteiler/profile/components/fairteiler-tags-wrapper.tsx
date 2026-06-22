@@ -9,7 +9,6 @@ import {
 } from '@/server/fairteiler/actions';
 import { invokeAction } from '@/lib/hooks/use-form-action';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
-import { getTags } from '@/server/fairteiler/queries';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface FairteilerTagsWrapperProps {
@@ -25,10 +24,7 @@ export function FairteilerTagsWrapper({
   const queryClient = useQueryClient();
   const tagsKey = fairteilerKeys.tags().queryKey;
 
-  const { data: tagsData } = useQuery({
-    ...fairteilerKeys.tags(),
-    queryFn: getTags,
-  });
+  const { data: tagsData } = useQuery(fairteilerKeys.tags());
   const tags = tagsData ?? [];
 
   const addTag = useMutation({
