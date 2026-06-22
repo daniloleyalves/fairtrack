@@ -88,8 +88,6 @@ export const auth = betterAuth({
     account: {
       update: {
         after: async (account, ctx) => {
-          // Catches /change-password (reset is handled via onPasswordReset below,
-          // which gives us the user without a verification-table lookup).
           const body = ctx?.body as { newPassword?: string } | undefined;
           if (!body?.newPassword) return;
           try {

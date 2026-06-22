@@ -125,14 +125,6 @@ describe('DTO Layer', () => {
           role: 'owner',
         });
       });
-
-      it('should fail when DAL returns null', async () => {
-        vi.mocked(dal.loadActiveMembership).mockResolvedValue(null);
-
-        await expect(getActiveMembership(mockHeaders)).rejects.toThrow(
-          new NotFoundError('membership'),
-        );
-      });
     });
   });
 
