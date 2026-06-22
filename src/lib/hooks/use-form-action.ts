@@ -187,9 +187,6 @@ export async function invokeAction<
   action: AppActionFn<TSchema, TData>,
   input: TSchema extends StandardSchemaV1<infer Input> ? Input : void,
 ): Promise<TData> {
-  // The action's SafeActionFn signature accepts variadic bind-args + input.
-  // Since our `BindArgsSchemas` is `readonly []`, the call collapses to a
-  // single-arg call; cast required because TS can't reduce the tuple type.
   const result = await (
     action as (input: unknown) => ReturnType<typeof action>
   )(input);
