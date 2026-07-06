@@ -65,15 +65,21 @@ export const updateFairteilerAction = fairteilerAction
   });
 
 const toggleDisabledSchema = z.object({
-  fairteilerId: z.string(),
   disabled: z.boolean(),
 });
 
-export const toggleFairteilerDisabled = action
+export const toggleFairteilerDisabled = fairteilerAction
   .inputSchema(toggleDisabledSchema)
-  .action(async ({ parsedInput }) => {
+  .action(async ({ parsedInput, ctx }) => {
+    const permissionResult = await checkPermissionOnServer(await headers(), {
+      organization: ['update'],
+    });
+    if (!permissionResult.success) {
+      throw new PermissionError('cannot update fairteiler');
+    }
+
     const result = await toggleFairteilerVisibility(
-      parsedInput.fairteilerId,
+      ctx.fairteilerId,
       parsedInput.disabled,
     );
     if (!result) {

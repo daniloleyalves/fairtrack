@@ -29,7 +29,6 @@ export function FairteilerDisableWrapper({
   const toggle = useMutation({
     mutationFn: (disabled: boolean) =>
       invokeAction(toggleFairteilerDisabled, {
-        fairteilerId: fairteiler.id,
         disabled,
       }),
     onMutate: async (disabled) => {
