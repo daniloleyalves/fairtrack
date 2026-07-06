@@ -25,13 +25,19 @@ export default function PlatformReportingWrapper() {
     queryFn: () => getFairteilers(),
   });
 
-  if (
-    contributionsQuery.isPending ||
-    !contributionsQuery.data ||
-    fairteilersQuery.isPending ||
-    !fairteilersQuery.data
-  ) {
+  if (contributionsQuery.isPending || fairteilersQuery.isPending) {
     return <PlatformReportingGridSkeleton />;
+  }
+
+  if (contributionsQuery.error) {
+    throw contributionsQuery.error;
+  }
+  if (fairteilersQuery.error) {
+    throw fairteilersQuery.error;
+  }
+
+  if (!contributionsQuery.data || !fairteilersQuery.data) {
+    throw new Error('Berichtsdaten nicht gefunden.');
   }
 
   return (
