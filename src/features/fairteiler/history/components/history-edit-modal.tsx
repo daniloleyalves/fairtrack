@@ -108,6 +108,7 @@ export function HistoryEditModal({ item, open, setOpen }: EditModalProps) {
         {
           showToast: true,
           setFormError: true,
+          successMessage: 'Beitrag erfolgreich bearbeitet.',
           onSuccess: () => {
             refresh();
             mutate(

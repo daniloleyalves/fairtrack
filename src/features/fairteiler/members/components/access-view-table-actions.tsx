@@ -30,6 +30,7 @@ export function AccessViewTableActions({ member }: { member: Member }) {
         undefined,
         {
           showToast: true,
+          successMessage: 'Zugang erfolgreich deaktiviert.',
           onSuccess: () => {
             mutate(ACTIVE_FAIRTEILER_KEY);
           },
