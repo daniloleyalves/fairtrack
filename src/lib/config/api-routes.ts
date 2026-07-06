@@ -26,17 +26,9 @@ export const CATEGORY_KEY = '/api/platform/categories';
 export const ORIGIN_KEY = '/api/platform/origins';
 export const COMPANY_KEY = '/api/platform/companies';
 
-export const PLATFORM_CONTRIBUTIONS_KEY = '/api/platform/contributions';
-export const PLATFORM_FAIRTEILERS_KEY = '/api/platform/fairteilers';
-
 // ------- USER API ROUTES -------
 
 export const USER_PROFILE_KEY = '/api/user/profile';
 export const USER_DASHBOARD_KEY = '/api/user/dashboard';
 export const USER_PREFERENCES_KEY = '/api/user/preferences';
 export const USER_CONTRIBUTIONS_KEY = '/api/user/contributions';
-
-// ------ GAMIFICATION ------
-
-export const GAMIFICATION_MILESTONE_PRGRESS =
-  '/api/user/gamification/milestone-progress';

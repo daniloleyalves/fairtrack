@@ -48,7 +48,6 @@ export default async function UserContributionPage({
   const fairteilerData = await getFairteilerBySlug(fairteilerSlug);
 
   const tutorial = await getFairteilerTutorialWithSteps(
-    nextHeaders,
     fairteilerData.fairteiler.id,
   );
 

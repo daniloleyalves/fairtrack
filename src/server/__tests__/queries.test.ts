@@ -274,7 +274,7 @@ describe('DTO Layer', () => {
             mockFairteilerOrigins,
           );
 
-          const result = await getOriginsByFairteiler(mockHeaders);
+          const result = await getOriginsByFairteiler();
 
           expect(fairteilerDal.loadFairteilerOrigins).toHaveBeenCalledWith(
             mockFairteiler.id,
@@ -329,7 +329,7 @@ describe('DTO Layer', () => {
             mockFairteilerCategories,
           );
 
-          const result = await getCategoriesByFairteiler(mockHeaders);
+          const result = await getCategoriesByFairteiler();
 
           expect(fairteilerDal.loadFairteilerCategories).toHaveBeenCalledWith(
             mockFairteiler.id,
@@ -386,7 +386,7 @@ describe('DTO Layer', () => {
             mockFairteilerCompanies,
           );
 
-          const result = await getCompaniesByFairteiler(mockHeaders);
+          const result = await getCompaniesByFairteiler();
 
           expect(fairteilerDal.loadFairteilerCompanies).toHaveBeenCalledWith(
             mockFairteiler.id,
