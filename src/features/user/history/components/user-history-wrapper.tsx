@@ -10,6 +10,7 @@ import { useUserHistoryData } from '../use-user-history-data';
 export function UserHistoryWrapper() {
   const {
     isPending,
+    error,
     contributions,
     isEmpty,
     totalCount,
@@ -21,6 +22,10 @@ export function UserHistoryWrapper() {
 
   if (isPending) {
     return <UserHistorySkeleton />;
+  }
+
+  if (error) {
+    throw error;
   }
 
   if (isEmpty) {

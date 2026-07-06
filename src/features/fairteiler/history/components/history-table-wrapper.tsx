@@ -10,6 +10,7 @@ import { useHistoryData } from '../use-history-data';
 export function FairteilerHistoryWrapper() {
   const {
     isPending,
+    error,
     contributions,
     isEmpty,
     totalCount,
@@ -21,6 +22,10 @@ export function FairteilerHistoryWrapper() {
 
   if (isPending) {
     return <HistorySkeleton />;
+  }
+
+  if (error) {
+    throw error;
   }
 
   if (isEmpty) {

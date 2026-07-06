@@ -31,6 +31,7 @@ export function useUserHistoryData() {
 
   return {
     isPending: initialQuery.isPending,
+    error: initialQuery.error,
     contributions: current?.data ?? [],
     totalCount,
     loadedCount,

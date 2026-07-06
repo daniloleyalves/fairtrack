@@ -28,6 +28,7 @@ export function useHistoryData() {
 
   return {
     isPending: initialQuery.isPending,
+    error: initialQuery.error,
     contributions: current?.data ?? [],
     totalCount: current?.total ?? 0,
     loadedCount: current?.data?.length ?? 0,

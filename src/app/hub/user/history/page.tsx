@@ -5,6 +5,7 @@ import { UserNav } from '@/components/nav/user-nav';
 import { getSession } from '@/server/user/queries';
 import { headers } from 'next/headers';
 import { UnauthorizedAccess } from '@/components/unauthorized-access';
+import { DataErrorBoundary } from '@/components/error-boundary';
 
 export default async function UserHistoryPage() {
   const nextHeaders = await headers();
@@ -71,7 +72,9 @@ export default async function UserHistoryPage() {
         </div>
       </div>
 
-      <UserHistoryWrapper />
+      <DataErrorBoundary>
+        <UserHistoryWrapper />
+      </DataErrorBoundary>
     </div>
   );
 }
