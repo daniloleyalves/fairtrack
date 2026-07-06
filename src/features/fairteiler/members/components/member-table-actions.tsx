@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { IdCard, Loader2, MoreHorizontal, Save, Trash2 } from 'lucide-react';
 import { Dispatch, SetStateAction, useState, useTransition } from 'react';
 
-import { useSWRConfig } from 'swr';
+import { useQueryClient } from '@tanstack/react-query';
 import { ConfirmModal } from '@components/confirm-modal';
 import { Button, buttonVariants } from '@ui/button';
 import {
@@ -42,11 +42,11 @@ import {
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@ui/form';
 import { RoleSelector } from './role-selector';
 import { changeRoleSchema } from '../schemas/members-schema';
-import { ACTIVE_FAIRTEILER_KEY } from '@/lib/config/api-routes';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { handleAsyncAction } from '@/lib/client-error-handling';
 
 export function MemberTableActions({ member }: { member: Member }) {
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
 
   const [isChangeRoleModalOpen, setChangeRoleModalOpen] = useState(false);
@@ -64,7 +64,9 @@ export function MemberTableActions({ member }: { member: Member }) {
         {
           showToast: true,
           onSuccess: async () => {
-            await mutate(ACTIVE_FAIRTEILER_KEY);
+            await queryClient.invalidateQueries({
+              queryKey: fairteilerKeys.active().queryKey,
+            });
             setRemoveMemberModalOpen(false);
           },
         },
@@ -142,7 +144,7 @@ function ChangeRoleModal({
   setOpen: Dispatch<SetStateAction<boolean>>;
 }) {
   const isMobile = useIsMobile();
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof changeRoleSchema>>({
@@ -168,7 +170,9 @@ function ChangeRoleModal({
           showToast: true,
           setFormError: true,
           onSuccess: async () => {
-            await mutate(ACTIVE_FAIRTEILER_KEY);
+            await queryClient.invalidateQueries({
+              queryKey: fairteilerKeys.active().queryKey,
+            });
             setOpen(false);
           },
         },
