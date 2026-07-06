@@ -20,11 +20,11 @@ import { Check, CirclePlus, Copy, Loader2 } from 'lucide-react';
 import { Dispatch, SetStateAction, startTransition, useState } from 'react';
 import { useForm } from 'react-hook-form'; // No need for UseFormReturn type export here
 
-import { useSWRConfig } from 'swr';
+import { useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { accessViewSchema } from '../schemas/members-schema';
 import { RoleSelector } from '../components/role-selector';
-import { ACTIVE_FAIRTEILER_KEY } from '@/lib/config/api-routes';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { useFormAction } from '@/lib/hooks/use-form-action';
 import { toast } from 'sonner';
 
@@ -40,7 +40,7 @@ export function AddAccessViewForm({
 }: React.ComponentProps<'form'> & {
   setOpen: Dispatch<SetStateAction<boolean>>;
 }) {
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
 
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [credentials, setCredentials] = useState<Credentials | null>(null);
@@ -60,7 +60,9 @@ export function AddAccessViewForm({
       if (data) {
         setCredentials(data);
         setFormSubmitted(true);
-        await mutate(ACTIVE_FAIRTEILER_KEY);
+        await queryClient.invalidateQueries({
+          queryKey: fairteilerKeys.active().queryKey,
+        });
       }
     },
     onError: () => {
