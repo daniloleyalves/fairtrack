@@ -32,18 +32,30 @@ preload(CATEGORIES_BY_FAIRTEILER_KEY, fetcher);
 preload(COMPANIES_BY_FAIRTEILER_KEY, fetcher);
 
 export function MemberTablesWrapper() {
-  const { data: fairteiler, isPending } = useQuery({
+  const {
+    data: fairteiler,
+    isPending,
+    error,
+  } = useQuery({
     ...fairteilerKeys.active(),
     queryFn: () => getActiveFairteiler(),
   });
 
-  if (isPending || !fairteiler) {
+  if (isPending) {
     return (
       <>
         <Skeleton className='h-[250px] w-full' />
         <Skeleton className='h-[250px] w-full' />
       </>
     );
+  }
+
+  if (error) {
+    throw error;
+  }
+
+  if (!fairteiler) {
+    throw new Error('Fairteiler nicht gefunden.');
   }
 
   const teamMembers = fairteiler.members.filter(
