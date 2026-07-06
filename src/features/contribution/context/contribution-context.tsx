@@ -157,6 +157,15 @@ export function ContributionProvider({
   ]);
 
   if (!initialData) {
+    const queryError =
+      fairteilerQuery.error ??
+      originsQuery.error ??
+      categoriesQuery.error ??
+      companiesQuery.error;
+    if (queryError) {
+      throw queryError;
+    }
+
     if (
       !fairteilerQuery.data ||
       !originsQuery.data ||
