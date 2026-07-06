@@ -1,13 +1,14 @@
 'use client';
 
-import { ORIGIN_KEY, ORIGINS_BY_FAIRTEILER_KEY } from '@/lib/config/api-routes';
-import useSWRSuspense from '@/lib/services/swr';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 import {
   addFairteilerOriginAction,
   removeFairteilerOriginAction,
   suggestNewOriginAction,
   updateOriginAction,
 } from '@server/fairteiler/actions';
+import { getOrigins, getOriginsByFairteiler } from '@server/fairteiler/queries';
+import { originKeys } from '@server/fairteiler/query-keys';
 import { GenericItem } from '@server/db/db-types';
 import { Badge } from '@ui/badge';
 import { Button } from '@ui/button';
@@ -16,146 +17,33 @@ import { ScrollArea } from '@ui/scroll-area';
 import { Loader2, Plus, Pencil } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import useSWRMutation from 'swr/mutation';
 import { FormSelectionItem } from './form-selection-item';
 import { v4 as uuidv4 } from 'uuid';
 import { EditItemDialog } from './edit-item-dialog';
-import { useSWRConfig } from 'swr';
+import { useCatalogResource } from '../hooks/use-catalog-resource';
 
 // --- Main Component ---
 
 export function OriginSelectionWrapper() {
-  const { data: allOrigins } = useSWRSuspense<GenericItem[]>(ORIGIN_KEY);
-
-  const { data: chosenOrigins } = useSWRSuspense<GenericItem[]>(
-    ORIGINS_BY_FAIRTEILER_KEY,
-  );
-
-  return (
-    <OriginSelection allOrigins={allOrigins} chosenOrigins={chosenOrigins} />
-  );
-}
-
-function OriginSelection({
-  allOrigins,
-  chosenOrigins,
-}: {
-  allOrigins: GenericItem[];
-  chosenOrigins: GenericItem[];
-}) {
-  const { mutate } = useSWRConfig();
-
-  // --- Mutations  ---
-  const { trigger: addFairteilerOriginTrigger, isMutating: isAdding } =
-    useSWRMutation(
-      ORIGINS_BY_FAIRTEILER_KEY,
-      (_key, { arg }: { arg: GenericItem }) => addFairteilerOriginAction(arg),
-      {
-        populateCache: (
-          addedOrigin: GenericItem,
-          currentOrigins: GenericItem[] = [],
-        ) => {
-          if (!currentOrigins.length) {
-            return [addedOrigin];
-          }
-          return [...currentOrigins, addedOrigin];
-        },
-        revalidate: false,
-        rollbackOnError: true,
-        onError: () =>
-          toast.error(
-            'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen',
-          ),
-      },
-    );
-
-  const { trigger: removeFairteilerOriginTrigger, isMutating: isRemoving } =
-    useSWRMutation(
-      ORIGINS_BY_FAIRTEILER_KEY,
-      (_key, { arg }: { arg: GenericItem }) =>
-        removeFairteilerOriginAction(arg),
-      {
-        populateCache: (
-          removedOrigin: GenericItem,
-          currentChosen: GenericItem[] = [],
-        ) => {
-          return (currentChosen || []).filter((o) => o.id !== removedOrigin.id);
-        },
-        revalidate: false,
-        rollbackOnError: true,
-        onSuccess: () => {
-          toast.success('Änderung erfolgreich gespeichert.');
-        },
-        onError: () => {
-          return toast.error(
-            'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen',
-          );
-        },
-      },
-    );
-
-  const { trigger: updateOriginTrigger, isMutating: isUpdating } =
-    useSWRMutation(
-      ORIGINS_BY_FAIRTEILER_KEY,
-      (_key, { arg }: { arg: GenericItem }) => updateOriginAction(arg),
-      {
-        populateCache: (
-          updatedOrigin: GenericItem,
-          currentOrigins: GenericItem[] = [],
-        ) => {
-          return currentOrigins.map((o) =>
-            o.id === updatedOrigin.id ? updatedOrigin : o,
-          );
-        },
-        revalidate: false,
-        rollbackOnError: true,
-        onSuccess: () => {
-          mutate(ORIGIN_KEY);
-          toast.success('Änderung erfolgreich gespeichert.');
-        },
-        onError: () => {
-          return toast.error(
-            'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen',
-          );
-        },
-      },
-    );
-
-  // --- Handlers with Optimistic Updates  ---
-
-  const handleAddOrigin = (originToAdd: GenericItem) => {
-    addFairteilerOriginTrigger(originToAdd, {
-      optimisticData: (currentChosen: GenericItem[] = []) => {
-        return [...currentChosen, originToAdd];
-      },
-    });
-  };
-
-  const handleRemoveOrigin = (originToRemove: GenericItem) => {
-    removeFairteilerOriginTrigger(originToRemove, {
-      optimisticData: (currentChosen: GenericItem[] = []) => {
-        return currentChosen.filter((o) => o.id !== originToRemove.id);
-      },
-    });
-  };
-
-  const handleUpdateOrigin = (originToUpdate: GenericItem) => {
-    updateOriginTrigger(originToUpdate, {
-      optimisticData: (currentOrigins: GenericItem[] = []) => {
-        return currentOrigins.map((o) =>
-          o.id === originToUpdate.id ? originToUpdate : o,
-        );
-      },
-    });
-  };
+  const origins = useCatalogResource<GenericItem, GenericItem>({
+    allKey: originKeys.all(),
+    allQueryFn: getOrigins,
+    chosenKey: originKeys.byFairteiler(),
+    chosenQueryFn: getOriginsByFairteiler,
+    addToFairteiler: (item) => invokeAction(addFairteilerOriginAction, item),
+    removeFromFairteiler: (item) =>
+      invokeAction(removeFairteilerOriginAction, item),
+    updatePlatformItem: (item) => invokeAction(updateOriginAction, item),
+    suggestPlatformItem: (item) => invokeAction(suggestNewOriginAction, item),
+  });
 
   // --- Derived State ---
 
-  const chosenOriginIds = new Set(chosenOrigins.map((o) => o.id));
-  const availableOrigins = allOrigins.filter(
+  const chosenOriginIds = new Set(origins.chosen.map((o) => o.id));
+  const availableOrigins = origins.all.filter(
     (origin) => !chosenOriginIds.has(origin.id) && origin.status !== 'pending',
   );
-  const pendingOrigins = allOrigins.filter(
+  const pendingOrigins = origins.all.filter(
     (origin) => origin.status === 'pending',
   );
 
@@ -174,11 +62,11 @@ function OriginSelection({
                 erscheinen im Rette-Formular.
               </p>
               <ChosenOrigins
-                origins={chosenOrigins}
-                onRemoveAction={handleRemoveOrigin}
-                onUpdateAction={handleUpdateOrigin}
-                isRemoving={isRemoving}
-                isUpdating={isUpdating}
+                origins={origins.chosen}
+                onRemoveAction={origins.removeFromFairteiler}
+                onUpdateAction={origins.updatePlatformItem}
+                isRemoving={origins.flags.isRemoving}
+                isUpdating={origins.flags.isUpdating}
               />
             </div>
 
@@ -195,8 +83,8 @@ function OriginSelection({
                       <FormSelectionItem
                         key={origin.id}
                         item={origin}
-                        onAdd={() => handleAddOrigin(origin)}
-                        isAdding={isAdding}
+                        onAdd={() => origins.addToFairteiler(origin)}
+                        isAdding={origins.flags.isAdding}
                       />
                     ))
                   ) : (
@@ -214,7 +102,11 @@ function OriginSelection({
             <p className='mb-3 text-sm text-muted-foreground'>
               Ist die gewünschte Herkunft nicht dabei? Schlage eine neue vor.
             </p>
-            <SuggestOriginForm pendingOrigins={pendingOrigins} />
+            <SuggestOriginForm
+              pendingOrigins={pendingOrigins}
+              onSuggest={origins.suggestPlatformItem}
+              isSuggesting={origins.flags.isSuggesting}
+            />
           </div>
         </div>
       </div>
@@ -290,21 +182,16 @@ export function ChosenOrigins({
 
 export function SuggestOriginForm({
   pendingOrigins,
+  onSuggest,
+  isSuggesting,
 }: {
   pendingOrigins: GenericItem[];
+  onSuggest: (item: GenericItem) => void;
+  isSuggesting: boolean;
 }) {
   const [newOriginText, setNewOriginText] = useState('');
 
-  const { trigger: addTrigger, isMutating: isAdding } = useSWRMutation(
-    ORIGIN_KEY,
-    (_key, { arg }: { arg: GenericItem }) => suggestNewOriginAction(arg),
-    {
-      revalidate: false,
-      rollbackOnError: true,
-    },
-  );
-
-  const handleAddOrigin = async (e: React.FormEvent) => {
+  const handleAddOrigin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newOriginText.trim()) {
       toast.info('Bitte geben Sie einen Namen für die Herkunft ein.');
@@ -317,18 +204,8 @@ export function SuggestOriginForm({
       status: 'active',
     };
 
-    try {
-      await addTrigger(newSuggestion, {
-        optimisticData: (currentOrigins: GenericItem[] = []) => {
-          return [...currentOrigins, newSuggestion];
-        },
-      });
-
-      setNewOriginText('');
-    } catch (e) {
-      console.error('Failed to suggest origin:', e);
-      toast.error('Fehlgeschlagen, ' + String(e));
-    }
+    onSuggest(newSuggestion);
+    setNewOriginText('');
   };
 
   return (
@@ -353,17 +230,17 @@ export function SuggestOriginForm({
           value={newOriginText}
           onChange={(e) => setNewOriginText(e.target.value)}
           placeholder='Name der neuen Herkunft...'
-          disabled={isAdding}
+          disabled={isSuggesting}
         />
         <Button
           size='icon'
           type='submit'
           variant='outline'
-          disabled={isAdding || newOriginText.length <= 0}
+          disabled={isSuggesting || newOriginText.length <= 0}
           className='shrink-0'
           aria-label='Suggest new origin'
         >
-          {isAdding ? <Loader2 className='animate-spin' /> : <Plus />}
+          {isSuggesting ? <Loader2 className='animate-spin' /> : <Plus />}
         </Button>
       </form>
     </div>

@@ -39,7 +39,7 @@ export default async function UserContributionPage({
 
   const nextHeaders = await headers();
 
-  const userPreferences = await getUserPreferences(nextHeaders);
+  const userPreferences = await getUserPreferences();
 
   if (!userPreferences?.userId) {
     return <UnauthorizedAccess />;

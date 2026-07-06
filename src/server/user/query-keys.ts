@@ -6,6 +6,10 @@ export const userKeys = {
     queryKey: ['user', 'session'] as const,
     staleTime: STALE.ACTIVE_SESSION,
   }),
+  profile: () => ({
+    queryKey: ['user', 'profile'] as const,
+    staleTime: STALE.PROFILE,
+  }),
   dashboard: () => ({
     queryKey: ['user', 'dashboard'] as const,
     staleTime: STALE.DASHBOARD,

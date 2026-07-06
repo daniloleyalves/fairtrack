@@ -1,9 +1,7 @@
 'use client';
 
 import { createContext, useContext, useReducer, type ReactNode } from 'react';
-import useSWRSuspense, { fetcher } from '@/lib/services/swr';
-import useSWRMutation from 'swr/mutation';
-import { FAIRTEILER_TUTORIAL_KEY } from '@/lib/config/api-routes';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FairteilerTutorialWithSteps } from '@/server/db/db-types';
 import {
   addFairteilerTutorialAction,
@@ -13,11 +11,20 @@ import {
   updateFairteilerTutorialAction,
   updateFairteilerTutorialStepAction,
 } from '@/server/tutorial/actions';
+import { getFairteilerTutorialWithSteps } from '@/server/tutorial/queries';
+import { tutorialKeys } from '@/server/tutorial/query-keys';
 import { toast } from 'sonner';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 import {
   TutorialFormData,
   TutorialStepFormData,
 } from '../schemas/fairteiler-tutorial-schema';
+
+type AddStepInput = Omit<TutorialStepFormData, 'id'> & { tutorialId: string };
+type UpdateStepInput = TutorialStepFormData & {
+  id: string;
+  tutorialId: string;
+};
 
 interface TutorialState {
   currentStepIndex: number;
@@ -99,154 +106,132 @@ interface TutorialContextValue {
   startEditingStep: (step: TutorialStepFormData) => void;
   clearStepForm: () => void;
   resetState: () => void;
-  addTutorial: (data: TutorialFormData) => Promise<void>;
-  updateTutorial: (data: TutorialFormData) => Promise<void>;
-  removeTutorial: (data: { id: string }) => Promise<void>;
+  addTutorial: (data: TutorialFormData) => Promise<unknown>;
+  updateTutorial: (data: TutorialFormData) => Promise<unknown>;
+  removeTutorial: (data: { id: string }) => Promise<unknown>;
   toggleTutorialActive: (
     tutorial: FairteilerTutorialWithSteps,
-  ) => Promise<void>;
-  addStep: (data: FormData) => Promise<void>;
-  updateStep: (data: FormData) => Promise<void>;
-  removeStep: (data: { id: string }) => Promise<void>;
+  ) => Promise<unknown>;
+  addStep: (data: AddStepInput) => Promise<unknown>;
+  updateStep: (data: UpdateStepInput) => Promise<unknown>;
+  removeStep: (data: { id: string }) => Promise<unknown>;
 }
 
 const TutorialContext = createContext<TutorialContextValue | null>(null);
 
+function showErrorToast(err: unknown, fallback: string) {
+  toast.error(err instanceof Error ? err.message : fallback);
+}
+
 export function TutorialProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(tutorialReducer, initialState);
+  const queryClient = useQueryClient();
+  const tutorialKey = tutorialKeys.fairteilerTutorial().queryKey;
+  const invalidateTutorial = () =>
+    queryClient.invalidateQueries({ queryKey: tutorialKey });
 
-  const { data: tutorial } = useSWRSuspense<
-    FairteilerTutorialWithSteps | undefined
-  >(FAIRTEILER_TUTORIAL_KEY, {
-    fetcher,
-    revalidateOnFocus: false,
-    revalidateOnReconnect: true,
+  const { data: tutorialData } = useQuery({
+    ...tutorialKeys.fairteilerTutorial(),
+    queryFn: () => getFairteilerTutorialWithSteps(),
+  });
+  const tutorial = tutorialData ?? undefined;
+
+  const addTutorialMutation = useMutation({
+    mutationFn: (data: TutorialFormData) =>
+      invokeAction(addFairteilerTutorialAction, data),
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: tutorialKey });
+      const previous = queryClient.getQueryData<
+        FairteilerTutorialWithSteps | undefined
+      >(tutorialKey);
+      queryClient.setQueryData(
+        tutorialKey,
+        data as unknown as FairteilerTutorialWithSteps,
+      );
+      return { previous };
+    },
+    onError: (err, _data, context) => {
+      queryClient.setQueryData(tutorialKey, context?.previous);
+      showErrorToast(err, 'Erstellung fehlgeschlagen.');
+    },
+    onSuccess: () => toast.success('Anleitung erfolgreich erstellt!'),
+    onSettled: () => void invalidateTutorial(),
   });
 
-  const { trigger: addTutorialTrigger } = useSWRMutation(
-    FAIRTEILER_TUTORIAL_KEY,
-    (_key, { arg }: { arg: TutorialFormData }) =>
-      addFairteilerTutorialAction(arg),
-    {
-      revalidate: false,
-      rollbackOnError: true,
-      onSuccess: () => {
-        toast.success('Anleitung erfolgreich erstellt!');
-      },
-      onError: (err) => {
-        const message =
-          err instanceof Error ? err.message : 'Erstellung fehlgeschlagen.';
-        toast.error(message);
-      },
+  const updateTutorialMutation = useMutation({
+    mutationFn: (data: TutorialFormData) =>
+      invokeAction(updateFairteilerTutorialAction, data),
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: tutorialKey });
+      const previous = queryClient.getQueryData<
+        FairteilerTutorialWithSteps | undefined
+      >(tutorialKey);
+      if (previous) {
+        queryClient.setQueryData<FairteilerTutorialWithSteps>(tutorialKey, {
+          ...previous,
+          ...data,
+        });
+      }
+      return { previous };
     },
-  );
+    onError: (err, _data, context) => {
+      queryClient.setQueryData(tutorialKey, context?.previous);
+      showErrorToast(err, 'Aktualisierung fehlgeschlagen.');
+    },
+    onSuccess: () => toast.success('Anleitung erfolgreich aktualisiert!'),
+    onSettled: () => void invalidateTutorial(),
+  });
 
-  const { trigger: updateTutorialTrigger } = useSWRMutation(
-    FAIRTEILER_TUTORIAL_KEY,
-    (_key, { arg }: { arg: TutorialFormData }) =>
-      updateFairteilerTutorialAction(arg),
-    {
-      revalidate: false,
-      rollbackOnError: true,
-      onSuccess: () => {
-        toast.success('Anleitung erfolgreich aktualisiert!');
-      },
-      onError: (err) => {
-        const message =
-          err instanceof Error ? err.message : 'Aktualisierung fehlgeschlagen.';
-        toast.error(message);
-      },
+  const removeTutorialMutation = useMutation({
+    mutationFn: (data: { id: string }) =>
+      invokeAction(removeFairteilerTutorialAction, data),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: tutorialKey });
+      const previous = queryClient.getQueryData<
+        FairteilerTutorialWithSteps | undefined
+      >(tutorialKey);
+      queryClient.setQueryData(tutorialKey, null);
+      return { previous };
     },
-  );
+    onError: (err, _data, context) => {
+      queryClient.setQueryData(tutorialKey, context?.previous);
+      showErrorToast(err, 'Löschung fehlgeschlagen.');
+    },
+    onSuccess: () => toast.success('Anleitung erfolgreich gelöscht!'),
+    onSettled: () => void invalidateTutorial(),
+  });
 
-  const { trigger: removeTutorialTrigger } = useSWRMutation(
-    FAIRTEILER_TUTORIAL_KEY,
-    (_key, { arg }: { arg: { id: string } }) =>
-      removeFairteilerTutorialAction(arg),
-    {
-      revalidate: false,
-      rollbackOnError: true,
-      onSuccess: () => {
-        toast.success('Anleitung erfolgreich gelöscht!');
-      },
-      onError: (err) => {
-        const message =
-          err instanceof Error ? err.message : 'Löschung fehlgeschlagen.';
-        toast.error(message);
-      },
+  const addStepMutation = useMutation({
+    mutationFn: (data: AddStepInput) =>
+      invokeAction(addFairteilerTutorialStepAction, data),
+    onSuccess: (result) => {
+      if (!result) return;
+      toast.success('Schritt erfolgreich hinzugefügt!');
+      dispatch({ type: 'SET_CURRENT_STEP', payload: result.sortIndex - 1 });
     },
-  );
+    onError: (err) => showErrorToast(err, 'Hinzufügen fehlgeschlagen.'),
+    onSettled: () => void invalidateTutorial(),
+  });
 
-  const { trigger: addStepTrigger } = useSWRMutation(
-    FAIRTEILER_TUTORIAL_KEY,
-    (_key, { arg }: { arg: FormData }) => addFairteilerTutorialStepAction(arg),
-    {
-      revalidate: true,
-      rollbackOnError: true,
-      onSuccess: (result) => {
-        if (result.success && result.data) {
-          toast.success(result.message ?? 'Schritt erfolgreich hinzugefügt!');
-          dispatch({
-            type: 'SET_CURRENT_STEP',
-            payload: result.data.sortIndex - 1,
-          });
-        }
-        if (!result.success && result.error) {
-          toast.error(result.error);
-        }
-      },
-      onError: (err) => {
-        const message =
-          err instanceof Error ? err.message : 'Hinzufügen fehlgeschlagen.';
-        toast.error(message);
-      },
+  const updateStepMutation = useMutation({
+    mutationFn: (data: UpdateStepInput) =>
+      invokeAction(updateFairteilerTutorialStepAction, data),
+    onSuccess: (result) => {
+      if (!result) return;
+      toast.success('Schritt erfolgreich aktualisiert!');
+      dispatch({ type: 'SET_CURRENT_STEP', payload: result.sortIndex - 1 });
     },
-  );
+    onError: (err) => showErrorToast(err, 'Aktualisierung fehlgeschlagen.'),
+    onSettled: () => void invalidateTutorial(),
+  });
 
-  const { trigger: updateStepTrigger } = useSWRMutation(
-    FAIRTEILER_TUTORIAL_KEY,
-    (_key, { arg }: { arg: FormData }) =>
-      updateFairteilerTutorialStepAction(arg),
-    {
-      revalidate: true,
-      rollbackOnError: true,
-      onSuccess: (result) => {
-        if (result.success && result.data) {
-          toast.success(result.message ?? 'Schritt erfolgreich aktualisiert!');
-          dispatch({
-            type: 'SET_CURRENT_STEP',
-            payload: result.data.sortIndex - 1,
-          });
-        }
-        if (!result.success && result.error) {
-          toast.error(result.error);
-        }
-      },
-      onError: (err) => {
-        const message =
-          err instanceof Error ? err.message : 'Aktualisierung fehlgeschlagen.';
-        toast.error(message);
-      },
-    },
-  );
-
-  const { trigger: removeStepTrigger } = useSWRMutation(
-    FAIRTEILER_TUTORIAL_KEY,
-    (_key, { arg }: { arg: { id: string } }) =>
-      removeFairteilerTutorialStepAction(arg),
-    {
-      revalidate: true,
-      rollbackOnError: true,
-      onSuccess: () => {
-        toast.success('Schritt erfolgreich gelöscht!');
-      },
-      onError: (err) => {
-        const message =
-          err instanceof Error ? err.message : 'Löschung fehlgeschlagen.';
-        toast.error(message);
-      },
-    },
-  );
+  const removeStepMutation = useMutation({
+    mutationFn: (data: { id: string }) =>
+      invokeAction(removeFairteilerTutorialStepAction, data),
+    onSuccess: () => toast.success('Schritt erfolgreich gelöscht!'),
+    onError: (err) => showErrorToast(err, 'Löschung fehlgeschlagen.'),
+    onSettled: () => void invalidateTutorial(),
+  });
 
   const value: TutorialContextValue = {
     state,
@@ -262,31 +247,17 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'START_EDITING_STEP', payload: step }),
     clearStepForm: () => dispatch({ type: 'CLEAR_STEP_FORM' }),
     resetState: () => dispatch({ type: 'RESET_STATE' }),
-    addTutorial: async (data) => {
-      await addTutorialTrigger(data, { optimisticData: data });
-    },
-    updateTutorial: async (data) => {
-      await updateTutorialTrigger(data, { optimisticData: data });
-    },
-    removeTutorial: async (data) => {
-      await removeTutorialTrigger(data, { optimisticData: null });
-    },
-    toggleTutorialActive: async (tutorial) => {
-      const isActive = !tutorial.isActive;
-      await updateTutorialTrigger(
-        { ...tutorial, isActive },
-        { optimisticData: { ...tutorial, isActive } },
-      );
-    },
-    addStep: async (newStep) => {
-      await addStepTrigger(newStep);
-    },
-    updateStep: async (data) => {
-      await updateStepTrigger(data);
-    },
-    removeStep: async (data) => {
-      await removeStepTrigger(data);
-    },
+    addTutorial: (data) => addTutorialMutation.mutateAsync(data),
+    updateTutorial: (data) => updateTutorialMutation.mutateAsync(data),
+    removeTutorial: (data) => removeTutorialMutation.mutateAsync(data),
+    toggleTutorialActive: (tutorial) =>
+      updateTutorialMutation.mutateAsync({
+        ...tutorial,
+        isActive: !tutorial.isActive,
+      }),
+    addStep: (data) => addStepMutation.mutateAsync(data),
+    updateStep: (data) => updateStepMutation.mutateAsync(data),
+    removeStep: (data) => removeStepMutation.mutateAsync(data),
   };
 
   return (

@@ -30,7 +30,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { handleAsyncAction } from '@/lib/client-error-handling';
+import { useFormAction } from '@/lib/hooks/use-form-action';
 import { useIsMobile } from '@/lib/hooks/use-devices';
 import { editContributionAction } from '@/server/contribution/actions';
 import { contributionKeys } from '@/server/contribution/query-keys';
@@ -72,6 +72,17 @@ export function HistoryEditModal({ item, open, setOpen }: EditModalProps) {
     },
   });
 
+  const editContribution = useFormAction(editContributionAction, form, {
+    successMessage: 'Beitrag erfolgreich bearbeitet.',
+    onSuccess: () => {
+      refresh();
+      queryClient.invalidateQueries({
+        queryKey: contributionKeys.versionHistory(item.checkinId).queryKey,
+      });
+      setOpen(false);
+    },
+  });
+
   // Reset form when modal opens or item changes
   useEffect(() => {
     if (open) {
@@ -90,29 +101,12 @@ export function HistoryEditModal({ item, open, setOpen }: EditModalProps) {
     }
 
     startTransition(() => {
-      handleAsyncAction(
-        () =>
-          editContributionAction({
-            checkinId: item.checkinId,
-            prevValue: item.quantity.toString(),
-            newValue: values.quantity.toString(),
-            field: 'quantity',
-          }),
-        form,
-        {
-          showToast: true,
-          setFormError: true,
-          successMessage: 'Beitrag erfolgreich bearbeitet.',
-          onSuccess: () => {
-            refresh();
-            queryClient.invalidateQueries({
-              queryKey: contributionKeys.versionHistory(item.checkinId)
-                .queryKey,
-            });
-            setOpen(false);
-          },
-        },
-      );
+      editContribution.execute({
+        checkinId: item.checkinId,
+        prevValue: item.quantity.toString(),
+        newValue: values.quantity.toString(),
+        field: 'quantity',
+      });
     });
   }
 

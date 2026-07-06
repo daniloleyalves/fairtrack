@@ -5,8 +5,11 @@ import { FairteilerDisableToggle } from './fairteiler-disable-toggle';
 import { ACTIVE_FAIRTEILER_KEY } from '@/lib/config/api-routes';
 import useSWRSuspense from '@/lib/services/swr';
 import { FairteilerWithMembers } from '@/server/db/db-types';
-import { updateFairteilerAction } from '@/lib/auth/auth-actions';
-import useSWRMutation from 'swr/mutation';
+import { toggleFairteilerDisabled } from '@/lib/auth/auth-actions';
+import { invokeAction } from '@/lib/hooks/use-form-action';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSWRConfig } from 'swr';
 
 interface FairteilerDisableWrapperProps {
   className?: string;
@@ -19,60 +22,50 @@ export function FairteilerDisableWrapper({
     ACTIVE_FAIRTEILER_KEY,
   );
 
-  const handleToggle = (checked: boolean) => {
-    const formData = new FormData();
-    // Append all fairteiler properties to FormData
-    for (const [key, value] of Object.entries(fairteiler)) {
-      if (value != null) {
-        formData.append(key, String(value));
-      }
-    }
-    // Set the disabled property based on the checked state
-    formData.append('disabled', String(!checked));
-    toggleFairteilerVisibility(formData);
-  };
+  const queryClient = useQueryClient();
+  const { mutate: swrMutate } = useSWRConfig();
+  const activeKey = fairteilerKeys.active().queryKey;
 
-  // --- Mutations ---
-  const { trigger: toggleFairteilerVisibility } = useSWRMutation(
-    ACTIVE_FAIRTEILER_KEY,
-    (_key, { arg }: { arg: FormData }) => updateFairteilerAction(arg),
-    {
-      optimisticData: (
-        currentFairteilerCache: FairteilerWithMembers | undefined,
-      ): FairteilerWithMembers => {
-        const baseFairteiler: FairteilerWithMembers =
-          currentFairteilerCache ?? fairteiler;
-
-        return {
-          ...baseFairteiler,
-          disabled: !fairteiler.disabled,
-        };
-      },
-      revalidate: false,
-      rollbackOnError: true,
-      onSuccess: (result) => {
-        if (result.success && result.data) {
-          toast.success(
-            result.message ??
-              'Fairteilersichtbarkeit erfolgreich aktualisiert!',
-          );
-        }
-        if (!result.success && result.error) {
-          toast.success(result.error);
-        }
-      },
-      onError: (err) => {
-        const message =
-          err instanceof Error ? err.message : 'Aktualisierung fehlgeschlagen.';
-        toast.error(message);
-      },
+  const toggle = useMutation({
+    mutationFn: (disabled: boolean) =>
+      invokeAction(toggleFairteilerDisabled, {
+        disabled,
+      }),
+    onMutate: async (disabled) => {
+      await queryClient.cancelQueries({ queryKey: activeKey });
+      const previous =
+        queryClient.getQueryData<FairteilerWithMembers>(activeKey);
+      queryClient.setQueryData<FairteilerWithMembers>(activeKey, (current) => {
+        const base = current ?? previous ?? fairteiler;
+        return { ...base, disabled };
+      });
+      return { previous };
     },
-  );
+    onError: (err, _disabled, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(activeKey, context.previous);
+      }
+      toast.error(
+        err instanceof Error ? err.message : 'Aktualisierung fehlgeschlagen.',
+      );
+    },
+    onSuccess: () => {
+      toast.success('Fairteilersichtbarkeit erfolgreich aktualisiert!');
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({
+        queryKey: fairteilerKeys.all().queryKey,
+      });
+      // Transitional: sibling components still read ACTIVE_FAIRTEILER_KEY
+      // via SWR. Drop once those move.
+      void swrMutate(ACTIVE_FAIRTEILER_KEY);
+    },
+  });
 
   return (
     <FairteilerDisableToggle
       isDisabled={fairteiler.disabled}
-      onToggleDisabled={handleToggle}
+      onToggleDisabled={(checked) => toggle.mutate(checked)}
       className={className}
     />
   );

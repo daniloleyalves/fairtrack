@@ -16,10 +16,6 @@ export const FAIRTEILER_CONTRIBUTION_VERSION_HISTORY =
 
 export const FAIRTEILER_CONTRIBUTIONS_KEY = '/api/fairteiler/contributions';
 
-export const FAIRTEILER_TAGS_KEY = '/api/fairteiler/tags';
-
-export const FAIRTEILER_TUTORIAL_KEY = '/api/fairteiler/tutorial';
-
 // ------- PLATFORM API ROUTES -------
 
 export const CATEGORY_KEY = '/api/platform/categories';
@@ -28,7 +24,5 @@ export const COMPANY_KEY = '/api/platform/companies';
 
 // ------- USER API ROUTES -------
 
-export const USER_PROFILE_KEY = '/api/user/profile';
 export const USER_DASHBOARD_KEY = '/api/user/dashboard';
-export const USER_PREFERENCES_KEY = '/api/user/preferences';
 export const USER_CONTRIBUTIONS_KEY = '/api/user/contributions';

@@ -26,6 +26,14 @@ import { calculateUserAllTimeStreaks } from '@/features/user/gamification/streak
 import { gamificationElements } from '@/features/user/gamification/gamification-config';
 import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
 
+export async function getUserProfile() {
+  const session = await getSession(await headers());
+  if (!session?.user) {
+    throw new AuthError('No active session');
+  }
+  return session.user;
+}
+
 export async function getSession(
   headers: Headers,
   invalidateCookieCache?: boolean,
@@ -243,24 +251,16 @@ export async function getOnboardingData(
 /**
  * Get user preferences for the authenticated user
  */
-export async function getUserPreferences(
-  headers: Headers,
-): Promise<UserPreferences | null | undefined> {
-  const session = await loadAuthenticatedSession(headers);
+export async function getUserPreferences(): Promise<
+  UserPreferences | null | undefined
+> {
+  const session = await loadAuthenticatedSession(await headers());
   const userId = session.user.id;
   if (!userId) {
     throw new AuthError('No active session.');
   }
 
-  const userPreferences = loadUserPreferences(userId);
-
-  if (!userPreferences) {
-    throw new NotFoundError(
-      'ExperienceLevels, userPreferences or stepFlowProgress not found',
-    );
-  }
-
-  return userPreferences;
+  return await loadUserPreferences(userId);
 }
 
 export async function getUserStreak(headers: Headers) {

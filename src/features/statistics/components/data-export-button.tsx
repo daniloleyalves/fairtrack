@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { exportContributionsAction } from '@/server/contribution/actions';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 import {
   exportContributionsToExcel,
   generateExportFilename,
@@ -30,12 +31,12 @@ export function ExportButton({ filters, scope, className }: ExportButtonProps) {
           ? { from: filters.dateRange.from, to: filters.dateRange.to }
           : undefined;
 
-      const data = await exportContributionsAction({
+      const data = await invokeAction(exportContributionsAction, {
         dateRange,
         scope,
       });
 
-      if (!data.length) {
+      if (!data?.length) {
         const errorMessage =
           scope === 'fairteiler'
             ? 'Keine Fairteiler-Daten zum Exportieren gefunden'

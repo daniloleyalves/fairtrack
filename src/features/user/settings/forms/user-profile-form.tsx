@@ -20,10 +20,10 @@ import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { User } from '@/server/db/db-types';
 import { userProfileSchema } from '../schemas/user-profile-schema';
-import useSWRMutation from 'swr/mutation';
-import { USER_PROFILE_KEY } from '@/lib/config/api-routes';
 import { updateUserAction } from '@/lib/auth/auth-actions';
-import { toast } from 'sonner';
+import { useFormAction } from '@/lib/hooks/use-form-action';
+import { userKeys } from '@/server/user/query-keys';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function UserProfileForm({
   user,
@@ -32,51 +32,19 @@ export default function UserProfileForm({
 }: React.ComponentProps<'div'> & {
   user: User;
 }) {
-  // --- Mutations ---
-  const { trigger: updateTrigger, isMutating } = useSWRMutation(
-    USER_PROFILE_KEY,
-    (_key, { arg }: { arg: FormData }) => updateUserAction(arg),
-    {
-      optimisticData: (currentUserCache: User | undefined): User => {
-        const baseUser: User = currentUserCache ?? user;
-
-        const values = form.getValues();
-
-        const updatedAvatar =
-          values.avatar instanceof File
-            ? URL.createObjectURL(values.avatar)
-            : values.avatar;
-
-        return {
-          ...baseUser,
-          ...values,
-          avatar: updatedAvatar,
-        };
-      },
-      revalidate: false,
-      rollbackOnError: true,
-      onSuccess: (result) => {
-        if (result.success && result.data) {
-          toast.success(result.message ?? 'Profil erfolgreich aktualisiert!');
-          form.reset(result.data);
-        }
-        if (!result.success && result.error) {
-          toast.success(result.error);
-          form.reset();
-        }
-      },
-      onError: (err) => {
-        const message =
-          err instanceof Error ? err.message : 'Aktualisierung fehlgeschlagen.';
-        toast.error(message);
-        form.setError('root.serverError', { message });
-      },
-    },
-  );
-
   const form = useForm<z.infer<typeof userProfileSchema>>({
     resolver: zodResolver(userProfileSchema),
     defaultValues: user,
+  });
+
+  const queryClient = useQueryClient();
+
+  const { execute, isPending } = useFormAction(updateUserAction, form, {
+    successMessage: 'Profil erfolgreich aktualisiert!',
+    onSuccess: (data) => {
+      if (data) form.reset(data);
+      void queryClient.invalidateQueries({ queryKey: userKeys.all().queryKey });
+    },
   });
 
   // Avatar preview logic
@@ -96,18 +64,8 @@ export default function UserProfileForm({
     }
   }, [avatar]);
 
-  async function onSubmit(values: z.infer<typeof userProfileSchema>) {
-    const formData = new FormData();
-    for (const key in values) {
-      const value = values[key as keyof typeof values];
-      if (value instanceof File) {
-        formData.append(key, value);
-      } else if (value != null) {
-        formData.append(key, String(value));
-      }
-    }
-
-    await updateTrigger(formData);
+  function onSubmit(values: z.infer<typeof userProfileSchema>) {
+    execute(values);
   }
   const removeAvatar = () => {
     form.setValue('avatar', null, { shouldDirty: true });
@@ -132,7 +90,7 @@ export default function UserProfileForm({
                     <Input
                       {...field}
                       placeholder='Enter your first name'
-                      disabled={isMutating}
+                      disabled={isPending}
                     />
                   </FormControl>
                   <FormMessage />
@@ -150,7 +108,7 @@ export default function UserProfileForm({
                     <Input
                       {...field}
                       placeholder='Enter your last name'
-                      disabled={isMutating}
+                      disabled={isPending}
                     />
                   </FormControl>
                   <FormMessage />
@@ -168,7 +126,7 @@ export default function UserProfileForm({
                     <PhoneInput
                       value={field.value ?? ''}
                       onChange={(v) => field.onChange(v || null)}
-                      disabled={isMutating}
+                      disabled={isPending}
                       aria-invalid={!!form.formState.errors.phone}
                     />
                   </FormControl>
@@ -208,7 +166,7 @@ export default function UserProfileForm({
                           <Button
                             type='button'
                             variant='outline'
-                            disabled={isMutating}
+                            disabled={isPending}
                             onClick={removeAvatar}
                             className='bg-input/40'
                             size='icon'
@@ -222,7 +180,7 @@ export default function UserProfileForm({
                         {...fileRef}
                         type='file'
                         accept='image/jpeg,image/jpg,image/png'
-                        disabled={isMutating}
+                        disabled={isPending}
                         onChange={(event) =>
                           field.onChange(event.target?.files?.[0] ?? null)
                         }
@@ -244,11 +202,8 @@ export default function UserProfileForm({
         )}
         {/* Submit Button */}
         <div className='flex justify-end pt-4'>
-          <Button
-            type='submit'
-            disabled={isMutating || !form.formState.isDirty}
-          >
-            {isMutating && <Loader2 className='size-4 animate-spin' />}
+          <Button type='submit' disabled={isPending || !form.formState.isDirty}>
+            {isPending && <Loader2 className='size-4 animate-spin' />}
             Profil aktualisieren
           </Button>
         </div>
