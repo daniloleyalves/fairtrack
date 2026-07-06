@@ -14,18 +14,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { fetcher } from '@/lib/services/swr';
 import { formatNumber } from '@/lib/utils';
 import { vContribution } from '@/server/db/db-types';
+import { getVersionHistoryByCheckinId } from '@/server/contribution/queries';
+import { contributionKeys } from '@/server/contribution/query-keys';
+import { useQueryClient } from '@tanstack/react-query';
 import type { ColumnDef, Row } from '@tanstack/react-table';
 import { formatInTimeZone } from 'date-fns-tz';
 import { ArrowUpDown, Eye, History, MoreHorizontal } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import { DateRange } from 'react-day-picker';
-import { preload } from 'swr';
 import { HistoryVersionHistory } from '@/features/fairteiler/history/components/history-version-history';
-import { FAIRTEILER_CONTRIBUTION_VERSION_HISTORY } from '@/lib/config/api-routes';
 
 export const userHistoryColumns: ColumnDef<vContribution>[] = [
   {
@@ -146,15 +146,16 @@ export const userHistoryColumns: ColumnDef<vContribution>[] = [
 
 const UserHistoryRowActions = ({ row }: { row: Row<vContribution> }) => {
   const historyItem = row.original;
+  const queryClient = useQueryClient();
 
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
 
   const preloadContributionVersionHistory = () => {
-    preload(
-      `${FAIRTEILER_CONTRIBUTION_VERSION_HISTORY}?checkinId=${row.original.checkinId}`,
-      fetcher,
-    );
+    queryClient.prefetchQuery({
+      ...contributionKeys.versionHistory(row.original.checkinId),
+      queryFn: () => getVersionHistoryByCheckinId(row.original.checkinId),
+    });
   };
 
   return (
