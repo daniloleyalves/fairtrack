@@ -56,13 +56,21 @@ export interface DashboardData {
 }
 
 export default function FairteilerDashboardWrapper() {
-  const { data, isPending } = useQuery({
+  const { data, isPending, error } = useQuery({
     ...fairteilerKeys.dashboard(),
     queryFn: () => getFairteilerDashboardData(),
   });
 
-  if (isPending || !data) {
+  if (isPending) {
     return <FairteilerDashboardGridSkeleton />;
+  }
+
+  if (error || !data) {
+    return (
+      <p className='text-center text-sm text-muted-foreground'>
+        Beim Laden des Dashboards ist ein unerwarteter Fehler aufgetreten.
+      </p>
+    );
   }
 
   return <FairteilerDashboard data={data} />;

@@ -12,13 +12,21 @@ import { ReportingDashboard } from './reporting-dashboard';
 const REPORTING_QUERY_OPTIONS = { limit: 100000 } as const;
 
 export default function FairteilerReportingWrapper() {
-  const { data, isPending } = useQuery({
+  const { data, isPending, error } = useQuery({
     ...contributionKeys.list(REPORTING_QUERY_OPTIONS),
     queryFn: () => getContributions(REPORTING_QUERY_OPTIONS),
   });
 
-  if (isPending || !data) {
+  if (isPending) {
     return <ReportingGridSkeleton />;
+  }
+
+  if (error || !data) {
+    return (
+      <p className='text-center text-sm text-muted-foreground'>
+        Beim Laden der Berichte ist ein unerwarteter Fehler aufgetreten.
+      </p>
+    );
   }
 
   return (

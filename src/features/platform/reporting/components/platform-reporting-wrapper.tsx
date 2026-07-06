@@ -25,13 +25,21 @@ export default function PlatformReportingWrapper() {
     queryFn: () => getFairteilers(),
   });
 
+  if (contributionsQuery.isPending || fairteilersQuery.isPending) {
+    return <PlatformReportingGridSkeleton />;
+  }
+
   if (
-    contributionsQuery.isPending ||
+    contributionsQuery.error ||
     !contributionsQuery.data ||
-    fairteilersQuery.isPending ||
+    fairteilersQuery.error ||
     !fairteilersQuery.data
   ) {
-    return <PlatformReportingGridSkeleton />;
+    return (
+      <p className='text-center text-sm text-muted-foreground'>
+        Beim Laden der Berichte ist ein unerwarteter Fehler aufgetreten.
+      </p>
+    );
   }
 
   return (
