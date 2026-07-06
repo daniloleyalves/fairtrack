@@ -10,8 +10,9 @@ import {
   disableAccessViewAction,
 } from '../auth-actions';
 import { auth, checkPermissionOnServer } from '../auth';
-import { getActiveFairteiler } from '@server/dto';
-import { checkInvitationAndUser, updateFairteiler } from '@server/dal';
+import { getActiveFairteiler } from '@server/fairteiler/dto';
+import { checkInvitationAndUser } from '@server/contribution/dal';
+import { updateFairteiler } from '@server/fairteiler/dal';
 import { put, del } from '@vercel/blob';
 import { headers } from 'next/headers';
 import { MemberRolesEnum } from '../auth-permissions';
@@ -35,13 +36,22 @@ vi.mock('../auth', () => ({
   checkPermissionOnServer: vi.fn(),
 }));
 
-vi.mock('@server/dto', () => ({
+vi.mock('@server/fairteiler/dto', () => ({
   getActiveFairteiler: vi.fn(),
 }));
 
-vi.mock('@server/dal', () => ({
-  updateFairteiler: vi.fn(),
+vi.mock('@server/contribution/dal', () => ({
   checkInvitationAndUser: vi.fn(),
+}));
+
+vi.mock('@server/fairteiler/dal', () => ({
+  updateFairteiler: vi.fn(),
+  toggleFairteilerVisibility: vi.fn(),
+}));
+
+vi.mock('@server/user/dal', () => ({
+  loadAuthenticatedSession: vi.fn(),
+  loadUserByEmail: vi.fn(),
   validateResetPasswordToken: vi.fn(),
 }));
 

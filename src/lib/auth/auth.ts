@@ -33,7 +33,7 @@ import {
   getInviteMemberTemplate,
   getInviteMemberText,
 } from '@/lib/services/resend/invite-member';
-import { updateUserSecureStatus } from '@server/dal';
+import { updateUserSecureStatus } from '@server/user/dal';
 
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,

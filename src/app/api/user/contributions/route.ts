@@ -1,5 +1,5 @@
 import { createApiRoute } from '@server/api-helpers';
-import { getUserContributions } from '@server/dto';
+import { getUserContributions } from '@server/user/dto';
 
 /**
  * Handles GET request to the /api/user/contributions route.

@@ -2,15 +2,17 @@
 
 import { headers } from 'next/headers';
 import z, { ZodError } from 'zod';
+import { checkInvitationAndUser } from '@server/contribution/dal';
 import {
-  checkInvitationAndUser,
-  loadAuthenticatedSession,
-  loadUserByEmail,
   toggleFairteilerVisibility,
   updateFairteiler,
+} from '@server/fairteiler/dal';
+import {
+  loadAuthenticatedSession,
+  loadUserByEmail,
   validateResetPasswordToken,
-} from '@server/dal';
-import { getActiveFairteiler } from '@server/dto';
+} from '@server/user/dal';
+import { getActiveFairteiler } from '@server/fairteiler/dto';
 import { auth, checkPermissionOnServer } from './auth';
 import { generatePassword, getErrorMessage } from './auth-helpers';
 import { MemberRolesEnum } from './auth-permissions';

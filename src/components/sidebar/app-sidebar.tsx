@@ -14,8 +14,8 @@ import { headers } from 'next/headers';
 import {
   getActiveMembership,
   getActiveFairteiler,
-  getSession,
-} from '@server/dto';
+} from '@server/fairteiler/dto';
+import { getSession } from '@server/user/dto';
 
 export async function AppSidebar({
   ...props

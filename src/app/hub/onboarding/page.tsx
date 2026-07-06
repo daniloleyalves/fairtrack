@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { headers } from 'next/headers';
-import { getOnboardingData } from '@/server/dto';
+import { getOnboardingData } from '@/server/user/dto';
 import { OnboardingWrapper } from '@/features/user/onboarding/components/onboarding-wrapper';
 import { Skeleton } from '@/components/ui/skeleton';
 import {

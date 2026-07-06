@@ -28,8 +28,8 @@ import { ExperienceLevel } from '@/server/db/db-types';
 import { Award, Sparkles, Flame, Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { handleAsyncAction } from '@/lib/client-error-handling';
-import { completeOnboardingAction } from '@/server/actions';
-import { OnboardingData } from '@/server/dto';
+import { completeOnboardingAction } from '@/server/user/actions';
+import { OnboardingData } from '@/server/user/dto';
 import { useRouter } from 'next/navigation';
 
 export function OnboardingFlow({

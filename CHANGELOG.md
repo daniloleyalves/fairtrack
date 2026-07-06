@@ -23,6 +23,14 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 ### Added
 
 - TanStack Query + `next-safe-action` foundation (refactor Phase 1): `QueryClient` factory in `src/lib/query-client.ts`, client-side `QueryProvider` mounted in the root layout, and a `next-safe-action` client (`action` + `authedAction`) in `src/server/_lib/safe-action.ts`. SWR remains active alongside; no call sites migrated yet.
+
+### Changed
+
+- Refactor Phase 2 (slice 1/5 — tutorial): tutorial DAL/DTO/actions moved from the server monoliths into `src/server/tutorial/`. Mechanical split; no behavior change. The remaining 4 slices (platform, user, fairteiler, contribution) follow.
+- Refactor Phase 2 (slice 2/5 — platform): `getPlatformStats` moved from `src/server/dto.ts` into `src/server/platform/dto.ts`. Single-function move; no behavior change.
+- Refactor Phase 2 (slice 3/5 — user): user-domain DAL/DTO/actions extracted into `src/server/user/` (auth/session, profile, preferences, feedback, user-scoped contribution stats, milestones, gamification events). 21 DAL + 9 DTO + 5 actions moved; ~25 caller files repointed; cross-domain imports updated in monoliths and tutorial files. Mechanical split; no behavior change.
+- Refactor Phase 2 (slice 4/5 — fairteiler): fairteiler-domain DAL/DTO/actions extracted into `src/server/fairteiler/` (org/membership, tags, origin/category/company catalogs and per-fairteiler links, fairteiler dashboard). 27 DAL + 12 DTO + 14 actions moved; ~20 caller files repointed; cross-domain imports updated in monoliths, platform/, user-side auth-actions, and test mocks. Mechanical split; no behavior change. Final slice (contribution) deletes the monoliths entirely.
+- Refactor Phase 2 (slice 5/5 — contribution, final): contribution-domain DAL/DTO/actions extracted into `src/server/contribution/`, and `src/server/{dal,dto,actions}.ts` deleted. 12 DAL + 4 DTO + 3 actions moved (checkin, contribution stats, version history, invitation validation, submit/edit/export). All remaining caller imports repointed via bulk rewrite. Dead commented-out `generateUserFeedbackAction` block dropped. Phase 2 complete — server code is now fully organized by domain.
 - `PhoneInput` component (shadcn `input-group` + `Command`/`Popover` country picker, `libphonenumber-js`, German country names via `Intl.DisplayNames`); wired into the user profile form with `isValidPhoneNumber` validation. Phone is stored in E.164 format.
 - `QuantityIncrementer` gained `showStepperButtons?: boolean` (default `true`). Passed `false` in the fast-mode contribution list; wizard quantity modal keeps the +/- buttons.
 

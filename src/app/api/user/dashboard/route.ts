@@ -1,5 +1,5 @@
 import { createApiRoute } from '@server/api-helpers';
-import { getUserDashboardData } from '@server/dto';
+import { getUserDashboardData } from '@server/user/dto';
 
 /**
  * Handles GET requests to the /api/user/dashboard route.

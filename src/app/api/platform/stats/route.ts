@@ -1,5 +1,5 @@
 import { createApiRoute } from '@server/api-helpers';
-import { getPlatformStats } from '@server/dto';
+import { getPlatformStats } from '@server/platform/dto';
 
 /**
  * GET /api/platform/stats

@@ -5,7 +5,7 @@ import {
   removeFairteilerCompanyAction,
   suggestNewCompanyAction,
   updateCompanyAction,
-} from '@server/actions';
+} from '@server/fairteiler/actions';
 import { CompanyWithOrigin, GenericItem } from '@server/db/db-types';
 import { toast } from 'sonner';
 import { useState } from 'react';

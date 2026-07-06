@@ -10,7 +10,7 @@ import {
   removeFairteilerCategoryAction,
   suggestNewCategoryAction,
   updateCategoryAction,
-} from '@server/actions';
+} from '@server/fairteiler/actions';
 import { GenericItem } from '@server/db/db-types';
 import { Badge } from '@ui/badge';
 import { Button } from '@ui/button';

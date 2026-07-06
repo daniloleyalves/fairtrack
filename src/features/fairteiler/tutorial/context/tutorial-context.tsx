@@ -12,7 +12,7 @@ import {
   removeFairteilerTutorialStepAction,
   updateFairteilerTutorialAction,
   updateFairteilerTutorialStepAction,
-} from '@/server/actions';
+} from '@/server/tutorial/actions';
 import { toast } from 'sonner';
 import {
   TutorialFormData,

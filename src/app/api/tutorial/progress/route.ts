@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/server/dto';
+import { getSession } from '@/server/user/dto';
 import { loadTutorialProgress } from '@/features/contribution/tutorial/tutorial-flow-api';
 
 export async function GET(request: NextRequest) {

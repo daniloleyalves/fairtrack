@@ -33,7 +33,7 @@ import {
 import { handleAsyncAction } from '@/lib/client-error-handling';
 import { FAIRTEILER_CONTRIBUTION_VERSION_HISTORY } from '@/lib/config/api-routes';
 import { useIsMobile } from '@/lib/hooks/use-devices';
-import { editContributionAction } from '@/server/actions';
+import { editContributionAction } from '@/server/contribution/actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';

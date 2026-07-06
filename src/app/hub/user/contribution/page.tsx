@@ -1,16 +1,14 @@
+import { getFairteilerBySlug } from '@/server/fairteiler/dto';
+import { getUserPreferences } from '@/server/user/dto';
 import {
-  getFairteilerBySlug,
   getFairteilerTutorialWithSteps,
-} from '@/server/dto';
+  getContributionTutorialProgress,
+} from '@/server/tutorial/dto';
 import { notFound } from 'next/navigation';
 import { ContributionProvider } from '@/features/contribution/context/contribution-context';
 import { ContributionHeader } from '@/features/contribution/components/contribution-header';
 import { ContributionContent } from '@/features/contribution/components/contribution-content';
 import { UserPreferencesProvider } from '@/lib/services/preferences-service';
-import {
-  getUserPreferences,
-  getContributionTutorialProgress,
-} from '@/server/dto';
 import { headers } from 'next/headers';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Suspense } from 'react';

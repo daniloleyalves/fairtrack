@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { exportContributionsAction } from '@/server/actions';
+import { exportContributionsAction } from '@/server/contribution/actions';
 import {
   exportContributionsToExcel,
   generateExportFilename,
