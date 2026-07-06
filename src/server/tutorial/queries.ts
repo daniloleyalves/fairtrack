@@ -1,8 +1,6 @@
 'use server';
 import { loadAuthenticatedSession } from '../user/dal';
-import { loadMembership } from '../fairteiler/dal';
 import { AuthError } from '../api-helpers';
-import { PermissionError } from '../error-handling';
 import { StepFlowProgress } from '../db/db-types';
 import { loadFairteilerTutorialWithSteps, loadStepFlowProgress } from './dal';
 
@@ -10,19 +8,11 @@ export async function getFairteilerTutorialWithSteps(
   headers: Headers,
   fairteilerId?: string,
 ) {
-  const session = await loadAuthenticatedSession(headers);
-  let fairteilerIdentifier: string | undefined = fairteilerId;
+  let fairteilerIdentifier = fairteilerId;
 
   if (!fairteilerIdentifier) {
+    const session = await loadAuthenticatedSession(headers);
     fairteilerIdentifier = session.session.activeOrganizationId ?? undefined;
-  } else if (fairteilerIdentifier !== session.session.activeOrganizationId) {
-    const membership = await loadMembership(
-      session.user.id,
-      fairteilerIdentifier,
-    );
-    if (!membership) {
-      throw new PermissionError('Kein Zugriff auf diesen Fairteiler.');
-    }
   }
 
   if (!fairteilerIdentifier) {
