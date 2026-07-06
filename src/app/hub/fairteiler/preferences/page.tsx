@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FairteilerDisableWrapper } from '@/features/fairteiler/preferences/components/fairteiler-disable-wrapper';
 import { FairteilerTutorialCardWrapper } from '@/features/fairteiler/tutorial/components/fairteiler-tutorial-card-wrapper';
-import { BookOpen, UserIcon } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 
 export default function FairteilerPreferencesPage() {
   return (
@@ -25,9 +25,7 @@ export default function FairteilerPreferencesPage() {
         </p>
       </div>
       <ListErrorBoundary>
-        <Suspense fallback={<FairteilerDisableSkeleton />}>
-          <FairteilerDisableWrapper />
-        </Suspense>
+        <FairteilerDisableWrapper />
       </ListErrorBoundary>
       <ListErrorBoundary>
         <Suspense fallback={<TutorialCardSkeleton />}>
@@ -70,27 +68,6 @@ function TutorialCardSkeleton() {
           </div>
         </div>
       </CardContent>
-    </Card>
-  );
-}
-
-function FairteilerDisableSkeleton() {
-  return (
-    <Card className='h-max'>
-      <CardHeader className='flex justify-between'>
-        <div className='flex flex-col gap-3 xs:flex-row'>
-          <div className='flex size-10 min-w-10 items-center justify-center rounded-lg bg-primary/10'>
-            <UserIcon className='size-5 text-primary' />
-          </div>
-          <div className='space-y-2'>
-            <Skeleton className='h-4 w-48 bg-secondary' />
-            <div className='space-y-1'>
-              <Skeleton className='h-2 w-56 bg-secondary' />
-            </div>
-          </div>
-        </div>
-        <Skeleton className='h-5 w-10 bg-secondary' />
-      </CardHeader>
     </Card>
   );
 }

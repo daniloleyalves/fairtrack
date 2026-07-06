@@ -2,14 +2,15 @@
 
 import { toast } from 'sonner';
 import { FairteilerDisableToggle } from './fairteiler-disable-toggle';
-import { ACTIVE_FAIRTEILER_KEY } from '@/lib/config/api-routes';
-import useSWRSuspense from '@/lib/services/swr';
+import { Card, CardHeader } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { FairteilerWithMembers } from '@/server/db/db-types';
 import { toggleFairteilerDisabled } from '@/lib/auth/auth-actions';
 import { invokeAction } from '@/lib/hooks/use-form-action';
+import { getActiveFairteiler } from '@/server/fairteiler/queries';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSWRConfig } from 'swr';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { UserIcon } from 'lucide-react';
 
 interface FairteilerDisableWrapperProps {
   className?: string;
@@ -18,13 +19,17 @@ interface FairteilerDisableWrapperProps {
 export function FairteilerDisableWrapper({
   className,
 }: FairteilerDisableWrapperProps) {
-  const { data: fairteiler } = useSWRSuspense<FairteilerWithMembers>(
-    ACTIVE_FAIRTEILER_KEY,
-  );
-
   const queryClient = useQueryClient();
-  const { mutate: swrMutate } = useSWRConfig();
   const activeKey = fairteilerKeys.active().queryKey;
+
+  const {
+    data: fairteiler,
+    isPending,
+    error,
+  } = useQuery({
+    ...fairteilerKeys.active(),
+    queryFn: () => getActiveFairteiler(),
+  });
 
   const toggle = useMutation({
     mutationFn: (disabled: boolean) =>
@@ -37,6 +42,7 @@ export function FairteilerDisableWrapper({
         queryClient.getQueryData<FairteilerWithMembers>(activeKey);
       queryClient.setQueryData<FairteilerWithMembers>(activeKey, (current) => {
         const base = current ?? previous ?? fairteiler;
+        if (!base) return current;
         return { ...base, disabled };
       });
       return { previous };
@@ -56,11 +62,18 @@ export function FairteilerDisableWrapper({
       void queryClient.invalidateQueries({
         queryKey: fairteilerKeys.all().queryKey,
       });
-      // Transitional: sibling components still read ACTIVE_FAIRTEILER_KEY
-      // via SWR. Drop once those move.
-      void swrMutate(ACTIVE_FAIRTEILER_KEY);
     },
   });
+
+  if (isPending) {
+    return <FairteilerDisableSkeleton />;
+  }
+
+  if (error) {
+    throw error;
+  }
+
+  if (!fairteiler) return null;
 
   return (
     <FairteilerDisableToggle
@@ -68,5 +81,26 @@ export function FairteilerDisableWrapper({
       onToggleDisabled={(checked) => toggle.mutate(checked)}
       className={className}
     />
+  );
+}
+
+function FairteilerDisableSkeleton() {
+  return (
+    <Card className='h-max'>
+      <CardHeader className='flex justify-between'>
+        <div className='flex flex-col gap-3 xs:flex-row'>
+          <div className='flex size-10 min-w-10 items-center justify-center rounded-lg bg-primary/10'>
+            <UserIcon className='size-5 text-primary' />
+          </div>
+          <div className='space-y-2'>
+            <Skeleton className='h-4 w-48 bg-secondary' />
+            <div className='space-y-1'>
+              <Skeleton className='h-2 w-56 bg-secondary' />
+            </div>
+          </div>
+        </div>
+        <Skeleton className='h-5 w-10 bg-secondary' />
+      </CardHeader>
+    </Card>
   );
 }

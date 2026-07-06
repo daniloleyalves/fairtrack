@@ -76,7 +76,7 @@ export function HistoryEditModal({ item, open, setOpen }: EditModalProps) {
     successMessage: 'Beitrag erfolgreich bearbeitet.',
     onSuccess: () => {
       refresh();
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: contributionKeys.versionHistory(item.checkinId).queryKey,
       });
       setOpen(false);

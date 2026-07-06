@@ -55,7 +55,7 @@ export function MemberTableActions({ member }: { member: Member }) {
     successMessage: `Mitglied ${member.user.email} wurde erfolgreich entfernt.`,
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: fairteilerKeys.active().queryKey,
+        queryKey: fairteilerKeys.all().queryKey,
       });
       setRemoveMemberModalOpen(false);
     },
@@ -156,7 +156,7 @@ function ChangeRoleModal({
     successMessage: 'Rolle erfolgreich aktualisiert.',
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: fairteilerKeys.active().queryKey,
+        queryKey: fairteilerKeys.all().queryKey,
       });
       setOpen(false);
     },

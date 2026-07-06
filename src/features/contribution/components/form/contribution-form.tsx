@@ -19,7 +19,6 @@ interface ContributionFormConfig {
   fairteilerId: string;
   successRedirect?: string;
   revalidatePaths?: string[];
-  cacheKeys?: (readonly unknown[])[];
   context?: 'fairteiler' | 'user' | 'admin';
   submitAsAccessViewId?: string | null;
 }
@@ -45,13 +44,12 @@ export function ContributionForm({
   const submitContribution = useFormAction(submitContributionAction, form, {
     successMessage: 'Lebensmittel erfolgreich beigetragen!',
     onSuccess: (data) => {
-      const cacheKeys = config?.cacheKeys ?? [
-        fairteilerKeys.dashboard().queryKey,
-        userKeys.dashboard().queryKey,
-      ];
-      cacheKeys.forEach((queryKey) =>
-        queryClient.invalidateQueries({ queryKey }),
-      );
+      void queryClient.invalidateQueries({
+        queryKey: fairteilerKeys.dashboard().queryKey,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: userKeys.dashboard().queryKey,
+      });
 
       if (data?.redirectTo) {
         router.push(data.redirectTo);

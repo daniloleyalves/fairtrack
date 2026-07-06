@@ -2,12 +2,15 @@
 
 import { BlurFade } from '@components/magicui/blur-fade';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton, TableSkeleton } from '@/components/ui/skeleton';
 import { UserHistoryTable } from './user-history-table';
 import { Button } from '@/components/ui/button';
 import { useUserHistoryData } from '../use-user-history-data';
 
 export function UserHistoryWrapper() {
   const {
+    isPending,
+    error,
     contributions,
     isEmpty,
     totalCount,
@@ -16,6 +19,14 @@ export function UserHistoryWrapper() {
     hasLoadedAll,
     isLoadingAll,
   } = useUserHistoryData();
+
+  if (isPending) {
+    return <UserHistorySkeleton />;
+  }
+
+  if (error) {
+    throw error;
+  }
 
   if (isEmpty) {
     return (
@@ -60,5 +71,26 @@ export function UserHistoryWrapper() {
         </CardContent>
       </Card>
     </BlurFade>
+  );
+}
+
+function UserHistorySkeleton() {
+  return (
+    <Card>
+      <CardContent>
+        <div className='mb-4 flex flex-1 flex-col flex-wrap gap-2 md:flex-row md:items-center md:gap-4'>
+          <Skeleton variant='onCard' className='h-9 w-[250px]' />
+          <Skeleton variant='onCard' className='h-9 w-[200px]' />
+          <div className='flex flex-wrap gap-2'>
+            <Skeleton variant='onCard' className='h-9 w-[120px]' />
+            <Skeleton variant='onCard' className='h-9 w-[100px]' />
+            <Skeleton variant='onCard' className='h-9 w-[110px]' />
+            <Skeleton variant='onCard' className='h-9 w-[90px]' />
+          </div>
+        </div>
+
+        <TableSkeleton rows={8} columns={6} showPagination />
+      </CardContent>
+    </Card>
   );
 }

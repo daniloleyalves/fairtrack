@@ -45,7 +45,7 @@ export function InviteMemberForm({
     successMessage: `Einladung erfolgreich an ${form.getValues('email')} gesendet!`,
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: fairteilerKeys.active().queryKey,
+        queryKey: fairteilerKeys.all().queryKey,
       });
       form.reset();
       setOpen(false);

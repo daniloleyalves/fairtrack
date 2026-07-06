@@ -8,8 +8,6 @@ import { BlurFade } from '@/components/magicui/blur-fade';
 import ContributionTable from './contribution-table';
 import { ContributionInfos } from './contribution-infos';
 import { usePathname } from 'next/navigation';
-import { fairteilerKeys } from '@/server/fairteiler/query-keys';
-import { userKeys } from '@/server/user/query-keys';
 import { useContribution } from '../context/contribution-context';
 import { useIsMobile } from '@/lib/hooks/use-devices';
 import {
@@ -67,7 +65,6 @@ export function ContributionContent() {
         fairteilerId: fairteiler.id,
         successRedirect: '/hub/user/contribution/success',
         revalidatePaths: ['/hub/user/dashboard'],
-        cacheKeys: [userKeys.dashboard().queryKey],
         context: 'user' as const,
         submitAsAccessViewId: isOwner ? selectedAccessViewId : undefined,
       };
@@ -76,10 +73,6 @@ export function ContributionContent() {
         fairteilerId: fairteiler.id,
         successRedirect: '/hub/fairteiler/contribution/success',
         revalidatePaths: ['/hub/fairteiler/dashboard'],
-        cacheKeys: [
-          fairteilerKeys.dashboard().queryKey,
-          userKeys.dashboard().queryKey,
-        ],
         context: 'fairteiler' as const,
         submitAsAccessViewId: isOwner ? selectedAccessViewId : undefined,
       };

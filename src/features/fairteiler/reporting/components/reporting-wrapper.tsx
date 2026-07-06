@@ -1,10 +1,8 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { SWRConfig } from 'swr';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton, StatSkeleton } from '@/components/ui/skeleton';
-import { fetcher } from '@/lib/services/swr';
 import { getContributions } from '@/server/contribution/queries';
 import { contributionKeys } from '@/server/contribution/query-keys';
 import { ReportingDashboard } from './reporting-dashboard';
@@ -29,19 +27,7 @@ export default function FairteilerReportingWrapper() {
     throw new Error('Berichtsdaten nicht gefunden.');
   }
 
-  return (
-    <SWRConfig
-      value={{
-        fetcher,
-        revalidateOnFocus: false,
-        revalidateOnMount: false,
-        revalidateIfStale: false,
-        revalidateOnReconnect: true,
-      }}
-    >
-      <ReportingDashboard data={data.data} />
-    </SWRConfig>
-  );
+  return <ReportingDashboard data={data.data} />;
 }
 
 function ReportingGridSkeleton() {

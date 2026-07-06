@@ -20,8 +20,8 @@ export function AccessViewTableActions({ member }: { member: Member }) {
   const disableAccessView = useFormAction(disableAccessViewAction, undefined, {
     successMessage: 'Zugang erfolgreich deaktiviert.',
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: fairteilerKeys.active().queryKey,
+      void queryClient.invalidateQueries({
+        queryKey: fairteilerKeys.all().queryKey,
       });
     },
   });

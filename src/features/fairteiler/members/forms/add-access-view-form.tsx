@@ -61,7 +61,7 @@ export function AddAccessViewForm({
         setCredentials(data);
         setFormSubmitted(true);
         await queryClient.invalidateQueries({
-          queryKey: fairteilerKeys.active().queryKey,
+          queryKey: fairteilerKeys.all().queryKey,
         });
       }
     },

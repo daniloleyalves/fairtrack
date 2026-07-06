@@ -1,24 +1,11 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { preload } from 'swr';
 import { Card } from '@/components/ui/card';
 import { ListSkeleton, Skeleton } from '@/components/ui/skeleton';
-import {
-  CATEGORIES_BY_FAIRTEILER_KEY,
-  COMPANIES_BY_FAIRTEILER_KEY,
-  ORIGINS_BY_FAIRTEILER_KEY,
-} from '@/lib/config/api-routes';
-import { fetcher } from '@/lib/services/swr';
 import { getFairteilerDashboardData } from '@/server/fairteiler/queries';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { FairteilerDashboard } from './fairteiler-dashboard';
-
-// Catalog preloads stay on SWR until Phase 5 (downstream mutation forms
-// still consume these keys).
-preload(ORIGINS_BY_FAIRTEILER_KEY, fetcher);
-preload(CATEGORIES_BY_FAIRTEILER_KEY, fetcher);
-preload(COMPANIES_BY_FAIRTEILER_KEY, fetcher);
 
 export interface DashboardData {
   keyFigures: {
