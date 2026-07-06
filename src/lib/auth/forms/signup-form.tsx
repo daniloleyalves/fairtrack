@@ -105,16 +105,18 @@ export function SignUpForm({
     // when autoSignIn is false (anti-enumeration). Surface the duplicate here so
     // the user sees a clear error instead of being silently redirected to sign-in.
     setIsPending(true);
-    const existing = await checkUserSecureStatusAction({ email: values.email });
-    if (existing.success && existing.data?.userExists) {
-      form.setError('root.serverError', {
-        message: getErrorMessage('USER_ALREADY_EXISTS', 'de'),
-      });
-      setIsPending(false);
-      return;
-    }
-
     try {
+      const existing = await checkUserSecureStatusAction({
+        email: values.email,
+      });
+      if (existing.success && existing.data?.userExists) {
+        form.setError('root.serverError', {
+          message: getErrorMessage('USER_ALREADY_EXISTS', 'de'),
+        });
+        setIsPending(false);
+        return;
+      }
+
       await authClient.signUp.email(
         {
           firstName: values.firstName,
@@ -195,6 +197,7 @@ export function SignUpForm({
       );
     } catch (error: unknown) {
       console.error('Server Action: Error signing in.', error);
+      setIsPending(false);
     }
   }
 

@@ -1,1 +1,1 @@
-ALTER TABLE "auth"."user" ALTER COLUMN "phone" SET DATA TYPE text USING "phone"::text;
+ALTER TABLE "auth"."user" ALTER COLUMN "phone" SET DATA TYPE text USING NULL::text;
