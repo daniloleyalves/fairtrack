@@ -30,13 +30,14 @@ export function useUserHistoryData() {
   const loadedCount = current?.data?.length ?? 0;
 
   return {
+    isPending: initialQuery.isPending,
     contributions: current?.data ?? [],
     totalCount,
     loadedCount,
     isLoadingAll: loadingMode === 'all' && allQuery.isPending,
     hasLoadedAll:
       (loadingMode === 'all' && !allQuery.isPending && !!allQuery.data) ||
-      loadedCount === totalCount,
+      (!initialQuery.isPending && loadedCount === totalCount),
     isEmpty: current?.data?.length === 0,
 
     loadAll: () => setLoadingMode('all'),

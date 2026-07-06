@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import { UserHistoryWrapper } from '@/features/user/history/components/user-history-wrapper';
 import { BlurFade } from '@/components/magicui/blur-fade';
 import { NavButton } from '@/components/ui/nav-button';
@@ -6,8 +5,6 @@ import { UserNav } from '@/components/nav/user-nav';
 import { getSession } from '@/server/user/queries';
 import { headers } from 'next/headers';
 import { UnauthorizedAccess } from '@/components/unauthorized-access';
-import { Skeleton, TableSkeleton } from '@/components/ui/skeleton';
-import { Card, CardContent } from '@/components/ui/card';
 
 export default async function UserHistoryPage() {
   const nextHeaders = await headers();
@@ -74,30 +71,7 @@ export default async function UserHistoryPage() {
         </div>
       </div>
 
-      <Suspense fallback={<UserHistorySkeleton />}>
-        <UserHistoryWrapper />
-      </Suspense>
+      <UserHistoryWrapper />
     </div>
-  );
-}
-
-function UserHistorySkeleton() {
-  return (
-    <Card>
-      <CardContent>
-        <div className='mb-4 flex flex-1 flex-col flex-wrap gap-2 md:flex-row md:items-center md:gap-4'>
-          <Skeleton variant='onCard' className='h-9 w-[250px]' />
-          <Skeleton variant='onCard' className='h-9 w-[200px]' />
-          <div className='flex flex-wrap gap-2'>
-            <Skeleton variant='onCard' className='h-9 w-[120px]' />
-            <Skeleton variant='onCard' className='h-9 w-[100px]' />
-            <Skeleton variant='onCard' className='h-9 w-[110px]' />
-            <Skeleton variant='onCard' className='h-9 w-[90px]' />
-          </div>
-        </div>
-
-        <TableSkeleton rows={8} columns={6} showPagination />
-      </CardContent>
-    </Card>
   );
 }
