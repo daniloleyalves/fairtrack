@@ -542,9 +542,7 @@ describe('DTO Layer', () => {
             category: { name: 'Test Category', image: null },
           },
         ];
-        const mockCalendarData = [
-          { date: new Date('2024-01-01'), quantity: '10.5' },
-        ];
+        const mockCalendarData = [{ date: '2024-01-01', quantity: '10.5' }];
 
         vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue(
           mockSession,
@@ -602,7 +600,7 @@ describe('DTO Layer', () => {
             },
           ],
           recentContributions: mockRecentContributions,
-          calendarData: [{ value: new Date('2024-01-01'), quantity: 10.5 }],
+          calendarData: [{ value: '2024-01-01', quantity: 10.5 }],
         });
       });
 
@@ -657,8 +655,8 @@ describe('DTO Layer', () => {
           },
         ];
         const mockCalendarData = [
-          { date: new Date('2024-01-01'), quantity: null },
-          { date: new Date('2024-01-02'), quantity: '15.5' },
+          { date: '2024-01-01', quantity: null },
+          { date: '2024-01-02', quantity: '15.5' },
         ];
 
         vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue(
@@ -691,8 +689,8 @@ describe('DTO Layer', () => {
           },
         ]);
         expect(result.calendarData).toEqual([
-          { value: new Date('2024-01-01'), quantity: 0 },
-          { value: new Date('2024-01-02'), quantity: 15.5 },
+          { value: '2024-01-01', quantity: 0 },
+          { value: '2024-01-02', quantity: 15.5 },
         ]);
       });
     });

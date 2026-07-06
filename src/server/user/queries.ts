@@ -116,8 +116,6 @@ export async function getUserContributions(
 
 /**
  * Orchestrates loading and transforming all data required for the user dashboard.
- * @param headers The request headers for authentication.
- * @returns The fully formatted dashboard data object.
  */
 export async function getUserDashboardData() {
   const session = await loadAuthenticatedSession(await headers());
@@ -184,11 +182,22 @@ export async function getUserDashboardData() {
 
   const transformedMilestoneData = transformMilestoneData(milestoneData);
 
+  const formattedRecentContributions = (recentContributions ?? []).map((c) => ({
+    id: c.id,
+    date: c.date,
+    title: c.title,
+    quantity: c.quantity,
+    category: {
+      name: c.category.name ?? 'Unkategorisiert',
+      image: c.category.image,
+    },
+  }));
+
   return {
     keyFigures: formattedKeyFigures,
     categoryDistribution: formattedCategoryDistribution,
     originDistribution: formattedOriginDistribution,
-    recentContributions: recentContributions ?? [],
+    recentContributions: formattedRecentContributions,
     calendarData: formattedCalendarData,
     milestoneData: transformedMilestoneData,
   };

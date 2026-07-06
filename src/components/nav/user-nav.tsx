@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { useTransition } from 'react';
 import { handleAsyncAction } from '@/lib/client-error-handling';
 import { signOutAction } from '@/lib/auth/auth-actions';
+import { useQueryClient } from '@tanstack/react-query';
 import { ChevronsUpDown, Loader2, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -88,12 +89,14 @@ export function UserNavContent({
 function SignOutMenuItem() {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const handleSignOut = () => {
     startTransition(() => {
       handleAsyncAction(() => signOutAction({}), undefined, {
         showToast: false,
         onSuccess: (data) => {
+          queryClient.clear();
           if (data?.redirectTo) {
             router.push(data.redirectTo);
           }

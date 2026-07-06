@@ -14,26 +14,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { fetcher } from '@/lib/services/swr';
 import { formatNumber } from '@/lib/utils';
 import { vContribution } from '@/server/db/db-types';
+import { getVersionHistoryByCheckinId } from '@/server/contribution/queries';
+import { contributionKeys } from '@/server/contribution/query-keys';
+import { useQueryClient } from '@tanstack/react-query';
 import type { ColumnDef, Row } from '@tanstack/react-table';
 import { formatInTimeZone } from 'date-fns-tz';
-import {
-  ArrowUpDown,
-  Edit,
-  Eye,
-  History,
-  Loader2,
-  MoreHorizontal,
-} from 'lucide-react';
+import { ArrowUpDown, Edit, Eye, History, MoreHorizontal } from 'lucide-react';
 import Image from 'next/image';
-import { Suspense, useState } from 'react';
+import { useState } from 'react';
 import { DateRange } from 'react-day-picker';
-import { preload } from 'swr';
 import { HistoryEditModal } from './components/history-edit-modal';
 import { HistoryVersionHistory } from './components/history-version-history';
-import { FAIRTEILER_CONTRIBUTION_VERSION_HISTORY } from '@/lib/config/api-routes';
 
 export const columns: ColumnDef<vContribution>[] = [
   {
@@ -146,16 +139,17 @@ export const columns: ColumnDef<vContribution>[] = [
 
 const RowActions = ({ row }: { row: Row<vContribution> }) => {
   const historyItem = row.original;
+  const queryClient = useQueryClient();
 
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
 
   const preloadContributionVersionHistory = () => {
-    preload(
-      `${FAIRTEILER_CONTRIBUTION_VERSION_HISTORY}?checkinId=${row.original.checkinId}`,
-      fetcher,
-    );
+    queryClient.prefetchQuery({
+      ...contributionKeys.versionHistory(row.original.checkinId),
+      queryFn: () => getVersionHistoryByCheckinId(row.original.checkinId),
+    });
   };
 
   return (
@@ -195,9 +189,7 @@ const RowActions = ({ row }: { row: Row<vContribution> }) => {
               className='w-80'
               onFocusOutside={(e) => e.preventDefault()}
             >
-              <Suspense fallback={<Loader2 className='mx-auto animate-spin' />}>
-                <HistoryVersionHistory checkinId={historyItem.checkinId} />
-              </Suspense>
+              <HistoryVersionHistory checkinId={historyItem.checkinId} />
             </PopoverContent>
           </Popover>
         </DropdownMenuContent>

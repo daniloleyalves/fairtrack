@@ -220,7 +220,7 @@ export async function loadCalendarData(fairteilerId: string) {
   const [error, data] = await attempt(
     db
       .select({
-        date: sql<Date>`${vContributions.contributionDate}::date`,
+        date: sql<string>`${vContributions.contributionDate}::date`,
         quantity: sum(vContributions.quantity),
       })
       .from(vContributions)
