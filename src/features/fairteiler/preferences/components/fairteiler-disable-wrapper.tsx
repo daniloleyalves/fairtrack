@@ -25,13 +25,10 @@ export function FairteilerDisableWrapper({
   });
 
   const toggle = useMutation({
-    mutationFn: (disabled: boolean) => {
-      if (!fairteiler) throw new Error('No active fairteiler');
-      return invokeAction(toggleFairteilerDisabled, {
-        fairteilerId: fairteiler.id,
+    mutationFn: (disabled: boolean) =>
+      invokeAction(toggleFairteilerDisabled, {
         disabled,
-      });
-    },
+      }),
     onMutate: async (disabled) => {
       await queryClient.cancelQueries({ queryKey: activeKey });
       const previous =

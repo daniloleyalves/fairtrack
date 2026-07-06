@@ -34,8 +34,8 @@ import { useFormAction } from '@/lib/hooks/use-form-action';
 import { useIsMobile } from '@/lib/hooks/use-devices';
 import { editContributionAction } from '@/server/contribution/actions';
 import { contributionKeys } from '@/server/contribution/query-keys';
-import { useQueryClient } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { Dispatch, SetStateAction, useEffect, useTransition } from 'react';
@@ -73,6 +73,7 @@ export function HistoryEditModal({ item, open, setOpen }: EditModalProps) {
   });
 
   const editContribution = useFormAction(editContributionAction, form, {
+    successMessage: 'Beitrag erfolgreich bearbeitet.',
     onSuccess: () => {
       refresh();
       void queryClient.invalidateQueries({

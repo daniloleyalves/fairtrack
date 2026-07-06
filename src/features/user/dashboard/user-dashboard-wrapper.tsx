@@ -38,13 +38,25 @@ export interface UserDashboardData {
 }
 
 export default function UserDashboardWrapper() {
-  const { data: dashboardData, isPending } = useQuery({
+  const {
+    data: dashboardData,
+    isPending,
+    error,
+  } = useQuery({
     ...userKeys.dashboard(),
     queryFn: () => getUserDashboardData(),
   });
 
-  if (isPending || !dashboardData) {
+  if (isPending) {
     return <UserDashboardGridSkeleton />;
+  }
+
+  if (error) {
+    throw error;
+  }
+
+  if (!dashboardData) {
+    throw new Error('Dashboard-Daten nicht gefunden.');
   }
 
   return <UserDashboard dashboardData={dashboardData} />;

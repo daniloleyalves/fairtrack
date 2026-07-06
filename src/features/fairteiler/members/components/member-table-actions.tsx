@@ -52,6 +52,7 @@ export function MemberTableActions({ member }: { member: Member }) {
   const [isRemoveMemberModalOpen, setRemoveMemberModalOpen] = useState(false);
 
   const removeMember = useFormAction(removeMemberAction, undefined, {
+    successMessage: `Mitglied ${member.user.email} wurde erfolgreich entfernt.`,
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: fairteilerKeys.all().queryKey,
@@ -152,6 +153,7 @@ function ChangeRoleModal({
   });
 
   const updateRole = useFormAction(updateMemberRoleAction, form, {
+    successMessage: 'Rolle erfolgreich aktualisiert.',
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: fairteilerKeys.all().queryKey,

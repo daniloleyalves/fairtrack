@@ -112,44 +112,21 @@ export function ContributionProvider({
     enabled: clientEnabled,
   });
 
-  let fairteiler: Fairteiler | FairteilerWithMembers;
-  let origins: GenericItem[];
-  let categories: (GenericItem & { image?: string })[];
-  let companies: (GenericItem & { originId?: string })[];
-  let tutorial: FairteilerTutorialWithSteps | undefined;
+  const resolvedFairteiler: Fairteiler | FairteilerWithMembers | undefined =
+    initialData?.fairteiler ?? fairteilerQuery.data ?? undefined;
 
-  if (initialData) {
-    fairteiler = initialData.fairteiler;
-    origins = initialData.origins;
-    categories = initialData.categories as (GenericItem & { image?: string })[];
-    companies = initialData.companies as (GenericItem & {
-      originId?: string;
-    })[];
-    tutorial = initialData.tutorial;
-  } else {
-    if (
-      !fairteilerQuery.data ||
-      !originsQuery.data ||
-      !categoriesQuery.data ||
-      !companiesQuery.data
-    ) {
-      return <>{pendingFallback}</>;
-    }
-    fairteiler = fairteilerQuery.data;
-    origins = originsQuery.data;
-    categories = categoriesQuery.data as (GenericItem & { image?: string })[];
-    companies = companiesQuery.data as (GenericItem & { originId?: string })[];
-    tutorial = tutorialQuery.data ?? undefined;
-  }
+  const fairteilerCoords: Coordinates | null = resolvedFairteiler
+    ? {
+        latitude: parseFloat(resolvedFairteiler.geoLat),
+        longitude: parseFloat(resolvedFairteiler.geoLng),
+      }
+    : null;
 
-  const fairteilerCoords: Coordinates = {
-    latitude: parseFloat(fairteiler.geoLat),
-    longitude: parseFloat(fairteiler.geoLng),
-  };
-
-  const isLocationVerified =
+  const isLocationVerified = Boolean(
     coordinates &&
-    isWithinRadius(coordinates, fairteilerCoords, DEFAULT_PROXIMITY_RADIUS);
+    fairteilerCoords &&
+    isWithinRadius(coordinates, fairteilerCoords, DEFAULT_PROXIMITY_RADIUS),
+  );
 
   useEffect(() => {
     if (!trackUserLocation) {
@@ -179,6 +156,35 @@ export function ContributionProvider({
     isLocationVerified,
   ]);
 
+  if (!initialData) {
+    const queryError =
+      fairteilerQuery.error ??
+      originsQuery.error ??
+      categoriesQuery.error ??
+      companiesQuery.error;
+    if (queryError) {
+      throw queryError;
+    }
+
+    if (
+      !fairteilerQuery.data ||
+      !originsQuery.data ||
+      !categoriesQuery.data ||
+      !companiesQuery.data
+    ) {
+      return <>{pendingFallback}</>;
+    }
+  }
+
+  const fairteiler: Fairteiler | FairteilerWithMembers =
+    initialData?.fairteiler ?? fairteilerQuery.data!;
+  const origins: GenericItem[] = initialData?.origins ?? originsQuery.data!;
+  const categories = (initialData?.categories ??
+    categoriesQuery.data!) as (GenericItem & { image?: string })[];
+  const companies = (initialData?.companies ??
+    companiesQuery.data!) as (GenericItem & { originId?: string })[];
+  const tutorial = initialData?.tutorial ?? tutorialQuery.data ?? undefined;
+
   const requestLocation = () => {
     window.location.reload();
   };
@@ -192,7 +198,7 @@ export function ContributionProvider({
     tutorial,
     locationStatus,
     coordinates,
-    isLocationVerified: Boolean(isLocationVerified),
+    isLocationVerified,
     error,
     requestLocation,
   };

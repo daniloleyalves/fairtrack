@@ -8,16 +8,30 @@ import {
   loadKeyFigures,
 } from './dal';
 import { loadAuthenticatedSession } from '../user/dal';
-import { NotFoundError } from '../error-handling';
+import { NotFoundError, PermissionError } from '../error-handling';
 import { AuthError } from '../api-helpers';
 import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
+import { checkPermissionOnServer } from '@/lib/auth/auth';
 
 export async function getRecentCheckinsWithinLastMinute(
   headers: Headers,
   submitAsUserId?: string,
 ) {
   const session = await loadAuthenticatedSession(headers);
-  const userId = submitAsUserId ?? session.user.id;
+  let userId = session.user.id;
+
+  if (submitAsUserId && submitAsUserId !== session.user.id) {
+    const permissionResult = await checkPermissionOnServer(headers, {
+      member: ['create'],
+    });
+    if (!permissionResult.success) {
+      throw new PermissionError(
+        'Nur Inhaber:innen dürfen Beiträge im Namen von Zugangsprofilen einsehen.',
+      );
+    }
+    userId = submitAsUserId;
+  }
+
   if (!userId) {
     throw new AuthError('No active session');
   }

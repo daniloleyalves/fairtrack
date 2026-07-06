@@ -7,12 +7,14 @@ const PERMISSION_ERROR =
   'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen';
 
 interface CatalogMessages {
+  addSuccess?: string;
   removeSuccess?: string;
   updateSuccess?: string;
   suggestError?: string;
 }
 
 const DEFAULT_MESSAGES = {
+  addSuccess: 'Änderung erfolgreich gespeichert.',
   removeSuccess: 'Änderung erfolgreich gespeichert.',
   updateSuccess: 'Änderung erfolgreich gespeichert.',
   suggestError: 'Fehlgeschlagen, Vorschlag konnte nicht gespeichert werden.',
@@ -86,6 +88,9 @@ export function useCatalogResource<
         queryClient.setQueryData(chosenKey.queryKey, context.previous);
       }
       toast.error(PERMISSION_ERROR);
+    },
+    onSuccess: () => {
+      toast.success(m.addSuccess);
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: chosenKey.queryKey });

@@ -18,6 +18,7 @@ import { useQueryClient } from '@tanstack/react-query';
 export function AccessViewTableActions({ member }: { member: Member }) {
   const queryClient = useQueryClient();
   const disableAccessView = useFormAction(disableAccessViewAction, undefined, {
+    successMessage: 'Zugang erfolgreich deaktiviert.',
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: fairteilerKeys.all().queryKey,

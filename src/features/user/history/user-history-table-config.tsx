@@ -16,6 +16,9 @@ import {
 } from '@/components/ui/popover';
 import { formatNumber } from '@/lib/utils';
 import { vContribution } from '@/server/db/db-types';
+import { getVersionHistoryByCheckinId } from '@/server/contribution/queries';
+import { contributionKeys } from '@/server/contribution/query-keys';
+import { useQueryClient } from '@tanstack/react-query';
 import type { ColumnDef, Row } from '@tanstack/react-table';
 import { formatInTimeZone } from 'date-fns-tz';
 import { ArrowUpDown, Eye, History, MoreHorizontal } from 'lucide-react';
@@ -143,15 +146,27 @@ export const userHistoryColumns: ColumnDef<vContribution>[] = [
 
 const UserHistoryRowActions = ({ row }: { row: Row<vContribution> }) => {
   const historyItem = row.original;
+  const queryClient = useQueryClient();
 
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
+
+  const preloadContributionVersionHistory = () => {
+    queryClient.prefetchQuery({
+      ...contributionKeys.versionHistory(row.original.checkinId),
+      queryFn: () => getVersionHistoryByCheckinId(row.original.checkinId),
+    });
+  };
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant='ghost' className='size-8 p-0'>
+          <Button
+            variant='ghost'
+            className='size-8 p-0'
+            onPointerDown={preloadContributionVersionHistory}
+          >
             <span className='sr-only'>Menü öffnen</span>
             <MoreHorizontal className='size-4' />
           </Button>

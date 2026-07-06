@@ -6,11 +6,11 @@ import { StepFlowProgress } from '../db/db-types';
 import { loadFairteilerTutorialWithSteps, loadStepFlowProgress } from './dal';
 
 export async function getFairteilerTutorialWithSteps(fairteilerId?: string) {
-  let fairteilerIdentifier: string | null | undefined = fairteilerId;
+  let fairteilerIdentifier = fairteilerId;
 
   if (!fairteilerIdentifier) {
     const session = await loadAuthenticatedSession(await headers());
-    fairteilerIdentifier = session.session.activeOrganizationId;
+    fairteilerIdentifier = session.session.activeOrganizationId ?? undefined;
   }
 
   if (!fairteilerIdentifier) {
