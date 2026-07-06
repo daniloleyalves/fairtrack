@@ -63,6 +63,7 @@ export function MemberTableActions({ member }: { member: Member }) {
         undefined,
         {
           showToast: true,
+          successMessage: `Mitglied ${member.user.email} wurde erfolgreich entfernt.`,
           onSuccess: async () => {
             await mutate(ACTIVE_FAIRTEILER_KEY);
             setRemoveMemberModalOpen(false);
@@ -167,6 +168,7 @@ function ChangeRoleModal({
         {
           showToast: true,
           setFormError: true,
+          successMessage: 'Rolle erfolgreich aktualisiert.',
           onSuccess: async () => {
             await mutate(ACTIVE_FAIRTEILER_KEY);
             setOpen(false);

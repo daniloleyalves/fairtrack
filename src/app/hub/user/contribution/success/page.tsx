@@ -14,12 +14,12 @@ import {
 } from '@components/ui/card';
 import { Skeleton } from '@components/ui/skeleton';
 import { siteConfig } from '@/lib/config/site-config';
-import { getRecentCheckinsWithinLastMinute } from '@server/contribution/dto';
+import { getRecentCheckinsWithinLastMinute } from '@server/contribution/queries';
 import {
   getLatestContributions,
   getMilestoneData,
   getUserPreferences,
-} from '@server/user/dto';
+} from '@server/user/queries';
 import {
   AlertTriangle,
   ArrowRight,
@@ -98,7 +98,7 @@ async function SuccessDisplay({ checkins }: { checkins: RecentCheckin[] }) {
     try {
       const [latestContributions, milestoneData] = await Promise.all([
         getLatestContributions(nextHeaders, 5),
-        getMilestoneData(nextHeaders),
+        getMilestoneData(),
       ]);
 
       const transformedMilestoneData = transformMilestoneData(milestoneData);

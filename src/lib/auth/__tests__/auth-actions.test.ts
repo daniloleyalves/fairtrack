@@ -10,7 +10,7 @@ import {
   disableAccessViewAction,
 } from '../auth-actions';
 import { auth, checkPermissionOnServer } from '../auth';
-import { getActiveFairteiler } from '@server/fairteiler/dto';
+import { getActiveFairteiler } from '@server/fairteiler/queries';
 import { checkInvitationAndUser } from '@server/contribution/dal';
 import { updateFairteiler } from '@server/fairteiler/dal';
 import { put, del } from '@vercel/blob';
@@ -36,7 +36,7 @@ vi.mock('../auth', () => ({
   checkPermissionOnServer: vi.fn(),
 }));
 
-vi.mock('@server/fairteiler/dto', () => ({
+vi.mock('@server/fairteiler/queries', () => ({
   getActiveFairteiler: vi.fn(),
 }));
 
@@ -168,23 +168,14 @@ describe('Authentication Actions', () => {
       const result = await signOutAction({});
 
       expect(auth.api.signOut).toHaveBeenCalledWith({ headers: mockHeaders });
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.message).toBe('Erfolgreich abgemeldet.');
-        expect(result.data?.redirectTo).toBe('/sign-in');
-      }
+      expect(result).toEqual({ redirectTo: '/sign-in', shouldRefresh: true });
     });
 
-    it('should handle sign out errors gracefully', async () => {
+    it('should propagate sign out errors', async () => {
       const mockError = new Error('Sign out failed');
       vi.mocked(auth.api.signOut).mockRejectedValue(mockError);
 
-      const result = await signOutAction({});
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Sign out failed');
-      }
+      await expect(signOutAction({})).rejects.toThrow('Sign out failed');
     });
 
     it('should call signOut with correct headers', async () => {
@@ -194,10 +185,9 @@ describe('Authentication Actions', () => {
         success: true,
       } as MockSignOutResult);
 
-      const result = await signOutAction({});
+      await signOutAction({});
 
       expect(auth.api.signOut).toHaveBeenCalledWith({ headers: customHeaders });
-      expect(result.success).toBe(true);
     });
   });
 
@@ -342,13 +332,7 @@ describe('Authentication Actions', () => {
         invitationId: 'invitation-123',
       });
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.message).toBe(
-          'Invitation details retrieved successfully',
-        );
-        expect(result.data).toEqual(mockInvitationResultWithUserExists);
-      }
+      expect(result).toEqual(mockInvitationResultWithUserExists);
     });
 
     it('should handle non-existent invitation', async () => {
@@ -361,35 +345,23 @@ describe('Authentication Actions', () => {
       ).rejects.toBeInstanceOf(NotFoundError);
     });
 
-    it('should handle database errors gracefully', async () => {
+    it('should propagate database errors', async () => {
       const dbError = new Error('Database connection failed');
       vi.mocked(checkInvitationAndUser).mockRejectedValue(dbError);
 
-      const result = await checkInvitationAndUserAction({
-        invitationId: 'valid-id',
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Database connection failed');
-      }
+      await expect(
+        checkInvitationAndUserAction({ invitationId: 'valid-id' }),
+      ).rejects.toThrow('Database connection failed');
     });
 
-    it('should validate invitation ID format', async () => {
+    it('should throw validation error for empty invitation ID', async () => {
       vi.mocked(checkInvitationAndUser).mockResolvedValue(
         mockInvitationResultWithoutUserExists,
       );
 
-      const result = await checkInvitationAndUserAction({
-        invitationId: '',
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe(
-          'Ungültige Eingabe. Bitte überprüfen Sie Ihre Angaben.',
-        );
-      }
+      await expect(
+        checkInvitationAndUserAction({ invitationId: '' }),
+      ).rejects.toThrow();
     });
 
     it('should handle expired invitations', async () => {
@@ -405,10 +377,7 @@ describe('Authentication Actions', () => {
         invitationId: 'expired-invitation',
       });
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data?.isValid).toBe(false);
-      }
+      expect(result.isValid).toBe(false);
     });
 
     it('should handle invitations for non-existent users', async () => {
@@ -424,10 +393,7 @@ describe('Authentication Actions', () => {
         invitationId: 'new-user-invitation',
       });
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data?.userExists).toBe(false);
-      }
+      expect(result.userExists).toBe(false);
     });
   });
 
@@ -480,14 +446,10 @@ describe('Authentication Actions', () => {
         role: MemberRolesEnum.EMPLOYEE,
       });
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.message).toBe('Zugangsprofil erfolgreich erstellt!');
-        expect(result.data?.email).toBe('employee-2@test-fairteiler.local');
-        expect(result.data?.password).toBeDefined();
-        expect(typeof result.data?.password).toBe('string');
-        expect(result.data?.password.length).toBeGreaterThan(0);
-      }
+      expect(result.email).toBe('employee-2@test-fairteiler.local');
+      expect(result.password).toBeDefined();
+      expect(typeof result.password).toBe('string');
+      expect(result.password.length).toBeGreaterThan(0);
 
       expect(auth.api.signUpEmail).toHaveBeenCalledWith({
         body: {
@@ -516,10 +478,7 @@ describe('Authentication Actions', () => {
         role: MemberRolesEnum.GUEST,
       });
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data?.email).toBe('guest-1@test-fairteiler.local');
-      }
+      expect(result.email).toBe('guest-1@test-fairteiler.local');
 
       expect(auth.api.signUpEmail).toHaveBeenCalledWith({
         body: expect.objectContaining({
@@ -542,19 +501,16 @@ describe('Authentication Actions', () => {
       ).rejects.toBeInstanceOf(NotFoundError);
     });
 
-    it('should handle user creation failure', async () => {
+    it('should propagate user creation failure', async () => {
       const signUpError = new Error('Email already exists');
       vi.mocked(auth.api.signUpEmail).mockRejectedValue(signUpError);
 
-      const result = await addAccessViewAction({
-        name: 'Test Employee',
-        role: MemberRolesEnum.EMPLOYEE,
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Email already exists');
-      }
+      await expect(
+        addAccessViewAction({
+          name: 'Test Employee',
+          role: MemberRolesEnum.EMPLOYEE,
+        }),
+      ).rejects.toThrow('Email already exists');
     });
 
     it('should cleanup user when addMember fails', async () => {
@@ -562,15 +518,12 @@ describe('Authentication Actions', () => {
       vi.mocked(auth.api.addMember).mockRejectedValue(addMemberError);
       vi.mocked(auth.api.removeUser).mockResolvedValue({ success: true });
 
-      const result = await addAccessViewAction({
-        name: 'Test Employee',
-        role: MemberRolesEnum.EMPLOYEE,
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Failed to add member');
-      }
+      await expect(
+        addAccessViewAction({
+          name: 'Test Employee',
+          role: MemberRolesEnum.EMPLOYEE,
+        }),
+      ).rejects.toThrow('Failed to add member');
 
       expect(auth.api.removeUser).toHaveBeenCalledWith({
         body: { userId: mockNewUser.id },
@@ -623,25 +576,16 @@ describe('Authentication Actions', () => {
         role: MemberRolesEnum.EMPLOYEE,
       });
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data?.email).toBe('employee-4@test-fairteiler.local');
-      }
+      expect(result.email).toBe('employee-4@test-fairteiler.local');
     });
 
-    it('should handle validation errors', async () => {
-      const result = await addAccessViewAction({
-        name: '',
-        role: 'invalid-role' as MemberRolesEnum.EMPLOYEE,
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe(
-          'Ungültige Eingabe. Bitte überprüfen Sie Ihre Angaben.',
-        );
-        expect(result.issues).toBeDefined();
-      }
+    it('should throw on validation errors', async () => {
+      await expect(
+        addAccessViewAction({
+          name: '',
+          role: 'invalid-role' as MemberRolesEnum.EMPLOYEE,
+        }),
+      ).rejects.toThrow();
     });
   });
 
@@ -664,17 +608,10 @@ describe('Authentication Actions', () => {
     });
 
     it('should successfully remove member', async () => {
-      const result = await removeMemberAction({
+      await removeMemberAction({
         organizationId: 'fairteiler-123',
         email: 'member@example.com',
       });
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.message).toBe(
-          'Mitglied member@example.com wurde erfolgreich entfernt.',
-        );
-      }
 
       expect(auth.api.removeMember).toHaveBeenCalledWith({
         headers: mockHeaders,
@@ -685,34 +622,25 @@ describe('Authentication Actions', () => {
       });
     });
 
-    it('should handle removal errors', async () => {
+    it('should propagate removal errors', async () => {
       const removalError = new Error('Member not found');
       vi.mocked(auth.api.removeMember).mockRejectedValue(removalError);
 
-      const result = await removeMemberAction({
-        organizationId: 'fairteiler-123',
-        email: 'nonexistent@example.com',
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Member not found');
-      }
+      await expect(
+        removeMemberAction({
+          organizationId: 'fairteiler-123',
+          email: 'nonexistent@example.com',
+        }),
+      ).rejects.toThrow('Member not found');
     });
 
-    it('should validate input parameters', async () => {
-      const result = await removeMemberAction({
-        organizationId: '',
-        email: 'invalid-email',
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe(
-          'Ungültige Eingabe. Bitte überprüfen Sie Ihre Angaben.',
-        );
-        expect(result.issues).toBeDefined();
-      }
+    it('should throw on invalid input parameters', async () => {
+      await expect(
+        removeMemberAction({
+          organizationId: '',
+          email: 'invalid-email',
+        }),
+      ).rejects.toThrow();
     });
   });
 
@@ -747,16 +675,11 @@ describe('Authentication Actions', () => {
     });
 
     it('should successfully update member role', async () => {
-      const result = await updateMemberRoleAction({
+      await updateMemberRoleAction({
         memberId: 'member-123',
         userId: 'user-123',
         role: MemberRolesEnum.MEMBER,
       });
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.message).toBe('Rolle erfolgreich aktualisiert.');
-      }
 
       expect(auth.api.updateMemberRole).toHaveBeenCalledWith({
         headers: mockHeaders,
@@ -770,13 +693,11 @@ describe('Authentication Actions', () => {
     });
 
     it('should promote user to admin when role is owner', async () => {
-      const result = await updateMemberRoleAction({
+      await updateMemberRoleAction({
         memberId: 'member-123',
         userId: 'user-123',
         role: MemberRolesEnum.OWNER,
       });
-
-      expect(result.success).toBe(true);
 
       expect(auth.api.updateMemberRole).toHaveBeenCalledWith({
         headers: mockHeaders,
@@ -795,52 +716,40 @@ describe('Authentication Actions', () => {
       });
     });
 
-    it('should handle role update errors', async () => {
+    it('should propagate role update errors', async () => {
       const updateError = new Error('Insufficient permissions');
       vi.mocked(auth.api.updateMemberRole).mockRejectedValue(updateError);
 
-      const result = await updateMemberRoleAction({
-        memberId: 'member-123',
-        userId: 'user-123',
-        role: MemberRolesEnum.MEMBER,
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Insufficient permissions');
-      }
+      await expect(
+        updateMemberRoleAction({
+          memberId: 'member-123',
+          userId: 'user-123',
+          role: MemberRolesEnum.MEMBER,
+        }),
+      ).rejects.toThrow('Insufficient permissions');
     });
 
-    it('should handle admin promotion errors', async () => {
+    it('should propagate admin promotion errors', async () => {
       const adminError = new Error('Failed to set admin role');
       vi.mocked(auth.api.setRole).mockRejectedValue(adminError);
 
-      const result = await updateMemberRoleAction({
-        memberId: 'member-123',
-        userId: 'user-123',
-        role: MemberRolesEnum.OWNER,
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Failed to set admin role');
-      }
+      await expect(
+        updateMemberRoleAction({
+          memberId: 'member-123',
+          userId: 'user-123',
+          role: MemberRolesEnum.OWNER,
+        }),
+      ).rejects.toThrow('Failed to set admin role');
     });
 
-    it('should validate input parameters', async () => {
-      const result = await updateMemberRoleAction({
-        memberId: '',
-        userId: '',
-        role: 'invalid-role' as MemberRolesEnum.MEMBER,
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe(
-          'Ungültige Eingabe. Bitte überprüfen Sie Ihre Angaben.',
-        );
-        expect(result.issues).toBeDefined();
-      }
+    it('should throw on invalid input parameters', async () => {
+      await expect(
+        updateMemberRoleAction({
+          memberId: '',
+          userId: '',
+          role: 'invalid-role' as MemberRolesEnum.MEMBER,
+        }),
+      ).rejects.toThrow();
     });
   });
 
@@ -859,17 +768,10 @@ describe('Authentication Actions', () => {
     });
 
     it('should successfully send invitation', async () => {
-      const result = await inviteMemberAction({
+      await inviteMemberAction({
         email: 'newmember@example.com',
         role: MemberRolesEnum.MEMBER,
       });
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.message).toBe(
-          'Einladung erfolgreich an newmember@example.com gesendet!',
-        );
-      }
 
       expect(auth.api.createInvitation).toHaveBeenCalledWith({
         headers: mockHeaders,
@@ -881,49 +783,34 @@ describe('Authentication Actions', () => {
       });
     });
 
-    it('should handle invitation creation errors', async () => {
+    it('should propagate invitation creation errors', async () => {
       const invitationError = new Error('Email already invited');
       vi.mocked(auth.api.createInvitation).mockRejectedValue(invitationError);
 
-      const result = await inviteMemberAction({
-        email: 'existing@example.com',
-        role: MemberRolesEnum.MEMBER,
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Email already invited');
-      }
+      await expect(
+        inviteMemberAction({
+          email: 'existing@example.com',
+          role: MemberRolesEnum.MEMBER,
+        }),
+      ).rejects.toThrow('Email already invited');
     });
 
-    it('should validate email format', async () => {
-      const result = await inviteMemberAction({
-        email: 'invalid-email',
-        role: MemberRolesEnum.MEMBER,
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe(
-          'Ungültige Eingabe. Bitte überprüfen Sie Ihre Angaben.',
-        );
-        expect(result.issues).toBeDefined();
-      }
+    it('should throw on invalid email format', async () => {
+      await expect(
+        inviteMemberAction({
+          email: 'invalid-email',
+          role: MemberRolesEnum.MEMBER,
+        }),
+      ).rejects.toThrow();
     });
 
-    it('should validate role', async () => {
-      const result = await inviteMemberAction({
-        email: 'valid@example.com',
-        role: 'invalid-role' as MemberRolesEnum.MEMBER,
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe(
-          'Ungültige Eingabe. Bitte überprüfen Sie Ihre Angaben.',
-        );
-        expect(result.issues).toBeDefined();
-      }
+    it('should throw on invalid role', async () => {
+      await expect(
+        inviteMemberAction({
+          email: 'valid@example.com',
+          role: 'invalid-role' as MemberRolesEnum.MEMBER,
+        }),
+      ).rejects.toThrow();
     });
 
     it('should send invitation for different roles', async () => {
@@ -934,12 +821,11 @@ describe('Authentication Actions', () => {
       ] as const;
 
       for (const role of roles) {
-        const result = await inviteMemberAction({
+        await inviteMemberAction({
           email: `${role}@example.com`,
           role,
         });
 
-        expect(result.success).toBe(true);
         expect(auth.api.createInvitation).toHaveBeenCalledWith({
           headers: mockHeaders,
           body: {
@@ -985,11 +871,7 @@ describe('Authentication Actions', () => {
         memberId: 'member-123',
       });
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.message).toBe('Zugang erfolgreich deaktiviert.');
-        expect(result.data).toBeDefined();
-      }
+      expect(result).toBeDefined();
 
       expect(auth.api.banUser).toHaveBeenCalledWith({
         headers: mockHeaders,
@@ -1008,63 +890,54 @@ describe('Authentication Actions', () => {
       });
     });
 
-    it('should handle ban user errors', async () => {
+    it('should propagate ban user errors', async () => {
       const banError = new Error('User not found');
       vi.mocked(auth.api.banUser).mockRejectedValue(banError);
 
-      const result = await disableAccessViewAction({
-        userId: 'nonexistent-user',
-        memberId: 'member-123',
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('User not found');
-      }
+      await expect(
+        disableAccessViewAction({
+          userId: 'nonexistent-user',
+          memberId: 'member-123',
+        }),
+      ).rejects.toThrow('User not found');
     });
 
-    it('should handle role update errors', async () => {
+    it('should propagate role update errors', async () => {
       const roleError = new Error('Failed to update role');
       vi.mocked(auth.api.updateMemberRole).mockRejectedValue(roleError);
 
-      const result = await disableAccessViewAction({
-        userId: 'user-123',
-        memberId: 'member-123',
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Failed to update role');
-      }
+      await expect(
+        disableAccessViewAction({
+          userId: 'user-123',
+          memberId: 'member-123',
+        }),
+      ).rejects.toThrow('Failed to update role');
     });
 
-    it('should validate input parameters', async () => {
+    it('should propagate validation errors from ban', async () => {
       const banError = new Error('User ID required');
       vi.mocked(auth.api.banUser).mockRejectedValue(banError);
 
-      const result = await disableAccessViewAction({
-        userId: '',
-        memberId: '',
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('User ID required');
-      }
+      await expect(
+        disableAccessViewAction({
+          userId: '',
+          memberId: '',
+        }),
+      ).rejects.toThrow('User ID required');
     });
 
-    it('should continue with role update even if ban fails', async () => {
+    it('should not call role update if ban fails', async () => {
       const banError = new Error('Ban failed');
       vi.mocked(auth.api.banUser).mockRejectedValue(banError);
 
-      const result = await disableAccessViewAction({
-        userId: 'user-123',
-        memberId: 'member-123',
-      });
+      await expect(
+        disableAccessViewAction({
+          userId: 'user-123',
+          memberId: 'member-123',
+        }),
+      ).rejects.toThrow('Ban failed');
 
-      expect(result.success).toBe(false);
       expect(auth.api.banUser).toHaveBeenCalled();
-      // Role update should not be called if ban fails
       expect(auth.api.updateMemberRole).not.toHaveBeenCalled();
     });
   });
@@ -1221,7 +1094,7 @@ describe('Authentication Actions', () => {
         const results = await Promise.all(promises);
 
         results.forEach((result) => {
-          expect(result.success).toBe(true);
+          expect(result.email).toBeDefined();
         });
       });
 
@@ -1249,23 +1122,20 @@ describe('Authentication Actions', () => {
 
         const results = await Promise.all(promises);
 
+        // updateMemberRoleAction returns void; each call should resolve
+        // without throwing.
         results.forEach((result) => {
-          expect(result.success).toBe(true);
+          expect(result).toBeUndefined();
         });
       });
     });
 
     describe('Network and Timeout Scenarios', () => {
-      it('should handle network timeouts in auth operations', async () => {
+      it('should propagate network timeouts in auth operations', async () => {
         const timeoutError = new Error('Network timeout');
         vi.mocked(auth.api.signOut).mockRejectedValue(timeoutError);
 
-        const result = await signOutAction({});
-
-        expect(result.success).toBe(false);
-        if (!result.success) {
-          expect(result.error).toBe('Network timeout');
-        }
+        await expect(signOutAction({})).rejects.toThrow('Network timeout');
       });
 
       it('should handle slow database responses', async () => {
@@ -1283,7 +1153,7 @@ describe('Authentication Actions', () => {
           invitationId: 'slow-response',
         });
 
-        expect(result.success).toBe(true);
+        expect(result).toEqual(mockInvitationResultWithUserExists);
       });
     });
 
@@ -1361,12 +1231,13 @@ describe('Authentication Actions', () => {
         );
         vi.mocked(auth.api.removeUser).mockResolvedValue({ success: true });
 
-        const result = await addAccessViewAction({
-          name: 'Test Employee',
-          role: MemberRolesEnum.EMPLOYEE,
-        });
+        await expect(
+          addAccessViewAction({
+            name: 'Test Employee',
+            role: MemberRolesEnum.EMPLOYEE,
+          }),
+        ).rejects.toThrow('Member addition failed');
 
-        expect(result.success).toBe(false);
         expect(auth.api.removeUser).toHaveBeenCalledWith({
           body: { userId: mockUserId },
         });
@@ -1406,15 +1277,12 @@ describe('Authentication Actions', () => {
           new Error('Cleanup failed'),
         );
 
-        const result = await addAccessViewAction({
-          name: 'Test Employee',
-          role: MemberRolesEnum.EMPLOYEE,
-        });
-
-        expect(result.success).toBe(false);
-        if (!result.success) {
-          expect(result.error).toBe('Member addition failed');
-        }
+        await expect(
+          addAccessViewAction({
+            name: 'Test Employee',
+            role: MemberRolesEnum.EMPLOYEE,
+          }),
+        ).rejects.toThrow('Member addition failed');
       });
     });
 
@@ -1440,19 +1308,16 @@ describe('Authentication Actions', () => {
         }
       });
 
-      it('should handle invalid authentication tokens', async () => {
+      it('should propagate invalid authentication tokens', async () => {
         const invalidTokenError = new Error('Invalid token');
         vi.mocked(auth.api.removeMember).mockRejectedValue(invalidTokenError);
 
-        const result = await removeMemberAction({
-          organizationId: 'fairteiler-123',
-          email: 'member@example.com',
-        });
-
-        expect(result.success).toBe(false);
-        if (!result.success) {
-          expect(result.error).toBe('Invalid token');
-        }
+        await expect(
+          removeMemberAction({
+            organizationId: 'fairteiler-123',
+            email: 'member@example.com',
+          }),
+        ).rejects.toThrow('Invalid token');
       });
     });
   });

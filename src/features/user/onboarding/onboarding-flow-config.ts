@@ -5,7 +5,7 @@ import {
   StepConfig,
 } from '@/lib/factories/step-flow-factory';
 import { saveOnboardingProgressAction } from '@/server/user/actions';
-import { OnboardingData } from '@/server/user/dto';
+import { OnboardingData } from '@/server/user/types';
 import {
   OnboardingMetadata,
   OnboardingStepData,

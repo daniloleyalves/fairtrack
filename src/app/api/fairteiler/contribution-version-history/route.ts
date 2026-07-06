@@ -1,5 +1,5 @@
 import { createApiRoute } from '@server/api-helpers';
-import { getVersionHistoryByCheckinId } from '@server/contribution/dto';
+import { getVersionHistoryByCheckinId } from '@server/contribution/queries';
 
 /**
  * Handles GET request to the /api/fairteiler/contribution-version-history route.
@@ -12,10 +12,5 @@ export const GET = createApiRoute(async (request) => {
     throw Error('checkinId not found');
   }
 
-  const contributionVersionHistory = await getVersionHistoryByCheckinId(
-    request.headers,
-    checkinId,
-  );
-
-  return contributionVersionHistory;
+  return await getVersionHistoryByCheckinId(checkinId);
 });

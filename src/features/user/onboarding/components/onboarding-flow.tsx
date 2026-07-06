@@ -29,7 +29,7 @@ import { Award, Sparkles, Flame, Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { handleAsyncAction } from '@/lib/client-error-handling';
 import { completeOnboardingAction } from '@/server/user/actions';
-import { OnboardingData } from '@/server/user/dto';
+import { OnboardingData } from '@/server/user/types';
 import { useRouter } from 'next/navigation';
 
 export function OnboardingFlow({
@@ -81,10 +81,10 @@ export function OnboardingFlow({
         () => completeOnboardingAction(allStepData),
         undefined,
         {
-          showToast: true,
-          onSuccess: (result) => {
-            if (result.data?.redirectTo) {
-              router.push(result.data?.redirectTo);
+          successMessage: 'Onboarding erfolgreich!',
+          onSuccess: (data) => {
+            if (data?.redirectTo) {
+              router.push(data.redirectTo);
             }
           },
         },

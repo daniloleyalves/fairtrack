@@ -51,10 +51,7 @@ export const suggestNewOriginAction = createAction({
       throw new NotFoundError('Origin', 'after creation');
     }
 
-    return {
-      message: 'Herkunft erfolgreich vorgeschlagen.',
-      data: input,
-    };
+    return input;
   },
 });
 
@@ -193,10 +190,7 @@ export const suggestNewCategoryAction = createAction({
       throw new NotFoundError('Category', 'after creation');
     }
 
-    return {
-      message: 'Kategorie erfolgreich vorgeschlagen.',
-      data: input,
-    };
+    return input;
   },
 });
 
@@ -335,10 +329,7 @@ export const suggestNewCompanyAction = createAction({
       throw new Error('Failed to create new company');
     }
 
-    return {
-      message: 'Betrieb erfolgreich vorgeschlagen.',
-      data: input,
-    };
+    return input;
   },
 });
 

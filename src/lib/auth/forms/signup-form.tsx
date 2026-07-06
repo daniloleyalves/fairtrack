@@ -69,22 +69,18 @@ export function SignUpForm({
     if (invitationId) {
       handleClientOperation(
         async () => {
-          const result = await checkInvitationAndUserAction({ invitationId });
+          const data = await checkInvitationAndUserAction({ invitationId });
 
-          if (result.success && result.data) {
-            // If user already exists, redirect to sign-in with invitationId
-            if (result.data.userExists) {
-              router.push(`/sign-in?invitationId=${invitationId}`);
-              return;
-            }
-
-            setInvitationData(result.data);
-
-            // Pre-fill email for new user signup
-            form.setValue('email', result.data.invitation.email);
-          } else if (!result.success) {
-            throw new Error(result.error || 'Failed to check invitation');
+          // If user already exists, redirect to sign-in with invitationId
+          if (data.userExists) {
+            router.push(`/sign-in?invitationId=${invitationId}`);
+            return;
           }
+
+          setInvitationData(data);
+
+          // Pre-fill email for new user signup
+          form.setValue('email', data.invitation.email);
         },
         noop,
         (error) => {
@@ -109,7 +105,7 @@ export function SignUpForm({
       const existing = await checkUserSecureStatusAction({
         email: values.email,
       });
-      if (existing.success && existing.data?.userExists) {
+      if (existing.userExists) {
         form.setError('root.serverError', {
           message: getErrorMessage('USER_ALREADY_EXISTS', 'de'),
         });

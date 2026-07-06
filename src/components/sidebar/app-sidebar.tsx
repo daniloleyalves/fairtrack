@@ -14,14 +14,14 @@ import { headers } from 'next/headers';
 import {
   getActiveMembership,
   getActiveFairteiler,
-} from '@server/fairteiler/dto';
-import { getSession } from '@server/user/dto';
+} from '@server/fairteiler/queries';
+import { getSession } from '@server/user/queries';
 
 export async function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const nextHeaders = await headers();
-  const fairteiler = await getActiveFairteiler(nextHeaders);
+  const fairteiler = await getActiveFairteiler();
   const membership = await getActiveMembership(nextHeaders);
   const session = await getSession(nextHeaders);
 

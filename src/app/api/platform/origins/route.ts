@@ -1,5 +1,5 @@
 import { createApiRoute } from '@server/api-helpers';
-import { getOrigins } from '@server/fairteiler/dto';
+import { getOrigins } from '@server/fairteiler/queries';
 
 /**
  * Handles GET requests to the /api/platform/origins route.

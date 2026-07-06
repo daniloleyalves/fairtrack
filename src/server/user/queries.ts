@@ -1,4 +1,6 @@
 import 'server-only';
+
+import { headers } from 'next/headers';
 import {
   addMilestoneEvent,
   loadAuthenticatedSession,
@@ -17,15 +19,11 @@ import {
 import { loadStepFlowProgress } from '../tutorial/dal';
 import { AuthError } from '../api-helpers';
 import { NotFoundError } from '../error-handling';
-import {
-  ExperienceLevel,
-  StepFlowProgress,
-  UserPreferences,
-} from '../db/db-types';
+import { UserPreferences } from '../db/db-types';
+import { OnboardingData } from './types';
 import { transformMilestoneData } from '@/features/user/gamification/milestones/milestone-utils';
 import { calculateUserAllTimeStreaks } from '@/features/user/gamification/streaks/streak-processor';
 import { gamificationElements } from '@/features/user/gamification/gamification-config';
-import { GamificationElement } from '@/features/user/onboarding/onboarding-flow-types';
 import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
 
 export async function getSession(
@@ -121,8 +119,8 @@ export async function getUserContributions(
  * @param headers The request headers for authentication.
  * @returns The fully formatted dashboard data object.
  */
-export async function getUserDashboardData(headers: Headers) {
-  const session = await loadAuthenticatedSession(headers);
+export async function getUserDashboardData() {
+  const session = await loadAuthenticatedSession(await headers());
   const userId = session.user.id;
   if (!userId) {
     throw new AuthError('No active session.');
@@ -148,38 +146,41 @@ export async function getUserDashboardData(headers: Headers) {
     {
       value: parseFloat(keyFigures?.[0].totalQuantity ?? '0'),
       description: 'gerettet',
-      color: 'primary',
+      color: 'primary' as const,
       unit: 'kg',
     },
     {
       value: keyFigures?.[0].totalContributions ?? 0,
       description: 'Abgaben',
-      color: 'default',
+      color: 'default' as const,
     },
   ];
 
   const formattedCategoryDistribution = {
     name: 'Kategorien',
-    data: categoryDistribution?.map((item, index) => ({
-      position: index + 1,
-      value: parseFloat(item.totalQuantity?.toString() ?? '0'),
-      description: item.name ?? 'Unkategorisiert',
-    })),
+    data:
+      categoryDistribution?.map((item, index) => ({
+        position: index + 1,
+        value: parseFloat(item.totalQuantity?.toString() ?? '0'),
+        description: item.name ?? 'Unkategorisiert',
+      })) ?? [],
   };
 
   const formattedOriginDistribution = {
     name: 'Herkunft',
-    data: originDistribution?.map((item, index) => ({
-      position: index + 1,
-      value: parseFloat(item.totalQuantity?.toString() ?? '0'),
-      description: item.name ?? 'Unbekannt',
-    })),
+    data:
+      originDistribution?.map((item, index) => ({
+        position: index + 1,
+        value: parseFloat(item.totalQuantity?.toString() ?? '0'),
+        description: item.name ?? 'Unbekannt',
+      })) ?? [],
   };
 
-  const formattedCalendarData = calendarData?.map((d) => ({
-    value: d.date,
-    quantity: parseFloat(d.quantity?.toString() ?? '0'),
-  }));
+  const formattedCalendarData =
+    calendarData?.map((d) => ({
+      value: d.date,
+      quantity: parseFloat(d.quantity?.toString() ?? '0'),
+    })) ?? [];
 
   const transformedMilestoneData = transformMilestoneData(milestoneData);
 
@@ -187,21 +188,10 @@ export async function getUserDashboardData(headers: Headers) {
     keyFigures: formattedKeyFigures,
     categoryDistribution: formattedCategoryDistribution,
     originDistribution: formattedOriginDistribution,
-    recentContributions: recentContributions,
+    recentContributions: recentContributions ?? [],
     calendarData: formattedCalendarData,
     milestoneData: transformedMilestoneData,
   };
-}
-
-export interface OnboardingData {
-  user: {
-    id: string;
-    isFirstLogin: boolean;
-  };
-  experienceLevels: ExperienceLevel[];
-  gamificationElements: GamificationElement[];
-  userPreferences: UserPreferences | null | undefined;
-  stepFlowProgress: StepFlowProgress | null | undefined;
 }
 
 /**
@@ -284,8 +274,8 @@ export async function getUserStreak(headers: Headers) {
   return userStreak;
 }
 
-export async function getMilestoneData(headers: Headers) {
-  const session = await loadAuthenticatedSession(headers);
+export async function getMilestoneData() {
+  const session = await loadAuthenticatedSession(await headers());
   const userId = session.user.id;
 
   if (!userId) {

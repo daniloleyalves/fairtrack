@@ -1,7 +1,7 @@
 import { NumberTicker } from '@/components/magicui/number-ticker';
 import { Illustrations } from '@/lib/assets/illustrations';
 import { initialContributionQuantity } from '@/lib/config/site-config';
-import { getKeyFigures } from '@/server/contribution/dto';
+import { getKeyFigures } from '@/server/contribution/queries';
 import { Button } from '@components/ui/button';
 import {
   Popover,

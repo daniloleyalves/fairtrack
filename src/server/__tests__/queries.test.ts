@@ -4,7 +4,7 @@ import {
   getRecentCheckinsWithinLastMinute,
   getContributions,
   getVersionHistoryByCheckinId,
-} from '../contribution/dto';
+} from '../contribution/queries';
 import {
   getFairteilers,
   getActiveFairteiler,
@@ -16,8 +16,8 @@ import {
   getCompanies,
   getCompaniesByFairteiler,
   getFairteilerDashboardData,
-} from '../fairteiler/dto';
-import { getSession } from '../user/dto';
+} from '../fairteiler/queries';
+import { getSession } from '../user/queries';
 import * as dal from '../contribution/dal';
 import * as fairteilerDal from '../fairteiler/dal';
 import * as userDal from '../user/dal';
@@ -185,7 +185,7 @@ describe('DTO Layer', () => {
           mockFairteiler,
         );
 
-        const result = await getActiveFairteiler(mockHeaders);
+        const result = await getActiveFairteiler();
 
         expect(fairteilerDal.loadActiveOrganization).toHaveBeenCalledWith(
           mockHeaders,
@@ -223,7 +223,7 @@ describe('DTO Layer', () => {
       it('should fail when DAL returns null', async () => {
         vi.mocked(fairteilerDal.loadActiveOrganization).mockResolvedValue(null);
 
-        await expect(getActiveFairteiler(mockHeaders)).rejects.toThrow(
+        await expect(getActiveFairteiler()).rejects.toThrow(
           new NotFoundError('active fairteiler'),
         );
       });
@@ -471,7 +471,7 @@ describe('DTO Layer', () => {
         );
         vi.mocked(dal.loadContributions).mockResolvedValue(mockContributions);
 
-        const result = await getContributions(mockHeaders);
+        const result = await getContributions();
 
         expect(result).toEqual(mockContributions);
       });
@@ -486,10 +486,7 @@ describe('DTO Layer', () => {
           mockContributionVersionHistory,
         );
 
-        const result = await getVersionHistoryByCheckinId(
-          mockHeaders,
-          'checkin-001',
-        );
+        const result = await getVersionHistoryByCheckinId('checkin-001');
 
         const expectedResult = mockContributionVersionHistory.map((item) => ({
           id: item.id,
@@ -565,7 +562,7 @@ describe('DTO Layer', () => {
         );
         vi.mocked(dal.loadCalendarData).mockResolvedValue(mockCalendarData);
 
-        const result = await getFairteilerDashboardData(mockHeaders);
+        const result = await getFairteilerDashboardData();
 
         expect(userDal.loadAuthenticatedSession).toHaveBeenCalledWith(
           mockHeaders,
@@ -622,7 +619,7 @@ describe('DTO Layer', () => {
         vi.mocked(dal.loadRecentContributions).mockResolvedValue([]);
         vi.mocked(dal.loadCalendarData).mockResolvedValue([]);
 
-        const result = await getFairteilerDashboardData(mockHeaders);
+        const result = await getFairteilerDashboardData();
 
         expect(result.keyFigures).toEqual([
           {
@@ -678,7 +675,7 @@ describe('DTO Layer', () => {
         vi.mocked(dal.loadRecentContributions).mockResolvedValue([]);
         vi.mocked(dal.loadCalendarData).mockResolvedValue(mockCalendarData);
 
-        const result = await getFairteilerDashboardData(mockHeaders);
+        const result = await getFairteilerDashboardData();
 
         expect(result.categoryDistribution.data).toEqual([
           { position: 1, value: 0, description: 'Unkategorisiert' },
@@ -719,7 +716,7 @@ describe('DTO Layer', () => {
         );
         vi.mocked(dal.loadKeyFigures).mockRejectedValue(dbError);
 
-        await expect(getFairteilerDashboardData(mockHeaders)).rejects.toThrow(
+        await expect(getFairteilerDashboardData()).rejects.toThrow(
           'Database timeout',
         );
       });
@@ -732,9 +729,7 @@ describe('DTO Layer', () => {
           authError,
         );
 
-        await expect(getContributions(mockHeaders)).rejects.toThrow(
-          'Session expired',
-        );
+        await expect(getContributions()).rejects.toThrow('Session expired');
       });
 
       it('should handle authentication errors in getFairteilerDashboardData', async () => {
@@ -743,7 +738,7 @@ describe('DTO Layer', () => {
           authError,
         );
 
-        await expect(getFairteilerDashboardData(mockHeaders)).rejects.toThrow(
+        await expect(getFairteilerDashboardData()).rejects.toThrow(
           'Unauthorized',
         );
       });
@@ -768,7 +763,7 @@ describe('DTO Layer', () => {
         vi.mocked(dal.loadRecentContributions).mockResolvedValue([]);
         vi.mocked(dal.loadCalendarData).mockResolvedValue([]);
 
-        const result = await getFairteilerDashboardData(mockHeaders);
+        const result = await getFairteilerDashboardData();
 
         expect(result.keyFigures[0].value).toBeNaN();
         expect(result.keyFigures[1].value).toBe(-1);

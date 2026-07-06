@@ -1,4 +1,6 @@
 import 'server-only';
+
+import { headers } from 'next/headers';
 import {
   loadCheckinsWithinTimeframe,
   loadContributions,
@@ -40,19 +42,16 @@ export async function getRecentCheckinsWithinLastMinute(
   }));
 }
 
-export async function getContributions(
-  headers: Headers,
-  options?: {
-    platformWide?: boolean;
-    dateRange?: {
-      from: Date;
-      to: Date;
-    };
-    limit?: number;
-    offset?: number;
-  },
-) {
-  const session = await loadAuthenticatedSession(headers);
+export async function getContributions(options?: {
+  platformWide?: boolean;
+  dateRange?: {
+    from: Date;
+    to: Date;
+  };
+  limit?: number;
+  offset?: number;
+}) {
+  const session = await loadAuthenticatedSession(await headers());
   const fairteilerId = session.session.activeOrganizationId;
   if (!fairteilerId) {
     throw new AuthError('No active organization selected.');
@@ -89,11 +88,8 @@ export async function getContributions(
   return contributions;
 }
 
-export async function getVersionHistoryByCheckinId(
-  headers: Headers,
-  checkinId: string,
-) {
-  const session = await loadAuthenticatedSession(headers);
+export async function getVersionHistoryByCheckinId(checkinId: string) {
+  const session = await loadAuthenticatedSession(await headers());
   const fairteilerId = session.session.activeOrganizationId;
   if (!fairteilerId) {
     throw new AuthError('No active organization selected.');

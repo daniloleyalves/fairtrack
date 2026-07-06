@@ -93,9 +93,9 @@ function SignOutMenuItem() {
     startTransition(() => {
       handleAsyncAction(() => signOutAction({}), undefined, {
         showToast: false,
-        onSuccess: (result) => {
-          if (result.data?.redirectTo) {
-            router.push(result.data.redirectTo);
+        onSuccess: (data) => {
+          if (data?.redirectTo) {
+            router.push(data.redirectTo);
           }
         },
       });
