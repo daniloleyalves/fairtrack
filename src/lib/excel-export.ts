@@ -30,8 +30,6 @@ export async function exportContributionsToExcel({
     { header: 'Datum', key: 'contributionDate', width: 15 },
     { header: 'Menge (kg)', key: 'quantity', width: 10 },
     { header: 'Titel', key: 'foodTitle', width: 25 },
-    { header: 'Kühlen', key: 'foodCool', width: 10 },
-    { header: 'Haltbarkeit', key: 'shelfLife', width: 15 },
     { header: 'Kategorie', key: 'categoryName', width: 20 },
     { header: 'Herkunft', key: 'originName', width: 20 },
     { header: 'Betrieb', key: 'companyName', width: 20 },
@@ -65,10 +63,6 @@ export async function exportContributionsToExcel({
         : '',
       quantity: contribution.quantity,
       foodTitle: contribution.foodTitle ?? '',
-      foodCool: contribution.foodCool ? 'Ja' : 'Nein',
-      shelfLife: contribution.shelfLife
-        ? new Date(contribution.shelfLife).toLocaleDateString('de-DE')
-        : '',
       categoryName: contribution.categoryName ?? '',
       originName: contribution.originName ?? '',
       companyName: contribution.companyName ?? '',

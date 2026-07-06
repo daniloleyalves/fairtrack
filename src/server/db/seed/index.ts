@@ -2,7 +2,8 @@
 
 import * as schema from '../schema';
 import { devSeedData } from './data/dev';
-import { demoSeedData, DEMO_PASSWORD_HASH } from './data/demo';
+import { demoSeedData, DEMO_PASSWORD } from './data/demo';
+import { hashPassword } from 'better-auth/crypto';
 import {
   getOptionsFromArgs,
   cleanDatabase,
@@ -33,18 +34,19 @@ const getSeedData = (environment: Environment): SeedData => {
   }
 };
 
-const populateRelationships = (data: SeedData): SeedData => {
+const populateRelationships = async (data: SeedData): Promise<SeedData> => {
   // Create copies to avoid mutating original data
   const populatedData = structuredClone(data) as SeedData;
 
   // Create account records for demo users (so they can sign in)
   if (populatedData.accounts !== undefined) {
+    const demoPasswordHash = await hashPassword(DEMO_PASSWORD);
     populatedData.accounts = populatedData.users.map((user) => ({
       id: generateId(),
       accountId: user.id,
       providerId: 'credential',
       userId: user.id,
-      password: DEMO_PASSWORD_HASH,
+      password: demoPasswordHash,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     }));
@@ -495,7 +497,7 @@ const main = async () => {
     }
 
     const rawData = getSeedData(options.environment);
-    const populatedData = populateRelationships(rawData);
+    const populatedData = await populateRelationships(rawData);
 
     await seedDatabase(populatedData, options.verbose, db);
 

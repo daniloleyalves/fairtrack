@@ -6,7 +6,15 @@ export interface FetcherError<TInfo = string> extends Error {
 
 export const fetcher = async <T = unknown>(
   ...args: [RequestInfo, RequestInit?]
-) => {
+): Promise<T> => {
+  // Skip fetching on the server. Node's fetch can't resolve relative URLs and
+  // `useSWRSuspense` Postpones the render anyway — orphan `preload(url, fetcher)`
+  // calls in 'use client' modules also evaluate here, so a noop avoids
+  // unhandledRejection on relative URLs during SSR.
+  if (typeof window === 'undefined') {
+    return new Promise<T>(() => undefined);
+  }
+
   const res = await fetch(...args);
 
   if (!res.ok) {

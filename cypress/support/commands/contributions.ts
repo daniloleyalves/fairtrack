@@ -52,7 +52,6 @@ declare global {
         contributions: Array<{
           categoryId: string;
           quantity: number;
-          shelfLife?: Date | null;
         }>;
       }): Chainable<void>;
 
@@ -77,7 +76,6 @@ declare global {
       selectWizardCategory(
         categoryId: string,
         quantity: number,
-        shelfLife?: Date | null,
       ): Chainable<void>;
 
       /**
@@ -107,7 +105,6 @@ declare global {
           title?: string;
           allergens?: string;
           comment?: string;
-          cool?: boolean;
         },
       ): Chainable<void>;
 
@@ -247,7 +244,7 @@ Cypress.Commands.add('selectWizardCompany', (companyName: string) => {
 // Select category and fill details in wizard
 Cypress.Commands.add(
   'selectWizardCategory',
-  (categoryId: string, quantity: number, shelfLife?: Date | null) => {
+  (categoryId: string, quantity: number) => {
     // Load fixture and find the category name
     cy.fixture('contributions').then((contributions) => {
       const categories = contributions.testCategories;
@@ -266,18 +263,6 @@ Cypress.Commands.add(
 
       // Fill quantity in the details modal
       cy.get('input[name="quantity"]').clear().type(quantity.toString());
-
-      // Fill shelf life if provided
-      if (shelfLife !== undefined) {
-        const days = shelfLife
-          ? Math.ceil(
-              (new Date(shelfLife).getTime() - Date.now()) /
-                (1000 * 60 * 60 * 24),
-            )
-          : 0;
-
-        cy.get('input[name="shelfLife"]').clear().type(days.toString());
-      }
 
       // Save the contribution details
       cy.get('button').contains('Okay').click();
@@ -307,11 +292,7 @@ Cypress.Commands.add('completeWizardFlow', (data) => {
 
   // Step 3: Select categories and fill details
   data.contributions.forEach((contrib) => {
-    cy.selectWizardCategory(
-      contrib.categoryId,
-      contrib.quantity,
-      contrib.shelfLife,
-    );
+    cy.selectWizardCategory(contrib.categoryId, contrib.quantity);
     cy.wait(100);
   });
 
@@ -348,7 +329,6 @@ Cypress.Commands.add(
       title?: string;
       allergens?: string;
       comment?: string;
-      cool?: boolean;
     },
   ) => {
     const rowSelector = `table tbody tr:nth-child(${index + 1})`;
@@ -377,15 +357,6 @@ Cypress.Commands.add(
       cy.get('input[name*="comment"], textarea[name*="comment"]')
         .clear()
         .type(data.comment);
-    }
-
-    if (data.cool !== undefined) {
-      const coolSwitch = cy.get('input[name*="cool"]');
-      if (data.cool) {
-        coolSwitch.check();
-      } else {
-        coolSwitch.uncheck();
-      }
     }
   },
 );

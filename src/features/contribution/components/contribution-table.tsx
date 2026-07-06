@@ -114,9 +114,6 @@ function ContributionTableHead() {
         Betrieb
       </TableHead>
       <TableHead>Menge (kg)</TableHead>
-      <TableHead className={cn(!showAllColumns && 'hidden', 'sm:table-cell')}>
-        Haltbarkeit
-      </TableHead>
       <TableHead className='w-[48px]'></TableHead>
     </TableRow>
   );

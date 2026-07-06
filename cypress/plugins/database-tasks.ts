@@ -116,7 +116,7 @@ export const databaseTasks = {
 
       await testDb
         .update(schema.user)
-        .set({ ...result.data.user, role: 'admin' })
+        .set({ role: 'admin' })
         .where(eq(schema.user.id, result.data.user.id))
         .returning();
 

@@ -5,9 +5,10 @@ import { KeyFigure } from '@/features/statistics/components/key-figure';
 import { TimespanPicker } from '@/features/statistics/components/timespan-picker';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { defaultDateRange } from '@/lib/config/site-config';
 import { BlurFade } from '@components/magicui/blur-fade';
+import { startOfYear } from 'date-fns';
 import { useState } from 'react';
+import type { DateRange } from 'react-day-picker';
 import {
   getPlatformKeyFigures,
   getPlatformVolumeTrendData,
@@ -37,8 +38,9 @@ export function PlatformReportingDashboard({
   data,
   fairteilers,
 }: PlatformReportingDashboardProps) {
-  const [filters, setFilters] = useState<ReportFilters>({
-    dateRange: defaultDateRange,
+  const [filters, setFilters] = useState<ReportFilters>(() => {
+    const today = new Date();
+    return { dateRange: { from: startOfYear(today), to: today } };
   });
 
   const filteredData = applyFilters(data, filters);
@@ -89,6 +91,7 @@ export function PlatformReportingDashboard({
           </span>
 
           <TimespanPicker
+            dateRange={filters.dateRange as DateRange}
             onDateRangeChange={(e) =>
               setFilters((prev) => ({
                 ...prev,

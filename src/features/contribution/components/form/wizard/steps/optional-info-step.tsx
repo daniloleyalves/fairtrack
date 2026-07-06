@@ -9,15 +9,7 @@ import { Separator } from '@components/ui/separator';
 import { GenericItem } from '@server/db/db-types';
 import type { ContributionItem } from '@features/contribution/models/contribution';
 import { cn, formatNumber } from '@/lib/utils';
-import { differenceInCalendarDays, startOfToday } from 'date-fns';
-import {
-  MessageSquareText,
-  Store,
-  Tag,
-  Thermometer,
-  Wheat,
-  Apple,
-} from 'lucide-react';
+import { MessageSquareText, Store, Tag, Wheat, Apple } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 
@@ -35,7 +27,6 @@ function getFilledOptionalFields(
   return {
     // Title is considered "filled" if it's custom and not the default category name
     title: contribution.title && contribution.title !== categoryName,
-    cool: contribution.cool,
     company: !!contribution.company,
     allergens: !!contribution.allergens,
     comment: !!contribution.comment,
@@ -103,12 +94,6 @@ export function OptionalInfoStep({
                   </span>
                   <div className='md:text-md flex w-max gap-3 text-sm text-muted-foreground'>
                     <span>{formatNumber(contribution.quantity)} kg</span>
-                    <span>|</span>
-                    <span>
-                      {contribution.shelfLife
-                        ? `${differenceInCalendarDays(contribution.shelfLife, startOfToday())} Tage haltbar`
-                        : 'Unkritisch'}
-                    </span>
                   </div>
                 </div>
               </div>
@@ -122,11 +107,6 @@ export function OptionalInfoStep({
                       isFilled: filledFields.title,
                       icon: Tag,
                       label: 'Eigener Name',
-                    },
-                    {
-                      isFilled: filledFields.cool,
-                      icon: Thermometer,
-                      label: 'Gekühlt',
                     },
                     {
                       isFilled: filledFields.company,

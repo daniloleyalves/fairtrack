@@ -25,7 +25,10 @@ import { getErrorMessage } from '../auth-helpers';
 import { toast } from 'sonner';
 import { handleClientOperation, noop } from '@/lib/client-error-handling';
 import { SignUpFormValues, signUpSchema } from '../schemas';
-import { checkInvitationAndUserAction } from '../auth-actions';
+import {
+  checkInvitationAndUserAction,
+  checkUserSecureStatusAction,
+} from '../auth-actions';
 
 export function SignUpForm({
   className,
@@ -97,7 +100,23 @@ export function SignUpForm({
   async function onSubmit(values: z.infer<typeof signUpSchema>) {
     // Clear all existing errors before a new submission
     form.clearErrors(); // Clears all field and root errors
+
+    // Pre-check: better-auth 1.6+ returns a synthetic success on duplicate email
+    // when autoSignIn is false (anti-enumeration). Surface the duplicate here so
+    // the user sees a clear error instead of being silently redirected to sign-in.
+    setIsPending(true);
     try {
+      const existing = await checkUserSecureStatusAction({
+        email: values.email,
+      });
+      if (existing.success && existing.data?.userExists) {
+        form.setError('root.serverError', {
+          message: getErrorMessage('USER_ALREADY_EXISTS', 'de'),
+        });
+        setIsPending(false);
+        return;
+      }
+
       await authClient.signUp.email(
         {
           firstName: values.firstName,
@@ -178,6 +197,7 @@ export function SignUpForm({
       );
     } catch (error: unknown) {
       console.error('Server Action: Error signing in.', error);
+      setIsPending(false);
     }
   }
 

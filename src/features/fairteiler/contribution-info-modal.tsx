@@ -108,15 +108,6 @@ function InfoContent({
             label='Betrieb'
             value={item.foodCompany ?? item.companyName}
           />
-          <InfoRow label='Kühlen' value={item.foodCool ? 'Ja' : 'Nein'} />
-          <InfoRow
-            label='Genießbar bis'
-            value={
-              item.shelfLife
-                ? formatInTimeZone(item.shelfLife, 'UTC', 'dd.MM.yyyy')
-                : 'Unkritisch'
-            }
-          />
           <InfoRow
             label='Gerettet am'
             value={formatInTimeZone(item.contributionDate, 'UTC', 'dd.MM.yyyy')}

@@ -28,13 +28,6 @@ export const contributionFormSchema = z.object({
         .min(1, { message: 'Bitte wähle ein Herkunft aus' }),
       companyId: z.uuid().trim().nullable(),
       company: z.string().trim().nullable(),
-      cool: z.boolean(),
-      shelfLife: z
-        .date()
-        .refine((date) => date === null || date > new Date(), {
-          message: 'Haltbarkeit darf nicht in der Vergangenheit liegen',
-        })
-        .nullable(),
       allergens: z
         .string()
         .trim()

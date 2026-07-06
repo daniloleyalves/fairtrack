@@ -5,15 +5,15 @@ import { KeyFigure } from '@/features/statistics/components/key-figure';
 import { TimespanPicker } from '@/features/statistics/components/timespan-picker';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { defaultDateRange } from '@/lib/config/site-config';
 import { vContribution } from '@/server/db/db-types';
 import { BlurFade } from '@components/magicui/blur-fade';
+import { startOfYear } from 'date-fns';
 import { useState } from 'react';
+import type { DateRange } from 'react-day-picker';
 import {
   getContributionsByCategory,
   getContributionsByCompany,
   getContributionsByOrigin,
-  getCoolingRequirements,
   getKeyFigures,
   getVolumeTrendData,
   getCalendarData,
@@ -32,8 +32,9 @@ interface ReportingDashboardProps {
 }
 
 export function ReportingDashboard({ data }: ReportingDashboardProps) {
-  const [filters, setFilters] = useState<ReportFilters>({
-    dateRange: defaultDateRange,
+  const [filters, setFilters] = useState<ReportFilters>(() => {
+    const today = new Date();
+    return { dateRange: { from: startOfYear(today), to: today } };
   });
 
   const filteredData = applyFilters(data, filters);
@@ -44,7 +45,6 @@ export function ReportingDashboard({ data }: ReportingDashboardProps) {
   const originData = getContributionsByOrigin(filteredData);
   const categoryData = getContributionsByCategory(filteredData);
   const companyData = getContributionsByCompany(filteredData);
-  const coolingData = getCoolingRequirements(filteredData);
   const calendarData = getCalendarData(filteredData);
 
   // --- Handlers to update the filter state ---
@@ -84,6 +84,7 @@ export function ReportingDashboard({ data }: ReportingDashboardProps) {
           </span>
 
           <TimespanPicker
+            dateRange={filters.dateRange as DateRange}
             onDateRangeChange={(e) =>
               setFilters((prev) => ({
                 ...prev,
@@ -118,17 +119,6 @@ export function ReportingDashboard({ data }: ReportingDashboardProps) {
             title='Betrieb'
             filterKey='company'
             options={companyData.map((d) => ({
-              label: d.description,
-              value: d.description,
-            }))}
-            filters={filters}
-            setFilters={setFilters}
-          />
-
-          <ChartFilter
-            title='Kühlanforderungen'
-            filterKey='cool'
-            options={coolingData.map((d) => ({
               label: d.description,
               value: d.description,
             }))}
@@ -215,18 +205,6 @@ export function ReportingDashboard({ data }: ReportingDashboardProps) {
               handleAttributeDistributionFilter('company', value)
             }
             title='Betriebe'
-          />
-        </BlurFade>
-        <BlurFade delay={0.25} duration={0.2}>
-          <AttributeDistributionChart
-            attributeDistribution={{
-              name: 'Kühlen',
-              data: coolingData,
-            }}
-            onFilter={(value) =>
-              handleAttributeDistributionFilter('cool', value)
-            }
-            title='Kühlanforderungen'
           />
         </BlurFade>
       </div>
