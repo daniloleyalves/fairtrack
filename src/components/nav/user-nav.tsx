@@ -15,6 +15,7 @@ import { routes } from '@/lib/config/routes';
 import Link from 'next/link';
 import { useFormAction } from '@/lib/hooks/use-form-action';
 import { signOutAction } from '@/lib/auth/auth-actions';
+import { useQueryClient } from '@tanstack/react-query';
 import { ChevronsUpDown, Loader2, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -86,9 +87,11 @@ export function UserNavContent({
 // --- 4. The Sign Out Item Component ---
 function SignOutMenuItem() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { execute, isPending } = useFormAction(signOutAction, undefined, {
     showToast: false,
     onSuccess: (data) => {
+      queryClient.clear();
       if (data?.redirectTo) {
         router.push(data.redirectTo);
       }
