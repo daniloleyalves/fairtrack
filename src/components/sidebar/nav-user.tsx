@@ -27,6 +27,7 @@ import { UserAvatar } from '../user-avatar';
 import { handleAsyncAction } from '@/lib/client-error-handling';
 import { User } from '@/server/db/db-types';
 import { authClient } from '@/lib/auth/auth-client';
+import { useQueryClient } from '@tanstack/react-query';
 
 // --- 1. The Main Orchestrator Component ---
 export function NavUser({ user, routeKey }: { user: User; routeKey: string }) {
@@ -147,12 +148,14 @@ export function SignOutMenuItem() {
   const [isPending, startTransition] = useTransition();
   const { refetch } = authClient.useSession();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const handleSignOut = () => {
     startTransition(() => {
       handleAsyncAction(() => signOutAction({}), undefined, {
         showToast: false,
         onSuccess: (data) => {
+          queryClient.clear();
           if (data?.redirectTo) {
             router.push(data.redirectTo);
             refetch();

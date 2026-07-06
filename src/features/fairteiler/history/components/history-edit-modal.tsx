@@ -31,15 +31,15 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { handleAsyncAction } from '@/lib/client-error-handling';
-import { FAIRTEILER_CONTRIBUTION_VERSION_HISTORY } from '@/lib/config/api-routes';
 import { useIsMobile } from '@/lib/hooks/use-devices';
 import { editContributionAction } from '@/server/contribution/actions';
+import { contributionKeys } from '@/server/contribution/query-keys';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { Dispatch, SetStateAction, useEffect, useTransition } from 'react';
 import { useForm, UseFormReturn } from 'react-hook-form';
-import { useSWRConfig } from 'swr';
 import * as z from 'zod';
 import { HistoryVersionHistory } from './history-version-history';
 import { vContribution } from '@/server/db/db-types';
@@ -59,7 +59,7 @@ interface EditModalProps {
 }
 
 export function HistoryEditModal({ item, open, setOpen }: EditModalProps) {
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
   const { refresh } = useHistoryData();
   const isMobile = useIsMobile();
   const [isSubmitting, startTransition] = useTransition();
@@ -102,11 +102,13 @@ export function HistoryEditModal({ item, open, setOpen }: EditModalProps) {
         {
           showToast: true,
           setFormError: true,
+          successMessage: 'Beitrag erfolgreich bearbeitet.',
           onSuccess: () => {
             refresh();
-            mutate(
-              `${FAIRTEILER_CONTRIBUTION_VERSION_HISTORY}?checkinId=${item.checkinId}`,
-            );
+            queryClient.invalidateQueries({
+              queryKey: contributionKeys.versionHistory(item.checkinId)
+                .queryKey,
+            });
             setOpen(false);
           },
         },

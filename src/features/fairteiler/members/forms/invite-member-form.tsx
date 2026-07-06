@@ -17,11 +17,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Send } from 'lucide-react';
 import { Dispatch, SetStateAction, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
-import { useSWRConfig } from 'swr';
+import { useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { RoleSelector } from '../components/role-selector';
 import { inviteMemberSchema } from '../schemas/members-schema';
-import { ACTIVE_FAIRTEILER_KEY } from '@/lib/config/api-routes';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { handleAsyncAction } from '@/lib/client-error-handling';
 
 export function InviteMemberForm({
@@ -31,7 +31,7 @@ export function InviteMemberForm({
 }: React.ComponentProps<'form'> & {
   setOpen: Dispatch<SetStateAction<boolean>>;
 }) {
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof inviteMemberSchema>>({
@@ -46,8 +46,11 @@ export function InviteMemberForm({
     startTransition(() => {
       handleAsyncAction(() => inviteMemberAction(values), form, {
         showToast: true,
+        successMessage: `Einladung erfolgreich an ${values.email} gesendet!`,
         onSuccess: async () => {
-          await mutate(ACTIVE_FAIRTEILER_KEY);
+          await queryClient.invalidateQueries({
+            queryKey: fairteilerKeys.active().queryKey,
+          });
           form.reset();
           setOpen(false);
         },
