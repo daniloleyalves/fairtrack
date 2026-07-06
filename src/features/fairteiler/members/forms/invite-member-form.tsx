@@ -46,6 +46,7 @@ export function InviteMemberForm({
     startTransition(() => {
       handleAsyncAction(() => inviteMemberAction(values), form, {
         showToast: true,
+        successMessage: `Einladung erfolgreich an ${values.email} gesendet!`,
         onSuccess: async () => {
           await queryClient.invalidateQueries({
             queryKey: fairteilerKeys.active().queryKey,

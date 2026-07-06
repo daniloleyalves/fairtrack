@@ -66,7 +66,21 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 
 ### Deployment notes
 
-- **Before deploying this release to prod**, follow `docs/release-bcrypt-removal.md`: identify the ~16 users with `secure = true` and bcrypt hashes, send each a password reset email, then run the migration. The 185 users with `secure = false` go through the existing `SecurityModal` reset flow on next sign-in and need no special handling.
+- **Before deploying this release to prod**, run the bcrypt → scrypt cutover in this order:
+  1. Identify the users who set their own password during the bcrypt era (these are the ones who need a heads-up email — everyone else goes through the existing `SecurityModal` reset flow on next sign-in and needs no special handling):
+     ```sql
+     SELECT u.id, u.email, u.first_name, u.last_name
+     FROM auth."user" u
+     JOIN auth."account" a ON a.user_id = u.id
+     WHERE a.provider_id = 'credential'
+       AND a.password LIKE '$2%'
+       AND u.secure = true;
+     ```
+  2. Send each of them a password reset via `auth.api.requestPasswordReset` (triggers `sendResetPassword`) before proceeding.
+  3. Run migrations (`NEXT_PUBLIC_ENV=production pnpm db:migrate`), which applies `0040_clear_bcrypt_hashes.sql` and NULLs every remaining `$2`-prefixed credential password.
+  4. Verify: `SELECT count(*) FROM auth."account" WHERE provider_id = 'credential' AND password LIKE '$2%';` should return `0`.
+  5. Deploy the code as normal.
+  - Rollback: roll back the code deploy only; leave the DB as-is (NULL passwords stay NULL, affected users complete reset and get scrypt hashes via the rolled-back shim). Do not restore bcrypt hashes from a backup.
 
 ### Fixed
 

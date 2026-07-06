@@ -30,6 +30,7 @@ export function AccessViewTableActions({ member }: { member: Member }) {
         undefined,
         {
           showToast: true,
+          successMessage: 'Zugang erfolgreich deaktiviert.',
           onSuccess: () => {
             queryClient.invalidateQueries({
               queryKey: fairteilerKeys.active().queryKey,
