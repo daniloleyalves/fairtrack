@@ -21,12 +21,12 @@ export default function FairteilerReportingWrapper() {
     return <ReportingGridSkeleton />;
   }
 
-  if (error || !data) {
-    return (
-      <p className='text-center text-sm text-muted-foreground'>
-        Beim Laden der Berichte ist ein unerwarteter Fehler aufgetreten.
-      </p>
-    );
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    throw new Error('Berichtsdaten nicht gefunden.');
   }
 
   return (

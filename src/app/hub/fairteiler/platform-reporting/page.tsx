@@ -1,3 +1,4 @@
+import { DataErrorBoundary } from '@/components/error-boundary';
 import PlatformReportingWrapper from '@/features/platform/reporting/components/platform-reporting-wrapper';
 
 export default function FairteilerPlatformReportingPage() {
@@ -17,7 +18,9 @@ export default function FairteilerPlatformReportingPage() {
         </p>
       </div>
 
-      <PlatformReportingWrapper />
+      <DataErrorBoundary>
+        <PlatformReportingWrapper />
+      </DataErrorBoundary>
     </div>
   );
 }

@@ -50,12 +50,12 @@ export function MemberTablesWrapper() {
     );
   }
 
-  if (error || !fairteiler) {
-    return (
-      <p className='text-center text-sm text-muted-foreground'>
-        Beim Laden der Mitgliederliste ist ein unerwarteter Fehler aufgetreten.
-      </p>
-    );
+  if (error) {
+    throw error;
+  }
+
+  if (!fairteiler) {
+    throw new Error('Fairteiler nicht gefunden.');
   }
 
   const teamMembers = fairteiler.members.filter(

@@ -65,12 +65,12 @@ export default function FairteilerDashboardWrapper() {
     return <FairteilerDashboardGridSkeleton />;
   }
 
-  if (error || !data) {
-    return (
-      <p className='text-center text-sm text-muted-foreground'>
-        Beim Laden des Dashboards ist ein unerwarteter Fehler aufgetreten.
-      </p>
-    );
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    throw new Error('Dashboard-Daten nicht gefunden.');
   }
 
   return <FairteilerDashboard data={data} />;

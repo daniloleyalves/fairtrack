@@ -29,17 +29,15 @@ export default function PlatformReportingWrapper() {
     return <PlatformReportingGridSkeleton />;
   }
 
-  if (
-    contributionsQuery.error ||
-    !contributionsQuery.data ||
-    fairteilersQuery.error ||
-    !fairteilersQuery.data
-  ) {
-    return (
-      <p className='text-center text-sm text-muted-foreground'>
-        Beim Laden der Berichte ist ein unerwarteter Fehler aufgetreten.
-      </p>
-    );
+  if (contributionsQuery.error) {
+    throw contributionsQuery.error;
+  }
+  if (fairteilersQuery.error) {
+    throw fairteilersQuery.error;
+  }
+
+  if (!contributionsQuery.data || !fairteilersQuery.data) {
+    throw new Error('Berichtsdaten nicht gefunden.');
   }
 
   return (

@@ -51,12 +51,12 @@ export default function UserDashboardWrapper() {
     return <UserDashboardGridSkeleton />;
   }
 
-  if (error || !dashboardData) {
-    return (
-      <p className='text-center text-sm text-muted-foreground'>
-        Beim Laden deines Dashboards ist ein unerwarteter Fehler aufgetreten.
-      </p>
-    );
+  if (error) {
+    throw error;
+  }
+
+  if (!dashboardData) {
+    throw new Error('Dashboard-Daten nicht gefunden.');
   }
 
   return <UserDashboard dashboardData={dashboardData} />;
