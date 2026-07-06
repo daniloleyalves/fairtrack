@@ -97,13 +97,15 @@ export const updateUserAction = authedAction
       ctx.session.user.image ?? null,
       'userAvatars',
     );
+    const name = `${otherValues.firstName} ${otherValues.lastName}`.trim();
 
-    const finalData = { ...otherValues, avatar: newAvatarUrl };
+    const finalData = { ...otherValues, name, avatar: newAvatarUrl };
 
     await auth.api.updateUser({
       headers: await headers(),
       body: {
         ...otherValues,
+        name,
         image: newAvatarUrl ?? undefined,
       },
     });

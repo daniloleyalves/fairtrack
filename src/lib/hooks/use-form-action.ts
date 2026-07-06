@@ -175,9 +175,11 @@ export function useFormAction<
 /**
  * Non-hook helper for invoking a next-safe-action procedure from a context
  * where hooks aren't available (e.g. step-flow callbacks, SWR mutation
- * fetchers, RSC pages). Returns the action's `data` on success, throws an
- * `Error` carrying the server error message on failure. Validation errors
- * surface as `Error` too — call sites needing field-level errors should use
+ * fetchers, RSC pages). Returns the action's `data` on success — `TData`
+ * itself is `void`/optional for actions with no return value, so the type
+ * already tells call sites when that's possible — and throws an `Error`
+ * carrying the server error message on failure. Validation errors surface
+ * as `Error` too — call sites needing field-level errors should use
  * `useFormAction` instead.
  */
 export async function invokeAction<
@@ -202,8 +204,5 @@ export async function invokeAction<
     ];
     throw new Error(allMessages[0] ?? ERROR_MESSAGES.VALIDATION_ERROR);
   }
-  if (result?.data === undefined) {
-    throw new Error('Action returned no data and no error');
-  }
-  return result.data;
+  return result?.data as TData;
 }
