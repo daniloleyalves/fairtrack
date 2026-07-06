@@ -66,6 +66,11 @@ vi.mock('../user/dal', () => ({
   loadSession: vi.fn(),
 }));
 
+vi.mock('../tutorial/dal', () => ({
+  loadStepFlowProgress: vi.fn(),
+  loadFairteilerTutorialWithSteps: vi.fn(),
+}));
+
 // Mock Next.js headers
 vi.mock('next/headers', () => ({
   headers: vi.fn(),
