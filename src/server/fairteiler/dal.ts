@@ -13,6 +13,7 @@ import {
   fairteilerCategory,
   fairteilerCompany,
   fairteilerOrigin,
+  member,
   origin,
   tag,
 } from '../db/schema';
@@ -77,6 +78,20 @@ export const loadActiveOrganization = cache(async (headers: Headers) => {
 export const loadActiveMembership = cache(async (headers: Headers) => {
   return await auth.api.getActiveMember({ headers });
 });
+
+export async function loadMembership(userId: string, fairteilerId: string) {
+  const [error, data] = await attempt(
+    db.query.member.findFirst({
+      where: and(
+        eq(member.userId, userId),
+        eq(member.organizationId, fairteilerId),
+      ),
+    }),
+  );
+
+  if (error) handleDatabaseError(error, 'load membership');
+  return data;
+}
 
 export async function updateFairteiler(
   fairteilerId: string,
