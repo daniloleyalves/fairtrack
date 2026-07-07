@@ -11,6 +11,7 @@ import { invokeAction } from '@/lib/hooks/use-form-action';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { getTags } from '@/server/fairteiler/queries';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface FairteilerTagsWrapperProps {
   className?: string;
@@ -25,10 +26,17 @@ export function FairteilerTagsWrapper({
   const queryClient = useQueryClient();
   const tagsKey = fairteilerKeys.tags().queryKey;
 
-  const { data: tagsData } = useQuery({
+  const {
+    data: tagsData,
+    isPending,
+    error,
+  } = useQuery({
     ...fairteilerKeys.tags(),
     queryFn: getTags,
   });
+
+  if (error) throw error;
+
   const tags = tagsData ?? [];
 
   const addTag = useMutation({
@@ -71,6 +79,15 @@ export function FairteilerTagsWrapper({
       void queryClient.invalidateQueries({ queryKey: tagsKey });
     },
   });
+
+  if (isPending) {
+    return (
+      <div className='flex gap-2'>
+        <Skeleton className='h-[22px] w-16 bg-secondary' />
+        <Skeleton className='h-[22px] w-12 bg-secondary' />
+      </div>
+    );
+  }
 
   return (
     <FairteilerTags
