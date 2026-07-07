@@ -34,6 +34,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { EditItemDialog } from './edit-item-dialog';
 import { useQuery } from '@tanstack/react-query';
 import { useCatalogResource } from '../hooks/use-catalog-resource';
+import { CatalogSelectionSkeleton } from './catalog-selection-skeleton';
 
 // --- Main Component ---
 
@@ -57,11 +58,22 @@ export function CompanySelectionWrapper() {
     },
   });
 
-  const { data: allOriginsData } = useQuery({
+  const {
+    data: allOriginsData,
+    isPending: isOriginsPending,
+    error: originsError,
+  } = useQuery({
     ...originKeys.all(),
     queryFn: getOrigins,
   });
+
+  if (originsError) throw originsError;
+
   const allOrigins = allOriginsData ?? [];
+
+  if (companies.flags.isLoading || isOriginsPending) {
+    return <CatalogSelectionSkeleton title='Betriebe' />;
+  }
 
   // --- Derived State  ---
 

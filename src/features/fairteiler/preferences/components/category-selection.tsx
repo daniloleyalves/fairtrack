@@ -24,6 +24,7 @@ import { FormSelectionItem } from './form-selection-item';
 import { v4 as uuidv4 } from 'uuid';
 import { EditItemDialog } from './edit-item-dialog';
 import { useCatalogResource } from '../hooks/use-catalog-resource';
+import { CatalogSelectionSkeleton } from './catalog-selection-skeleton';
 
 // --- Main Component ---
 
@@ -43,6 +44,10 @@ export function CategorySelectionWrapper() {
       updateSuccess: 'Kategorie erfolgreich aktualisiert',
     },
   });
+
+  if (categories.flags.isLoading) {
+    return <CatalogSelectionSkeleton title='Kategorien' />;
+  }
 
   // --- Derived State  ---
 
