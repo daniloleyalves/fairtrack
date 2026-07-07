@@ -362,7 +362,7 @@ describe('contributionEditSchema', () => {
     checkinId: 'checkin-123',
     prevValue: 'old value',
     newValue: 'new value',
-    field: 'title',
+    field: 'quantity',
     ...overrides,
   });
 
@@ -376,7 +376,17 @@ describe('contributionEditSchema', () => {
         expect(result.data.checkinId).toBe('checkin-123');
         expect(result.data.prevValue).toBe('old value');
         expect(result.data.newValue).toBe('new value');
-        expect(result.data.field).toBe('title');
+        expect(result.data.field).toBe('quantity');
+      }
+    });
+
+    it('should reject a field outside the editable allow-list', () => {
+      const invalidData = createValidEditData({ field: 'userId' });
+      const result = contributionEditSchema.safeParse(invalidData);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].path).toEqual(['field']);
       }
     });
   });
