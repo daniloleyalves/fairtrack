@@ -1,6 +1,8 @@
 'use cache';
 
 import { getFairteilers } from '@server/fairteiler/queries';
+import { getFairteilerQuantities } from '@server/platform/queries';
+import { BlurFade } from '@/components/magicui/blur-fade';
 import { Badge } from '@components/ui/badge';
 import { Button } from '@components/ui/button';
 import {
@@ -11,31 +13,30 @@ import {
   CardTitle,
 } from '@components/ui/card';
 import { generateBlurDataUrlFromImage } from '@/lib/services/plaiceholder';
-import { Globe, MapPin } from 'lucide-react';
+import { formatNumber } from '@/lib/utils';
+import { Globe, MapPin, Scale } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { type Fairteiler as FairteilerType } from '@server/db/db-types';
 import { cn } from '@/lib/utils';
 
-// --- 1. Main Page Component (Layout) ---
 // eslint-disable-next-line
 export default async function FairteilerPage() {
   return (
-    <div className='mb-8 px-4 pt-6 sm:px-0 2xl:mb-60'>
-      <div className='flex flex-col items-start gap-2'>
-        <h1 className='font-londrina text-4xl font-semibold tracking-wider'>
+    <div className='mb-8 px-4 pt-10 sm:px-0 2xl:mb-60'>
+      <div className='mx-auto flex max-w-2xl flex-col items-center gap-3 text-center'>
+        <h1 className='font-londrina text-5xl font-semibold tracking-wider text-primary'>
           Fairteiler
         </h1>
         <p className='text-md font-medium text-muted-foreground'>
-          Folgende Fairteilerstationen nutzen FairTrack, um ihre
-          Lebensmittelabggaben zu tracken. <br />
-          Bei diesen Fairteilern kannst du über die FairTrack-App Lebensmittel
-          abgeben und abholen.
+          Diese Fairteilerstationen erfassen ihre Lebensmittelabgaben mit
+          FairTrack. Hier kannst du über die App Lebensmittel abgeben und
+          abholen – und jedes Kilo zählt für die gemeinsame Bilanz.
         </p>
       </div>
 
-      <div className='mt-6 grid w-full grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4'>
+      <div className='mx-auto mt-10 grid w-full max-w-7xl grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4'>
         <Suspense fallback={<FairteilerGridSkeleton />}>
           <FairteilerGrid />
         </Suspense>
@@ -44,9 +45,11 @@ export default async function FairteilerPage() {
   );
 }
 
-// --- 2. Data Fetching Component ---
 async function FairteilerGrid() {
-  const fairteilers = await getFairteilers();
+  const [fairteilers, quantities] = await Promise.all([
+    getFairteilers(),
+    getFairteilerQuantities(),
+  ]);
 
   if (fairteilers.length === 0) {
     return (
@@ -58,15 +61,30 @@ async function FairteilerGrid() {
 
   return (
     <>
-      {fairteilers.map((fairteiler) => (
-        <FairteilerCard key={fairteiler.slug} fairteiler={fairteiler} />
+      {fairteilers.map((fairteiler, index) => (
+        <BlurFade
+          key={fairteiler.slug}
+          inView
+          delay={Math.min(index, 7) * 0.06}
+          className='h-full'
+        >
+          <FairteilerCard
+            fairteiler={fairteiler}
+            trackedKg={quantities[fairteiler.id] ?? 0}
+          />
+        </BlurFade>
       ))}
     </>
   );
 }
 
-// --- 3. Individual Card Component ---
-async function FairteilerCard({ fairteiler }: { fairteiler: FairteilerType }) {
+async function FairteilerCard({
+  fairteiler,
+  trackedKg,
+}: {
+  fairteiler: FairteilerType;
+  trackedKg: number;
+}) {
   const blurDataURL = fairteiler.thumbnail
     ? (await generateBlurDataUrlFromImage(fairteiler.thumbnail)).base64
     : undefined;
@@ -74,13 +92,13 @@ async function FairteilerCard({ fairteiler }: { fairteiler: FairteilerType }) {
   return (
     <Card
       className={cn(
-        'flex h-full flex-col',
+        'group flex h-full flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-lg',
         fairteiler.thumbnail ? 'pt-0' : 'sm:pt-0',
       )}
     >
       <div
         className={cn(
-          'relative h-[180px] w-full rounded-t-lg bg-muted',
+          'relative h-[180px] w-full overflow-hidden rounded-t-lg bg-muted',
           fairteiler.thumbnail ? 'relative' : 'hidden sm:block',
         )}
       >
@@ -93,8 +111,14 @@ async function FairteilerCard({ fairteiler }: { fairteiler: FairteilerType }) {
             placeholder='blur'
             blurDataURL={blurDataURL}
             alt={`Bild von ${fairteiler.name}`}
-            className='rounded-t-lg bg-secondary object-cover'
+            className='bg-secondary object-cover transition-transform duration-500 group-hover:scale-105'
           />
+        )}
+        {fairteiler.thumbnail && trackedKg > 0 && (
+          <div className='absolute top-3 right-3 flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-primary backdrop-blur-sm'>
+            <Scale className='size-3.5' />
+            {formatNumber(trackedKg, 0)} kg fairteilt
+          </div>
         )}
       </div>
       <CardHeader>
@@ -112,6 +136,12 @@ async function FairteilerCard({ fairteiler }: { fairteiler: FairteilerType }) {
         )}
       </CardHeader>
       <CardContent className='mt-auto flex flex-col items-start'>
+        {!fairteiler.thumbnail && trackedKg > 0 && (
+          <div className='mb-2 flex items-center gap-1.5 text-sm font-semibold text-primary'>
+            <Scale className='size-3.5' />
+            {formatNumber(trackedKg, 0)} kg fairteilt
+          </div>
+        )}
         {(fairteiler.geoLink ?? fairteiler.address) && (
           <div className='flex w-full items-center'>
             <MapPin className='mr-2 size-3.5' />
@@ -149,7 +179,6 @@ async function FairteilerCard({ fairteiler }: { fairteiler: FairteilerType }) {
   );
 }
 
-// --- 4. Skeleton Component ---
 function FairteilerGridSkeleton() {
   return Array.from({ length: 4 }).map((_, i) => (
     <Card key={i} className='flex h-full flex-col pt-0'>
