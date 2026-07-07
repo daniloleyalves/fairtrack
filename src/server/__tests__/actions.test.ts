@@ -16,8 +16,15 @@ import {
   addFairteilerCompanyAction,
   removeFairteilerCompanyAction,
 } from '../fairteiler/actions';
+import {
+  addFairteilerTutorialStepAction,
+  removeFairteilerTutorialAction,
+  updateFairteilerTutorialAction,
+  updateFairteilerTutorialStepAction,
+} from '../tutorial/actions';
 import * as dal from '../contribution/dal';
 import * as fairteilerDal from '../fairteiler/dal';
+import * as tutorialDal from '../tutorial/dal';
 import { AuthError } from '../api-helpers';
 import type { GenericItem } from '../db/db-types';
 import {
@@ -54,6 +61,17 @@ vi.mock('../fairteiler/dal', () => ({
   addCompany: vi.fn(),
   addFairteilerCompany: vi.fn(),
   removeFairteilerCompany: vi.fn(),
+  loadFairteilerMembership: vi.fn(),
+}));
+
+vi.mock('../tutorial/dal', () => ({
+  addFairteilerTutorial: vi.fn(),
+  addFairteilerTutorialStep: vi.fn(),
+  removeFairteilerTutorial: vi.fn(),
+  removeFairteilerTutorialStep: vi.fn(),
+  tutorialBelongsToFairteiler: vi.fn(),
+  updateFairteilerTutorial: vi.fn(),
+  updateFairteilerTutorialStep: vi.fn(),
 }));
 
 vi.mock('../user/dal', () => ({
@@ -432,6 +450,89 @@ describe('Server Actions', () => {
         const result = await submitContributionAction(mockContributionData);
         expect(result?.serverError).toBe('Checkin failed');
       });
+
+      const submitAsData = {
+        ...mockContributionData,
+        config: {
+          fairteilerId: 'fairteiler-123',
+          submitAsAccessViewId: 'access-view-user-9',
+        },
+      };
+
+      it('should submit as an access view that belongs to the target fairteiler', async () => {
+        vi.stubEnv('NEXT_PUBLIC_ENV_URL', 'http://localhost:3001');
+        vi.mocked(fairteilerDal.loadFairteilerMembership).mockResolvedValue({
+          id: 'member-9',
+          organizationId: 'fairteiler-123',
+          userId: 'access-view-user-9',
+          role: 'employee',
+          createdAt: new Date(),
+        });
+        vi.mocked(dal.checkinContribution).mockResolvedValue([]);
+
+        const result = await submitContributionAction(submitAsData);
+
+        expect(checkPermissionOnServer).toHaveBeenCalledWith(
+          mockHeaders,
+          { member: ['create'] },
+          'fairteiler-123',
+        );
+        expect(dal.checkinContribution).toHaveBeenCalledWith(
+          'fairteiler-123',
+          'access-view-user-9',
+          submitAsData.contributions,
+        );
+        expect(result?.data?.redirectTo).toContain(
+          'submitAsUserId=access-view-user-9',
+        );
+
+        vi.unstubAllEnvs();
+      });
+
+      it('should reject submitting as an access view from another fairteiler', async () => {
+        vi.mocked(fairteilerDal.loadFairteilerMembership).mockResolvedValue(
+          undefined,
+        );
+
+        const result = await submitContributionAction(submitAsData);
+
+        expect(result?.serverError).toBe(
+          'Permission denied: Das ausgewählte Zugangsprofil gehört nicht zu diesem Fairteiler.',
+        );
+        expect(dal.checkinContribution).not.toHaveBeenCalled();
+      });
+
+      it('should reject submitting as a disabled access view', async () => {
+        vi.mocked(fairteilerDal.loadFairteilerMembership).mockResolvedValue({
+          id: 'member-9',
+          organizationId: 'fairteiler-123',
+          userId: 'access-view-user-9',
+          role: 'disabled',
+          createdAt: new Date(),
+        });
+
+        const result = await submitContributionAction(submitAsData);
+
+        expect(result?.serverError).toBe(
+          'Permission denied: Das ausgewählte Zugangsprofil gehört nicht zu diesem Fairteiler.',
+        );
+        expect(dal.checkinContribution).not.toHaveBeenCalled();
+      });
+
+      it('should reject submitAs when the caller lacks member:create on the target fairteiler', async () => {
+        vi.mocked(checkPermissionOnServer).mockResolvedValue({
+          success: false,
+          error: null,
+        });
+
+        const result = await submitContributionAction(submitAsData);
+
+        expect(result?.serverError).toBe(
+          'Permission denied: Nur Inhaber:innen dürfen Beiträge im Namen von Zugangsprofile einreichen.',
+        );
+        expect(fairteilerDal.loadFairteilerMembership).not.toHaveBeenCalled();
+        expect(dal.checkinContribution).not.toHaveBeenCalled();
+      });
     });
 
     describe('editContributionAction', () => {
@@ -439,7 +540,7 @@ describe('Server Actions', () => {
         checkinId: 'contrib-1',
         prevValue: '5',
         newValue: '10',
-        field: 'quantity',
+        field: 'quantity' as const,
       };
 
       it('should successfully edit contribution', async () => {
@@ -464,6 +565,102 @@ describe('Server Actions', () => {
         const result = await editContributionAction(mockEditData);
         expect(result?.serverError).toBe('Version history failed');
       });
+    });
+  });
+
+  describe('Tutorial Actions (cross-tenant scoping)', () => {
+    it('rejects adding a step to a tutorial from another fairteiler', async () => {
+      vi.mocked(tutorialDal.tutorialBelongsToFairteiler).mockResolvedValue(
+        false,
+      );
+
+      const result = await addFairteilerTutorialStepAction({
+        title: 'Step',
+        content: 'Content',
+        sortIndex: 0,
+        media: null,
+        tutorialId: 'tutorial-from-other-org',
+      });
+
+      expect(result?.serverError).toBe(
+        'Permission denied: cannot create tutorial step',
+      );
+      expect(tutorialDal.addFairteilerTutorialStep).not.toHaveBeenCalled();
+    });
+
+    it('rejects updating a step under a tutorial from another fairteiler', async () => {
+      vi.mocked(tutorialDal.tutorialBelongsToFairteiler).mockResolvedValue(
+        false,
+      );
+
+      const result = await updateFairteilerTutorialStepAction({
+        id: 'step-1',
+        title: 'Step',
+        content: 'Content',
+        sortIndex: 0,
+        media: null,
+        tutorialId: 'tutorial-from-other-org',
+      });
+
+      expect(result?.serverError).toBe(
+        'Permission denied: cannot update tutorial step',
+      );
+      expect(tutorialDal.updateFairteilerTutorialStep).not.toHaveBeenCalled();
+    });
+
+    it('rejects updating a tutorial that does not belong to the active fairteiler', async () => {
+      vi.mocked(tutorialDal.updateFairteilerTutorial).mockResolvedValue([]);
+
+      const result = await updateFairteilerTutorialAction({
+        id: 'tutorial-from-other-org',
+        title: 'Hacked',
+        isActive: true,
+      });
+
+      expect(tutorialDal.updateFairteilerTutorial).toHaveBeenCalledWith(
+        'tutorial-from-other-org',
+        'fairteiler-123',
+        expect.objectContaining({ fairteilerId: 'fairteiler-123' }),
+      );
+      expect(result?.serverError).toBe('Failed to update tutorial');
+    });
+
+    it('rejects removing a tutorial that does not belong to the active fairteiler', async () => {
+      vi.mocked(tutorialDal.removeFairteilerTutorial).mockResolvedValue([]);
+
+      const result = await removeFairteilerTutorialAction({
+        id: 'tutorial-from-other-org',
+      });
+
+      expect(tutorialDal.removeFairteilerTutorial).toHaveBeenCalledWith(
+        'tutorial-from-other-org',
+        'fairteiler-123',
+      );
+      expect(result?.serverError).toBe('Failed to delete tutorial');
+    });
+
+    it('removes a tutorial that belongs to the active fairteiler', async () => {
+      const removed = [
+        {
+          id: 'tutorial-1',
+          fairteilerId: 'fairteiler-123',
+          title: 'Tutorial',
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
+      vi.mocked(tutorialDal.removeFairteilerTutorial).mockResolvedValue(
+        removed,
+      );
+
+      const result = await removeFairteilerTutorialAction({ id: 'tutorial-1' });
+
+      expect(tutorialDal.removeFairteilerTutorial).toHaveBeenCalledWith(
+        'tutorial-1',
+        'fairteiler-123',
+      );
+      expect(result?.data).toEqual(removed);
     });
   });
 
