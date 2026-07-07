@@ -26,17 +26,29 @@ import { useFormAction } from '@/lib/hooks/use-form-action';
 import { getActiveFairteiler } from '@/server/fairteiler/queries';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Skeleton } from '@/components/ui/skeleton';
+import { FairteilerProfileFormSkeleton } from './fairteiler-profile-form-skeleton';
 
 // --- 2. Data Fetching Component ---
 export function ProfileFormWrapper() {
-  const { data: fairteiler, isPending } = useQuery({
+  const {
+    data: fairteiler,
+    isPending,
+    error,
+  } = useQuery({
     ...fairteilerKeys.active(),
     queryFn: () => getActiveFairteiler(),
   });
 
-  if (isPending || !fairteiler) {
-    return <Skeleton className='h-[484px] w-full' />;
+  if (isPending) {
+    return <FairteilerProfileFormSkeleton />;
+  }
+
+  if (error) {
+    throw error;
+  }
+
+  if (!fairteiler) {
+    throw new Error('Fairteiler-Profil nicht gefunden.');
   }
 
   return (
