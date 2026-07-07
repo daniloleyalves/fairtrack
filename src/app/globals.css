@@ -152,6 +152,13 @@
   /* https://developer.mozilla.org/en-US/docs/Web/CSS/scrollbar-color#browser_compatibility */
   html {
     scrollbar-color: hsl(215.4 16.3% 46.9% / 0.3);
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
 }
 
