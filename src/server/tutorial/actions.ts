@@ -15,6 +15,7 @@ import {
   addFairteilerTutorialStep,
   removeFairteilerTutorial,
   removeFairteilerTutorialStep,
+  tutorialBelongsToFairteiler,
   updateFairteilerTutorial,
   updateFairteilerTutorialStep,
 } from './dal';
@@ -57,12 +58,16 @@ export const updateFairteilerTutorialAction = fairteilerAction
       throw new Error('Failed to update tutorial');
     }
 
-    const result = await updateFairteilerTutorial(parsedInput.id, {
-      fairteilerId: ctx.fairteilerId,
-      title: parsedInput.title,
-      isActive: parsedInput.isActive,
-    });
-    if (!result) {
+    const result = await updateFairteilerTutorial(
+      parsedInput.id,
+      ctx.fairteilerId,
+      {
+        fairteilerId: ctx.fairteilerId,
+        title: parsedInput.title,
+        isActive: parsedInput.isActive,
+      },
+    );
+    if (!result?.length) {
       throw new Error('Failed to update tutorial');
     }
     return result;
@@ -70,7 +75,7 @@ export const updateFairteilerTutorialAction = fairteilerAction
 
 export const removeFairteilerTutorialAction = fairteilerAction
   .inputSchema(z.object({ id: z.string() }))
-  .action(async ({ parsedInput }) => {
+  .action(async ({ parsedInput, ctx }) => {
     const permissionResult = await checkPermissionOnServer(await headers(), {
       preferences: ['delete'],
     });
@@ -80,8 +85,11 @@ export const removeFairteilerTutorialAction = fairteilerAction
       );
     }
 
-    const result = await removeFairteilerTutorial(parsedInput.id);
-    if (!result) {
+    const result = await removeFairteilerTutorial(
+      parsedInput.id,
+      ctx.fairteilerId,
+    );
+    if (!result?.length) {
       throw new Error('Failed to delete tutorial');
     }
     return result;
@@ -93,7 +101,7 @@ const tutorialStepCreateSchema = fairteilerTutorialStepSchema
 
 export const addFairteilerTutorialStepAction = fairteilerAction
   .inputSchema(tutorialStepCreateSchema)
-  .action(async ({ parsedInput }) => {
+  .action(async ({ parsedInput, ctx }) => {
     const permissionResult = await checkPermissionOnServer(await headers(), {
       preferences: ['create'],
     });
@@ -102,6 +110,10 @@ export const addFairteilerTutorialStepAction = fairteilerAction
     }
 
     const { media, tutorialId, ...otherValues } = parsedInput;
+
+    if (!(await tutorialBelongsToFairteiler(tutorialId, ctx.fairteilerId))) {
+      throw new PermissionError('cannot create tutorial step');
+    }
 
     const newMediaUrl = await handleImageUpload(
       media,
@@ -125,7 +137,7 @@ const tutorialStepUpdateSchema = fairteilerTutorialStepSchema.extend({
 
 export const updateFairteilerTutorialStepAction = fairteilerAction
   .inputSchema(tutorialStepUpdateSchema)
-  .action(async ({ parsedInput }) => {
+  .action(async ({ parsedInput, ctx }) => {
     const permissionResult = await checkPermissionOnServer(await headers(), {
       preferences: ['update'],
     });
@@ -135,24 +147,32 @@ export const updateFairteilerTutorialStepAction = fairteilerAction
 
     const { media, id, tutorialId, ...otherValues } = parsedInput;
 
+    if (!(await tutorialBelongsToFairteiler(tutorialId, ctx.fairteilerId))) {
+      throw new PermissionError('cannot update tutorial step');
+    }
+
     const newMediaUrl = await handleImageUpload(
       media,
       null,
       'fairteilerTutorialMedia',
     );
 
-    await updateFairteilerTutorialStep(id, {
+    const result = await updateFairteilerTutorialStep(id, ctx.fairteilerId, {
       ...otherValues,
       media: newMediaUrl,
       tutorialId,
     });
+
+    if (!result?.length) {
+      throw new PermissionError('cannot update tutorial step');
+    }
 
     return parsedInput;
   });
 
 export const removeFairteilerTutorialStepAction = fairteilerAction
   .inputSchema(z.object({ id: z.string() }))
-  .action(async ({ parsedInput }) => {
+  .action(async ({ parsedInput, ctx }) => {
     const permissionResult = await checkPermissionOnServer(await headers(), {
       preferences: ['delete'],
     });
@@ -162,8 +182,11 @@ export const removeFairteilerTutorialStepAction = fairteilerAction
       );
     }
 
-    const result = await removeFairteilerTutorialStep(parsedInput.id);
-    if (!result) {
+    const result = await removeFairteilerTutorialStep(
+      parsedInput.id,
+      ctx.fairteilerId,
+    );
+    if (!result?.length) {
       throw new Error('Failed to delete tutorial');
     }
     return result;
