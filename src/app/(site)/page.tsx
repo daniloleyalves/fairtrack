@@ -1,211 +1,301 @@
+import { BlurFade } from '@/components/magicui/blur-fade';
 import { NumberTicker } from '@/components/magicui/number-ticker';
+import { HeroCurves } from '@/components/site/hero-curves';
+import { ImpactSection } from '@/components/site/impact-section';
 import { Illustrations } from '@/lib/assets/illustrations';
-import { initialContributionQuantity } from '@/lib/config/site-config';
-import { getKeyFigures } from '@/server/contribution/queries';
+import { siteConfig } from '@/lib/config/site-config';
+import { getPublicImpactStats } from '@/server/platform/queries';
 import { Button } from '@components/ui/button';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@components/ui/popover';
-import { Info } from 'lucide-react';
+  ArrowRight,
+  ChartColumn,
+  ClipboardPen,
+  FileSpreadsheet,
+  UsersRound,
+} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
 export default async function Home() {
-  const contributionData = await getKeyFigures();
-  const totalContributionQuantity =
-    (contributionData?.totalQuantity ?? 0) + initialContributionQuantity;
-  return (
-    <div className='px-4 sm:px-0'>
-      <div className='mx-auto max-w-5xl pt-16 sm:pt-20 md:pt-16'>
-        <h1 className='text-center font-londrina text-6xl font-extrabold lg:text-7xl'>
-          RETTEN, TRACKEN, TEILEN
-        </h1>
-        <p className='mx-auto mt-3 max-w-3xl text-center font-semibold sm:text-xl'>
-          Behalte den Überblick über deinen Foodsharing-Beitrag und trage aktiv
-          zu einer Wirkungsmessung der Foodsharing-Bewegung bei!
-        </p>
-        <div className='sm:max-w-auto mx-auto mt-6 flex max-w-[200px] flex-col justify-center gap-4 sm:flex-row'>
-          <Button asChild size='lg' className='text-md'>
-            <Link href='/sign-in'>Jetzt mitmachen</Link>
-          </Button>
-          <Button asChild size='lg' variant='secondary' className='text-md'>
-            <Link href='/info-and-faq'>
-              <Info className='mr-2 size-4' />
-              Erfahre mehr
-            </Link>
-          </Button>
-        </div>
-      </div>
+  const stats = await getPublicImpactStats();
 
-      <div className='relative mt-10 flex justify-center md:mt-16'>
+  return (
+    <div className='overflow-x-clip px-4 pb-24 sm:px-0'>
+      <HeroCurves />
+
+      {/* Hero */}
+      <section className='mx-auto max-w-5xl pt-16 sm:pt-20 md:pt-16'>
+        <h1 className='text-center font-londrina text-6xl font-extrabold lg:text-7xl'>
+          <BlurFade delay={0} className='inline-block'>
+            <span>RETTEN.&nbsp;</span>
+          </BlurFade>
+          <BlurFade delay={0.12} className='inline-block'>
+            <span>TRACKEN.&nbsp;</span>
+          </BlurFade>
+          <BlurFade delay={0.24} className='inline-block'>
+            <span className='text-tertiary'>TEILEN.</span>
+          </BlurFade>
+        </h1>
+        <BlurFade delay={0.3}>
+          <p className='mx-auto mt-4 max-w-3xl text-center font-semibold sm:text-xl'>
+            FairTrack macht sichtbar, was die Foodsharing-Community leistet:
+            Jede Lebensmittelabgabe an einem Fairteiler wird erfasst – und aus
+            Schätzungen werden Fakten.
+          </p>
+        </BlurFade>
+        <BlurFade delay={0.4}>
+          <div className='sm:max-w-auto mx-auto mt-8 flex max-w-[220px] flex-col justify-center gap-4 sm:flex-row'>
+            <Button asChild size='lg' className='text-md group'>
+              <Link href='/sign-in'>
+                Jetzt mitmachen
+                <ArrowRight className='ml-1 size-4 transition-transform group-hover:translate-x-0.5' />
+              </Link>
+            </Button>
+            <Button asChild size='lg' variant='secondary' className='text-md'>
+              <Link href='/info-and-faq'>Erfahre mehr</Link>
+            </Button>
+          </div>
+        </BlurFade>
+      </section>
+
+      {/* Live counter */}
+      <section
+        aria-label='Gesamtmenge fairteilter Lebensmittel'
+        className='relative mt-10 flex justify-center md:mt-16'
+      >
         <div className='absolute top-1/2 z-10 -translate-y-1/3 text-center font-londrina text-primary'>
           <h2 className='text-5xl sm:text-8xl'>
-            <NumberTicker value={totalContributionQuantity} decimalPlaces={2} />
+            <NumberTicker value={stats.totalQuantityKg} decimalPlaces={2} />
           </h2>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant='link' className='text-lg md:text-xl'>
-                fairteilt
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent>
-              <p>
-                Gesamte fairteilte Menge an Lebensmitteln aller
-                <Button asChild variant='link' className='text-md p-1'>
-                  <Link href='/fairteiler'>Fairteiler</Link>
-                </Button>
-                , die FairTrack nutzen.
-              </p>
-            </PopoverContent>
-          </Popover>
+          <p className='mt-1 text-lg md:text-xl'>
+            Kilogramm Lebensmittel fairteilt
+          </p>
+          <p className='font-sans text-xs text-muted-foreground'>
+            live aus allen{' '}
+            <Link
+              href='/fairteiler'
+              className='font-medium text-primary underline-offset-2 hover:underline'
+            >
+              Fairteilern
+            </Link>
+            , die FairTrack nutzen
+          </p>
         </div>
         <Image
           src={Illustrations.valueBackground}
           className='sm:w-[700px]'
-          alt='value background'
+          alt=''
           loading='eager'
           decoding='sync'
           priority
         />
+      </section>
+
+      {/* Impact */}
+      <div className='mt-24 md:mt-32'>
+        <ImpactSection stats={stats} />
       </div>
 
-      <div className='hidden lg:block'>
-        <svg
-          viewBox='0 0 85 151'
-          fill='none'
-          className='absolute top-24 right-0 h-36'
-        >
-          <path
-            // transition:draw={{ duration: 5000, easing: quintOut }}
-            d='M184.5 30.5L85.948 7.79981C45.2974 -1.56353 6.5 29.3132 6.5 71.0282V71.0282C6.5 118.016 54.892 149.423 97.8068 130.288L200.5 84.5'
-            stroke='#446622'
-            strokeWidth='12'
-          />
-        </svg>
-        <svg
-          viewBox='0 0 120 270'
-          fill='none'
-          id='bubble'
-          className='absolute top-20 right-0 h-60'
-        >
-          <path
-            // transition:draw={{ duration: 3000, easing: quintOut }}
-            d='M216.113 38.3471L121.573 10.294C63.8989 -6.81963 6 36.3941 6 96.5535V96.5535C6 165.729 80.8082 209.03 140.793 174.575L235 120.463'
-            stroke='#99BB44'
-            strokeWidth='8'
-          />
-        </svg>
-
-        <svg
-          viewBox='0 0 463 715'
-          fill='none'
-          id='curve'
-          className='absolute top-[500px] -left-40 h-[350px]'
-        >
-          <path
-            // transition:draw={{ duration: 3000, easing: quintOut }}
-            d='M191.302 6L250.033 26.8248C364.536 67.4258 444.754 171.187 455.215 292.224V292.224C466.966 428.195 388.382 555.848 261.688 606.592L6 709'
-            stroke='#446622'
-            strokeWidth='14'
-            strokeLinecap='round'
-          />
-        </svg>
-
-        <svg
-          viewBox='0 0 423 569'
-          fill='none'
-          id='curve'
-          className='absolute top-[480px] -left-48 h-[400px]'
-        >
-          <path
-            // transition:draw={{ duration: 5000, easing: quintOut }}
-            d='M175.547 10L249.26 32.8475C338.176 60.4072 401.934 138.547 411.093 231.184V231.184C421.601 337.473 358.027 437.154 257.219 472.447L10 559'
-            stroke='#99BB44'
-            strokeWidth='20'
-            strokeLinecap='round'
-          />
-        </svg>
-      </div>
-
-      <div className='mt-24'>
-        <div>
-          <h3 className='mb-12 text-center font-londrina text-3xl text-tertiary sm:text-4xl'>
-            Und so funktionierts...
-          </h3>
+      {/* How it works */}
+      <section
+        aria-labelledby='how-it-works-heading'
+        className='mx-auto mt-24 max-w-6xl md:mt-32'
+      >
+        <BlurFade inView>
+          <h2
+            id='how-it-works-heading'
+            className='text-center font-londrina text-4xl text-tertiary sm:text-5xl'
+          >
+            Und so funktionierts…
+          </h2>
+        </BlurFade>
+        <div className='mt-14 grid grid-cols-1 gap-16 sm:grid-cols-2 lg:grid-cols-3 lg:gap-12'>
+          <HowItWorksStep
+            step={1}
+            title='Fairteiler finden'
+            image={Illustrations.walkingIllustration}
+            imageAlt='Illustration: Zu einem Fairteiler laufen'
+            delay={0}
+          >
+            Bei FairTrack registrierte{' '}
+            <Link
+              href='/fairteiler'
+              className='font-semibold text-primary underline-offset-2 hover:underline'
+            >
+              Fairteiler
+            </Link>{' '}
+            in deiner Nähe finden und aufsuchen.
+          </HowItWorksStep>
+          <HowItWorksStep
+            step={2}
+            title='Abgeben & erfassen'
+            image={Illustrations.arrivingIllustration}
+            imageAlt='Illustration: Ankunft am Fairteiler'
+            delay={0.12}
+          >
+            Lebensmittel abgeben und in unter einer Minute das digitale
+            Retteformular ausfüllen.
+          </HowItWorksStep>
+          <HowItWorksStep
+            step={3}
+            title='Wirkung verfolgen'
+            image={Illustrations.statisticsIllustration}
+            imageAlt='Illustration: Statistiken zum Foodsharing'
+            delay={0.24}
+            className='sm:col-span-2 lg:col-span-1'
+          >
+            Deinen Beitrag im persönlichen Dashboard verfolgen – vom ersten Kilo
+            bis zum nächsten Meilenstein.
+          </HowItWorksStep>
         </div>
-        <div className='grid grid-cols-1 gap-24 sm:grid-cols-2 lg:grid-cols-3'>
-          <div className='col-span-1'>
-            <Image
-              // in:scale={{ easing: backOut, duration: 200, start: 0.9 }}
-              src={Illustrations.walkingIllustration}
-              alt='walking to fairteiler illustration'
-              className='mx-auto w-3/5 sm:w-full'
-              loading='eager'
-            />
-            <h4
-              className='mt-8 text-center font-londrina text-2xl text-muted-foreground'
-              // in:fly={{ y: 20, easing: backOut, duration: 300, delay: 200 }}
-            >
-              Bei FairTrack registrierte <br /> Fairteiler
-              <Button
-                asChild
-                variant='link'
-                className='p-1 text-2xl text-primary'
-              >
-                <Link href='/fairteiler'>finden</Link>
-              </Button>
-              und aufsuchen
-            </h4>
-          </div>
-          <div className='col-span-1'>
-            <Image
-              // in:scale={{ easing: backOut, duration: 200, start: 0.9 }}
-              src={Illustrations.arrivingIllustration}
-              alt='arriving at fairteiler illustration'
-              className='mx-auto w-3/5 sm:w-full'
-              loading='eager'
-            />
-            <h4
-              className='mt-8 text-center font-londrina text-2xl text-muted-foreground'
-              // in:fly={{ y: 20, easing: backOut, duration: 300, delay: 200 }}
-            >
-              Lebensmittel abgeben und <br /> digitales Retteformular ausfüllen
-            </h4>
-          </div>
-          <div className='place-self-center sm:col-span-2 lg:col-span-1 lg:place-self-start'>
-            <Image
-              // in:scale={{ easing: backOut, duration: 200, start: 0.9 }}
-              src={Illustrations.statisticsIllustration}
-              alt='statistics about food sharing illustration'
-              className='mx-auto w-3/5 sm:w-2/3 lg:w-full'
-              loading='eager'
-            />
-            <h4
-              className='mt-8 text-center font-londrina text-2xl text-muted-foreground'
-              // in:fly={{ y: 20, easing: backOut, duration: 300, delay: 200 }}
-            >
-              Lebensmittelabgaben im Dashboard verfolgen
-            </h4>
-          </div>
-        </div>
-      </div>
+      </section>
 
-      <h5 className='text-md mt-24 mb-6 text-center font-semibold sm:text-xl md:mt-32 md:text-2xl'>
-        Durch das digitale Retteformular werden aus Schätzungen
-        <span className='font-bold text-tertiary'> Fakten </span> <br />
-        über das Engagement der Foodsharing-Community.
-      </h5>
-      <h5 className='mb-20 text-center font-londrina text-2xl font-medium text-tertiary sm:mb-0 sm:text-3xl md:text-4xl'>
-        Gemeinsam für mehr Lebensmittelwertschätzung
-      </h5>
+      {/* Operator pitch */}
+      <section
+        aria-labelledby='operator-heading'
+        className='mx-auto mt-24 max-w-5xl md:mt-32'
+      >
+        <BlurFade inView>
+          <div className='rounded-3xl border border-primary/10 bg-white p-8 sm:p-12'>
+            <div className='grid grid-cols-1 items-center gap-10 lg:grid-cols-2'>
+              <div>
+                <p className='text-sm font-semibold tracking-widest text-tertiary uppercase'>
+                  Für Betreiber:innen
+                </p>
+                <h2
+                  id='operator-heading'
+                  className='mt-2 font-londrina text-4xl text-primary'
+                >
+                  Du betreibst einen Fairteiler?
+                </h2>
+                <p className='mt-4 text-muted-foreground'>
+                  FairTrack gibt deinem Standort verlässliche Kennzahlen – für
+                  die interne Steuerung, die Öffentlichkeitsarbeit und
+                  Förderanträge. Kostenlos und Open Source.
+                </p>
+                <div className='mt-6 flex flex-col gap-3 sm:flex-row'>
+                  <Button asChild size='lg' className='group'>
+                    <Link href='/sign-up'>
+                      Fairteiler registrieren
+                      <ArrowRight className='ml-1 size-4 transition-transform group-hover:translate-x-0.5' />
+                    </Link>
+                  </Button>
+                  <Button asChild size='lg' variant='secondary'>
+                    <Link href={`mailto:${siteConfig.contact}`}>
+                      Kontakt aufnehmen
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+              <ul className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+                <OperatorFeature
+                  icon={<ClipboardPen className='size-5' />}
+                  title='Eigenes Retteformular'
+                  text='Kategorien, Herkünfte und Betriebe individuell konfigurierbar.'
+                />
+                <OperatorFeature
+                  icon={<ChartColumn className='size-5' />}
+                  title='Live-Statistiken'
+                  text='Mengen, Trends und Auswertungen für deinen Standort.'
+                />
+                <OperatorFeature
+                  icon={<UsersRound className='size-5' />}
+                  title='Team & Rollen'
+                  text='Mitglieder einladen, Rechte flexibel vergeben.'
+                />
+                <OperatorFeature
+                  icon={<FileSpreadsheet className='size-5' />}
+                  title='Excel-Export'
+                  text='Alle Daten jederzeit exportieren und weiterverwenden.'
+                />
+              </ul>
+            </div>
+          </div>
+        </BlurFade>
+      </section>
 
-      <Image
-        src={Illustrations.foodBag}
-        className='mx-auto mt-28 hidden sm:block'
-        alt='food bag'
-      />
+      {/* Closing */}
+      <section className='mx-auto mt-24 max-w-4xl text-center md:mt-32'>
+        <BlurFade inView>
+          <p className='text-md font-semibold sm:text-xl md:text-2xl'>
+            Durch das digitale Retteformular werden aus Schätzungen
+            <span className='font-bold text-tertiary'> Fakten </span>
+            über das Engagement der Foodsharing-Community.
+          </p>
+          <h2 className='mt-6 font-londrina text-3xl font-medium text-tertiary sm:text-4xl md:text-5xl'>
+            Gemeinsam für mehr Lebensmittelwertschätzung
+          </h2>
+          <Button asChild size='lg' className='text-md group mt-8'>
+            <Link href='/sign-in'>
+              Jetzt mitmachen
+              <ArrowRight className='ml-1 size-4 transition-transform group-hover:translate-x-0.5' />
+            </Link>
+          </Button>
+        </BlurFade>
+        <Image
+          src={Illustrations.foodBag}
+          className='mx-auto mt-20 hidden sm:block'
+          alt=''
+        />
+      </section>
     </div>
+  );
+}
+
+function HowItWorksStep({
+  step,
+  title,
+  image,
+  imageAlt,
+  delay,
+  className,
+  children,
+}: {
+  step: number;
+  title: string;
+  image: (typeof Illustrations)[string];
+  imageAlt: string;
+  delay: number;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <BlurFade inView delay={delay} className={className}>
+      <div className='flex h-full flex-col items-center text-center'>
+        <Image
+          src={image}
+          alt={imageAlt}
+          className='mx-auto w-3/5 sm:w-full lg:w-4/5'
+          loading='lazy'
+        />
+        <div className='mt-6 flex items-center gap-3'>
+          <span className='flex size-8 items-center justify-center rounded-full bg-primary font-londrina text-lg text-primary-foreground'>
+            {step}
+          </span>
+          <h3 className='font-londrina text-2xl text-foreground'>{title}</h3>
+        </div>
+        <p className='mt-3 max-w-xs text-muted-foreground'>{children}</p>
+      </div>
+    </BlurFade>
+  );
+}
+
+function OperatorFeature({
+  icon,
+  title,
+  text,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  text: string;
+}) {
+  return (
+    <li className='rounded-2xl bg-background p-4'>
+      <div className='flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary'>
+        {icon}
+      </div>
+      <h3 className='mt-3 text-sm font-semibold'>{title}</h3>
+      <p className='mt-1 text-sm text-muted-foreground'>{text}</p>
+    </li>
   );
 }
