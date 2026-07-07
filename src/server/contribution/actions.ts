@@ -20,8 +20,13 @@ import {
 import { AuthError } from '../api-helpers';
 import { authedAction, fairteilerAction } from '../_lib/safe-action';
 import { vContribution } from '../db/db-types';
+import { loadFairteilerMembership } from '../fairteiler/dal';
 import { checkPermissionOnServer } from '@/lib/auth/auth';
 import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
+import {
+  ACCESS_VIEW_ROLES,
+  MemberRolesEnum,
+} from '@/lib/auth/auth-permissions';
 
 export const submitContributionAction = authedAction
   .inputSchema(contributionFormSchema)
@@ -37,13 +42,32 @@ export const submitContributionAction = authedAction
     let contributingUserId = ctx.session.user.id;
 
     if (parsedInput.config.submitAsAccessViewId) {
-      const permissionResult = await checkPermissionOnServer(await headers(), {
-        member: ['create'],
-      });
+      const permissionResult = await checkPermissionOnServer(
+        await headers(),
+        { member: ['create'] },
+        parsedInput.config.fairteilerId,
+      );
 
       if (!permissionResult.success) {
         throw new PermissionError(
           'Nur Inhaber:innen dürfen Beiträge im Namen von Zugangsprofile einreichen.',
+        );
+      }
+
+      const membership = await loadFairteilerMembership(
+        parsedInput.config.fairteilerId,
+        parsedInput.config.submitAsAccessViewId,
+      );
+
+      const membershipRole = membership?.role as MemberRolesEnum | undefined;
+
+      if (
+        !membershipRole ||
+        !ACCESS_VIEW_ROLES.has(membershipRole) ||
+        membershipRole === MemberRolesEnum.DISABLED
+      ) {
+        throw new PermissionError(
+          'Das ausgewählte Zugangsprofil gehört nicht zu diesem Fairteiler.',
         );
       }
 
