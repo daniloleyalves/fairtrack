@@ -20,7 +20,6 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '3mb',
     },
   },
-  serverExternalPackages: ['ably'],
   async redirects() {
     return [
       {
