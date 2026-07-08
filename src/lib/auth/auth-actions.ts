@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import z from 'zod';
 import { checkInvitationAndUser } from '@server/contribution/dal';
 import {
+  loadMemberById,
   toggleFairteilerVisibility,
   updateFairteiler,
 } from '@server/fairteiler/dal';
@@ -198,9 +199,9 @@ export const removeMemberAction = authedAction
     revalidatePath('/hub/fairteiler/members');
   });
 
-export const updateMemberRoleAction = authedAction
+export const updateMemberRoleAction = fairteilerAction
   .inputSchema(changeRoleSchema)
-  .action(async ({ parsedInput }) => {
+  .action(async ({ parsedInput, ctx }) => {
     const reqHeaders = await headers();
     await auth.api.updateMemberRole({
       headers: reqHeaders,
@@ -208,9 +209,16 @@ export const updateMemberRoleAction = authedAction
     });
 
     if (parsedInput.role === MemberRolesEnum.OWNER) {
+      const targetMember = await loadMemberById(
+        parsedInput.memberId,
+        ctx.fairteilerId,
+      );
+      if (!targetMember) {
+        throw new NotFoundError('Member', parsedInput.memberId);
+      }
       await auth.api.setRole({
         headers: reqHeaders,
-        body: { role: 'admin', userId: parsedInput.userId },
+        body: { role: 'admin', userId: targetMember.userId },
       });
     }
     revalidatePath('/hub/fairteiler/members');

@@ -2,7 +2,6 @@ import { MemberRolesEnum } from '@/lib/auth/auth-permissions';
 import z from 'zod';
 
 export const changeRoleSchema = z.object({
-  userId: z.string(),
   memberId: z.string(),
   role: z.enum(MemberRolesEnum, {
     message: 'Bitte wähle eine gültige Rolle.',
