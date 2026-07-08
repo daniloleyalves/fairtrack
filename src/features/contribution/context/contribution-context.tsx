@@ -45,7 +45,7 @@ interface FairteilerData {
   tutorial?: FairteilerTutorialWithSteps;
 }
 
-interface ContributionContextValue {
+export interface ContributionContextValue {
   fairteiler: Fairteiler | FairteilerWithMembers;
   origins: GenericItem[];
   categories: (GenericItem & { image?: string })[];
