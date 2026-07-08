@@ -62,11 +62,22 @@ export function useCatalogResource<
   const queryClient = useQueryClient();
   const m = { ...DEFAULT_MESSAGES, ...messages };
 
-  const { data: allData } = useQuery({ ...allKey, queryFn: allQueryFn });
-  const { data: chosenData } = useQuery({
+  const {
+    data: allData,
+    isPending: isAllPending,
+    error: allError,
+  } = useQuery({ ...allKey, queryFn: allQueryFn });
+  const {
+    data: chosenData,
+    isPending: isChosenPending,
+    error: chosenError,
+  } = useQuery({
     ...chosenKey,
     queryFn: chosenQueryFn,
   });
+
+  if (allError) throw allError;
+  if (chosenError) throw chosenError;
 
   const all = allData ?? [];
   const chosen = chosenData ?? [];
@@ -177,6 +188,7 @@ export function useCatalogResource<
     updatePlatformItem: updateMutation.mutate,
     suggestPlatformItem: suggestMutation.mutate,
     flags: {
+      isLoading: isAllPending || isChosenPending,
       isAdding: addMutation.isPending,
       isRemoving: removeMutation.isPending,
       isUpdating: updateMutation.isPending,

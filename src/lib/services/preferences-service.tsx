@@ -1,6 +1,12 @@
 'use client';
 
-import { createContext, useContext, useRef, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  type ReactNode,
+} from 'react';
 import { z } from 'zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { formTableViewEnum } from '@/server/db/schema';
@@ -61,6 +67,14 @@ export function UserPreferencesProvider({
     queryFn: getUserPreferences,
     initialData: initialData ?? undefined,
   });
+
+  useEffect(() => {
+    if (error) {
+      toast.error(
+        'Präferenzen konnten nicht geladen werden. Es werden Standardwerte verwendet.',
+      );
+    }
+  }, [error]);
 
   const lastUpdatedKeyRef = useRef<keyof ClientPreferences | null>(null);
 
