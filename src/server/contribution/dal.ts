@@ -363,7 +363,12 @@ export async function addVersionHistoryRecord(
         .set({
           [payload.field]: payload.newValue,
         })
-        .where(eq(checkin.id, payload.checkinId)),
+        .where(
+          and(
+            eq(checkin.id, payload.checkinId),
+            eq(checkin.fairteilerId, fairteilerId),
+          ),
+        ),
     ]),
   );
 

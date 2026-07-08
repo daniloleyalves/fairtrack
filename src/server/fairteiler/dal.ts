@@ -13,6 +13,7 @@ import {
   fairteilerCategory,
   fairteilerCompany,
   fairteilerOrigin,
+  member,
   origin,
   tag,
 } from '../db/schema';
@@ -42,6 +43,23 @@ export async function loadFairteilerBySlug(fairteilerSlug: string) {
   );
 
   if (error) handleDatabaseError(error, 'loadFairteilerById');
+  return data;
+}
+
+export async function loadFairteilerMembership(
+  fairteilerId: string,
+  userId: string,
+) {
+  const [error, data] = await attempt(
+    db.query.member.findFirst({
+      where: and(
+        eq(member.organizationId, fairteilerId),
+        eq(member.userId, userId),
+      ),
+    }),
+  );
+
+  if (error) handleDatabaseError(error, 'loadFairteilerMembership');
   return data;
 }
 

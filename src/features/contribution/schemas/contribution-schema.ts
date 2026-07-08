@@ -60,7 +60,7 @@ export const contributionEditSchema = z.object({
   checkinId: z.string(),
   prevValue: z.string(),
   newValue: z.string(),
-  field: z.string(),
+  field: z.enum(['quantity']),
 });
 
 export const editContributionFormSchema = z.object({

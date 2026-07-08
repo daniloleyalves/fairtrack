@@ -16,8 +16,9 @@ import {
   TutorialStepFormData,
 } from '../schemas/fairteiler-tutorial-schema';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn, extractImageKeyword } from '@/lib/utils';
-import { Loader2, Plus, Save, X } from 'lucide-react';
+import { AlertCircle, Loader2, Plus, Save, X } from 'lucide-react';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { Editor } from '@tinymce/tinymce-react';
@@ -39,7 +40,7 @@ export function TutorialStepForm({
   isModalView = false,
   tutorialId,
 }: TutorialFormProps) {
-  const { env, isLoading: envLoading } = useClientEnv();
+  const { env, isLoading: envLoading, error: envError } = useClientEnv();
   const { state, addStep, updateStep, clearStepForm } = useTutorial();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editorReady, setEditorReady] = useState(false);
@@ -134,8 +135,20 @@ export function TutorialStepForm({
     );
   };
 
-  if (envLoading || !env) {
+  if (envLoading) {
     return <Skeleton className='h-[600px] w-full' />;
+  }
+
+  if (envError || !env) {
+    return (
+      <Alert className='mb-4' variant='destructive'>
+        <AlertCircle className='size-4' />
+        <AlertDescription>
+          Das Formular konnte nicht geladen werden. Bitte versuche es später
+          erneut.
+        </AlertDescription>
+      </Alert>
+    );
   }
 
   return (

@@ -42,6 +42,7 @@ export function InviteMemberForm({
   });
 
   const inviteMember = useFormAction(inviteMemberAction, form, {
+    successMessage: `Einladung erfolgreich an ${form.getValues('email')} gesendet!`,
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: fairteilerKeys.all().queryKey,

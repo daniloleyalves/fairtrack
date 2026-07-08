@@ -27,6 +27,8 @@ export function useHistoryData() {
     loadingMode === 'all' && allQuery.data ? allQuery.data : initialQuery.data;
 
   return {
+    isPending: initialQuery.isPending,
+    error: initialQuery.error,
     contributions: current?.data ?? [],
     totalCount: current?.total ?? 0,
     loadedCount: current?.data?.length ?? 0,

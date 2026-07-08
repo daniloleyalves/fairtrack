@@ -98,6 +98,8 @@ function tutorialReducer(
 interface TutorialContextValue {
   state: TutorialState;
   tutorial: FairteilerTutorialWithSteps | undefined;
+  isPending: boolean;
+  error: Error | null;
   setCurrentStep: (index: number) => void;
   toggleEditMode: () => void;
   showStepForm: (show: boolean) => void;
@@ -130,7 +132,11 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
   const invalidateTutorial = () =>
     queryClient.invalidateQueries({ queryKey: tutorialKey });
 
-  const { data: tutorialData } = useQuery({
+  const {
+    data: tutorialData,
+    isPending,
+    error,
+  } = useQuery({
     ...tutorialKeys.fairteilerTutorial(),
     queryFn: () => getFairteilerTutorialWithSteps(),
   });
@@ -236,6 +242,8 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
   const value: TutorialContextValue = {
     state,
     tutorial,
+    isPending,
+    error,
     setCurrentStep: (index) =>
       dispatch({ type: 'SET_CURRENT_STEP', payload: index }),
     toggleEditMode: () => dispatch({ type: 'TOGGLE_EDIT_MODE' }),

@@ -7,12 +7,14 @@ const PERMISSION_ERROR =
   'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen';
 
 interface CatalogMessages {
+  addSuccess?: string;
   removeSuccess?: string;
   updateSuccess?: string;
   suggestError?: string;
 }
 
 const DEFAULT_MESSAGES = {
+  addSuccess: 'Änderung erfolgreich gespeichert.',
   removeSuccess: 'Änderung erfolgreich gespeichert.',
   updateSuccess: 'Änderung erfolgreich gespeichert.',
   suggestError: 'Fehlgeschlagen, Vorschlag konnte nicht gespeichert werden.',
@@ -60,11 +62,22 @@ export function useCatalogResource<
   const queryClient = useQueryClient();
   const m = { ...DEFAULT_MESSAGES, ...messages };
 
-  const { data: allData } = useQuery({ ...allKey, queryFn: allQueryFn });
-  const { data: chosenData } = useQuery({
+  const {
+    data: allData,
+    isPending: isAllPending,
+    error: allError,
+  } = useQuery({ ...allKey, queryFn: allQueryFn });
+  const {
+    data: chosenData,
+    isPending: isChosenPending,
+    error: chosenError,
+  } = useQuery({
     ...chosenKey,
     queryFn: chosenQueryFn,
   });
+
+  if (allError) throw allError;
+  if (chosenError) throw chosenError;
 
   const all = allData ?? [];
   const chosen = chosenData ?? [];
@@ -86,6 +99,9 @@ export function useCatalogResource<
         queryClient.setQueryData(chosenKey.queryKey, context.previous);
       }
       toast.error(PERMISSION_ERROR);
+    },
+    onSuccess: () => {
+      toast.success(m.addSuccess);
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: chosenKey.queryKey });
@@ -172,6 +188,7 @@ export function useCatalogResource<
     updatePlatformItem: updateMutation.mutate,
     suggestPlatformItem: suggestMutation.mutate,
     flags: {
+      isLoading: isAllPending || isChosenPending,
       isAdding: addMutation.isPending,
       isRemoving: removeMutation.isPending,
       isUpdating: updateMutation.isPending,

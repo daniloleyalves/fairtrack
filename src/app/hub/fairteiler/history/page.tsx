@@ -1,8 +1,5 @@
 import { DataErrorBoundary } from '@/components/error-boundary';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton, TableSkeleton } from '@/components/ui/skeleton';
 import { FairteilerHistoryWrapper } from '@/features/fairteiler/history/components/history-table-wrapper';
-import { Suspense } from 'react';
 
 export default function FairteilerHistoryPage() {
   return (
@@ -20,23 +17,8 @@ export default function FairteilerHistoryPage() {
         </p>
       </div>
       <DataErrorBoundary>
-        <Suspense fallback={<HistorySkeleton />}>
-          <FairteilerHistoryWrapper />
-        </Suspense>
+        <FairteilerHistoryWrapper />
       </DataErrorBoundary>
     </div>
-  );
-}
-
-function HistorySkeleton() {
-  return (
-    <Card>
-      <CardContent>
-        <div className='flex items-center pb-4'>
-          <Skeleton variant='onCard' className='h-8 w-[250px]' />
-        </div>
-        <TableSkeleton rows={10} columns={5} showPagination />
-      </CardContent>
-    </Card>
   );
 }

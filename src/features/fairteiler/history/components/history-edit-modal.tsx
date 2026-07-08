@@ -34,8 +34,10 @@ import { useFormAction } from '@/lib/hooks/use-form-action';
 import { useIsMobile } from '@/lib/hooks/use-devices';
 import { editContributionAction } from '@/server/contribution/actions';
 import { contributionKeys } from '@/server/contribution/query-keys';
-import { useQueryClient } from '@tanstack/react-query';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
+import { userKeys } from '@/server/user/query-keys';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { Dispatch, SetStateAction, useEffect, useTransition } from 'react';
@@ -73,10 +75,17 @@ export function HistoryEditModal({ item, open, setOpen }: EditModalProps) {
   });
 
   const editContribution = useFormAction(editContributionAction, form, {
+    successMessage: 'Beitrag erfolgreich bearbeitet.',
     onSuccess: () => {
       refresh();
       void queryClient.invalidateQueries({
         queryKey: contributionKeys.versionHistory(item.checkinId).queryKey,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: fairteilerKeys.dashboard().queryKey,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: userKeys.dashboard().queryKey,
       });
       setOpen(false);
     },

@@ -21,6 +21,7 @@ import { FormSelectionItem } from './form-selection-item';
 import { v4 as uuidv4 } from 'uuid';
 import { EditItemDialog } from './edit-item-dialog';
 import { useCatalogResource } from '../hooks/use-catalog-resource';
+import { CatalogSelectionSkeleton } from './catalog-selection-skeleton';
 
 // --- Main Component ---
 
@@ -36,6 +37,10 @@ export function OriginSelectionWrapper() {
     updatePlatformItem: (item) => invokeAction(updateOriginAction, item),
     suggestPlatformItem: (item) => invokeAction(suggestNewOriginAction, item),
   });
+
+  if (origins.flags.isLoading) {
+    return <CatalogSelectionSkeleton title='Herkünfte' />;
+  }
 
   // --- Derived State ---
 
