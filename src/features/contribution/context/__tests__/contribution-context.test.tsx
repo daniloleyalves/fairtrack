@@ -31,7 +31,8 @@ vi.mock('@/lib/hooks/use-user-location', () => ({
   }),
 }));
 
-import { ContributionProvider } from '../contribution-context';
+import { ContributionProvider, useContribution } from '../contribution-context';
+import { tutorialKeys } from '@/server/tutorial/query-keys';
 
 function makeWrapper() {
   const client = new QueryClient({
@@ -51,28 +52,7 @@ afterEach(() => {
 });
 
 describe('ContributionProvider', () => {
-  // Regression: in earlier code, an early `return <>{pendingFallback}</>`
-  // branch sat BEFORE the location-tracking `useEffect`. On the first
-  // render the queries were pending so the effect was skipped; on the
-  // next render (data resolved) the effect ran — Rules-of-Hooks violation
-  // ("Rendered more hooks than during the previous render"). All hooks
-  // must run on every render, so the effect was hoisted above the early
-  // return. This test exercises the no-initialData client path so the
-  // ordering can't silently regress.
-  it('renders without violating Rules of Hooks when initialData is absent', async () => {
-    const { Wrapper } = makeWrapper();
-    expect(() =>
-      render(
-        <Wrapper>
-          <ContributionProvider pendingFallback={<div>pending</div>}>
-            <div>child</div>
-          </ContributionProvider>
-        </Wrapper>,
-      ),
-    ).not.toThrow();
-  });
-
-  it('transitions from pendingFallback to children once the queries resolve', async () => {
+  it('re-renders from pendingFallback to children once the queries resolve, without violating Rules of Hooks', async () => {
     const { Wrapper } = makeWrapper();
     const { getByText, queryByText } = render(
       <Wrapper>
@@ -98,8 +78,6 @@ describe('ContributionProvider', () => {
               name: 'Test',
               geoLat: '48.7',
               geoLng: '9.1',
-              // The rest of FairteilerWithMembers is intentionally narrowed
-              // — ContributionProvider only reads geoLat/geoLng off it.
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any,
             origins: [],
@@ -114,5 +92,42 @@ describe('ContributionProvider', () => {
 
     expect(getByText('child')).toBeTruthy();
     expect(queryByText('pending')).toBeNull();
+  });
+
+  it('does not fall back to a cached tutorial when initialData has none', () => {
+    const { client, Wrapper } = makeWrapper();
+    client.setQueryData(tutorialKeys.fairteilerTutorial().queryKey, {
+      id: 'stale-tutorial',
+      steps: [],
+    });
+
+    let tutorial: unknown = 'unset';
+    function Probe() {
+      tutorial = useContribution().tutorial;
+      return null;
+    }
+
+    render(
+      <Wrapper>
+        <ContributionProvider
+          initialData={{
+            fairteiler: {
+              id: 'f2',
+              name: 'No-Tutorial',
+              geoLat: '48.7',
+              geoLng: '9.1',
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any,
+            origins: [],
+            categories: [],
+            companies: [],
+          }}
+        >
+          <Probe />
+        </ContributionProvider>
+      </Wrapper>,
+    );
+
+    expect(tutorial).toBeUndefined();
   });
 });
