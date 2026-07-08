@@ -105,30 +105,6 @@ export function FairteilerMap({
     bearing: 0,
   });
 
-  // Validate mapbox token
-  if (!mapboxToken) {
-    return (
-      <Alert className='mb-4' variant='destructive'>
-        <AlertCircle className='size-4' />
-        <AlertDescription>
-          Mapbox-Token fehlt. Bitte konfigurieren Sie die Umgebungsvariable.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  // Check if we have valid fairteilers
-  if (!initFairteiler || markers.length === 0) {
-    return (
-      <Alert className='mb-4' variant='destructive'>
-        <AlertCircle className='size-4' />
-        <AlertDescription>
-          Keine Fairteiler mit gültigen Koordinaten gefunden.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
   const isUserNearFairteiler =
     userLocationState.coordinates &&
     activeFairteiler &&
@@ -360,6 +336,30 @@ export function FairteilerMap({
       }
     };
   }, []);
+
+  // Validate mapbox token
+  if (!mapboxToken) {
+    return (
+      <Alert className='mb-4' variant='destructive'>
+        <AlertCircle className='size-4' />
+        <AlertDescription>
+          Mapbox-Token fehlt. Bitte konfigurieren Sie die Umgebungsvariable.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  // Check if we have valid fairteilers
+  if (!initFairteiler || markers.length === 0) {
+    return (
+      <Alert className='mb-4' variant='destructive'>
+        <AlertCircle className='size-4' />
+        <AlertDescription>
+          Keine Fairteiler mit gültigen Koordinaten gefunden.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <div className='relative h-screen w-full bg-white md:h-[calc(100vh-100px)] md:rounded-lg'>
