@@ -18,6 +18,7 @@ import { Loader2, Send } from 'lucide-react';
 import { Dispatch, SetStateAction, startTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { z } from 'zod';
 import { RoleSelector } from '../components/role-selector';
 import { inviteMemberSchema } from '../schemas/members-schema';
@@ -42,8 +43,10 @@ export function InviteMemberForm({
   });
 
   const inviteMember = useFormAction(inviteMemberAction, form, {
-    successMessage: `Einladung erfolgreich an ${form.getValues('email')} gesendet!`,
     onSuccess: async () => {
+      toast.success(
+        `Einladung erfolgreich an ${form.getValues('email')} gesendet!`,
+      );
       await queryClient.invalidateQueries({
         queryKey: fairteilerKeys.all().queryKey,
       });

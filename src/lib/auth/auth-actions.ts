@@ -50,7 +50,9 @@ export const updateFairteilerAction = fairteilerAction
       organization: ['update'],
     });
     if (!permissionResult.success) {
-      throw new PermissionError('cannot update fairteiler');
+      throw new PermissionError(
+        'Du bist nicht befugt diese Aktion auszuführen',
+      );
     }
 
     const { thumbnail, ...otherValues } = parsedInput;
@@ -76,7 +78,9 @@ export const toggleFairteilerDisabled = fairteilerAction
       organization: ['update'],
     });
     if (!permissionResult.success) {
-      throw new PermissionError('cannot update fairteiler');
+      throw new PermissionError(
+        'Du bist nicht befugt diese Aktion auszuführen',
+      );
     }
 
     const result = await toggleFairteilerVisibility(
