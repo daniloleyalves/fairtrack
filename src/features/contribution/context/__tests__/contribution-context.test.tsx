@@ -31,7 +31,8 @@ vi.mock('@/lib/hooks/use-user-location', () => ({
   }),
 }));
 
-import { ContributionProvider } from '../contribution-context';
+import { ContributionProvider, useContribution } from '../contribution-context';
+import { tutorialKeys } from '@/server/tutorial/query-keys';
 
 function makeWrapper() {
   const client = new QueryClient({
@@ -104,5 +105,42 @@ describe('ContributionProvider', () => {
 
     expect(getByText('child')).toBeTruthy();
     expect(queryByText('pending')).toBeNull();
+  });
+
+  it('does not fall back to a cached tutorial when initialData has none', () => {
+    const { client, Wrapper } = makeWrapper();
+    client.setQueryData(tutorialKeys.fairteilerTutorial().queryKey, {
+      id: 'stale-tutorial',
+      steps: [],
+    });
+
+    let tutorial: unknown = 'unset';
+    function Probe() {
+      tutorial = useContribution().tutorial;
+      return null;
+    }
+
+    render(
+      <Wrapper>
+        <ContributionProvider
+          initialData={{
+            fairteiler: {
+              id: 'f2',
+              name: 'No-Tutorial',
+              geoLat: '48.7',
+              geoLng: '9.1',
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any,
+            origins: [],
+            categories: [],
+            companies: [],
+          }}
+        >
+          <Probe />
+        </ContributionProvider>
+      </Wrapper>,
+    );
+
+    expect(tutorial).toBeUndefined();
   });
 });

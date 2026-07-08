@@ -183,7 +183,9 @@ export function ContributionProvider({
     categoriesQuery.data!) as (GenericItem & { image?: string })[];
   const companies = (initialData?.companies ??
     companiesQuery.data!) as (GenericItem & { originId?: string })[];
-  const tutorial = initialData?.tutorial ?? tutorialQuery.data ?? undefined;
+  const tutorial = initialData
+    ? initialData.tutorial
+    : (tutorialQuery.data ?? undefined);
 
   const requestLocation = () => {
     window.location.reload();
