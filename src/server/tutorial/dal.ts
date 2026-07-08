@@ -1,6 +1,6 @@
 import 'server-only';
 import { cache } from 'react';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { attempt } from '@/lib/attempt';
 import { db } from '../db/drizzle';
 import {
@@ -105,8 +105,27 @@ export const addFairteilerTutorial = async (
   return data;
 };
 
+export const tutorialBelongsToFairteiler = async (
+  tutorialId: string,
+  fairteilerId: string,
+) => {
+  const [error, data] = await attempt(
+    db.query.fairteilerTutorial.findFirst({
+      where: and(
+        eq(fairteilerTutorial.id, tutorialId),
+        eq(fairteilerTutorial.fairteilerId, fairteilerId),
+      ),
+      columns: { id: true },
+    }),
+  );
+
+  if (error) handleDatabaseError(error, 'tutorialBelongsToFairteiler');
+  return Boolean(data);
+};
+
 export const updateFairteilerTutorial = async (
   tutorialId: string,
+  fairteilerId: string,
   updatedTutorialData: FairteilerTutorial,
 ) => {
   const [error, data] = await attempt(
@@ -116,7 +135,12 @@ export const updateFairteilerTutorial = async (
         title: updatedTutorialData.title,
         isActive: updatedTutorialData.isActive,
       })
-      .where(eq(fairteilerTutorial.id, tutorialId))
+      .where(
+        and(
+          eq(fairteilerTutorial.id, tutorialId),
+          eq(fairteilerTutorial.fairteilerId, fairteilerId),
+        ),
+      )
       .returning(),
   );
 
@@ -124,11 +148,19 @@ export const updateFairteilerTutorial = async (
   return data;
 };
 
-export const removeFairteilerTutorial = async (tutorialId: string) => {
+export const removeFairteilerTutorial = async (
+  tutorialId: string,
+  fairteilerId: string,
+) => {
   const [error, data] = await attempt(
     db
       .delete(fairteilerTutorial)
-      .where(eq(fairteilerTutorial.id, tutorialId))
+      .where(
+        and(
+          eq(fairteilerTutorial.id, tutorialId),
+          eq(fairteilerTutorial.fairteilerId, fairteilerId),
+        ),
+      )
       .returning(),
   );
 
@@ -157,8 +189,18 @@ export const addFairteilerTutorialStep = async (
   return data;
 };
 
+const stepsOwnedByFairteiler = (fairteilerId: string) =>
+  inArray(
+    fairteilerTutorialStep.tutorialId,
+    db
+      .select({ id: fairteilerTutorial.id })
+      .from(fairteilerTutorial)
+      .where(eq(fairteilerTutorial.fairteilerId, fairteilerId)),
+  );
+
 export const updateFairteilerTutorialStep = async (
   tutorialStepId: string,
+  fairteilerId: string,
   updatedTutorialStepData: FairteilerTutorialStep,
 ) => {
   if (
@@ -177,7 +219,12 @@ export const updateFairteilerTutorialStep = async (
         media: updatedTutorialStepData.media,
         sortIndex: updatedTutorialStepData.sortIndex,
       })
-      .where(eq(fairteilerTutorialStep.id, tutorialStepId))
+      .where(
+        and(
+          eq(fairteilerTutorialStep.id, tutorialStepId),
+          stepsOwnedByFairteiler(fairteilerId),
+        ),
+      )
       .returning(),
   );
 
@@ -185,11 +232,19 @@ export const updateFairteilerTutorialStep = async (
   return data;
 };
 
-export const removeFairteilerTutorialStep = async (tutorialStepId: string) => {
+export const removeFairteilerTutorialStep = async (
+  tutorialStepId: string,
+  fairteilerId: string,
+) => {
   const [error, data] = await attempt(
     db
       .delete(fairteilerTutorialStep)
-      .where(eq(fairteilerTutorialStep.id, tutorialStepId))
+      .where(
+        and(
+          eq(fairteilerTutorialStep.id, tutorialStepId),
+          stepsOwnedByFairteiler(fairteilerId),
+        ),
+      )
       .returning(),
   );
 

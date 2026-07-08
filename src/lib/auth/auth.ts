@@ -271,12 +271,14 @@ export async function getActiveOrganizationId(
 export async function checkPermissionOnServer(
   headers: Headers,
   checks: Record<string, string[]>,
+  organizationId?: string,
 ) {
   console.log('SERVER: Forwarding permission check to auth service.');
   return auth.api.hasPermission({
     headers: headers,
     body: {
       permissions: checks,
+      ...(organizationId ? { organizationId } : {}),
     },
   });
 }
