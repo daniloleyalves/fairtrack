@@ -146,18 +146,16 @@ describe('Access View Management E2E', () => {
 
       cy.get('button[type="submit"]').should('be.disabled');
 
-      // Intercept to spy on the actual API call
-      cy.intercept('POST', '**/hub/fairteiler/members**').as('addAccessView');
-
-      // Try with too short name
+      // Try with a valid name so the request reaches the server and is
+      // rejected on the permission check (not on client validation).
       cy.get('input[name="name"]').type('does-not-matter');
       cy.get('button[type="submit"]').contains('Zugangsprofil anlegen').click();
 
-      // Verify that the request failed
-      cy.wait('@addAccessView').then((interception) => {
-        expect(interception.response).to.exist;
-        expect(interception.response!.statusCode).to.be.equal(500);
-      });
+      // The action returns a serverError (no thrown 500); the form surfaces
+      // the German denial message to the non-owner.
+      cy.contains(
+        'Möglicherweise bist du nicht befugt diese Aktion auszuführen',
+      ).should('be.visible');
     });
   });
 

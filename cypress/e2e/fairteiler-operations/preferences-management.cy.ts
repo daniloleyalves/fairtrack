@@ -195,17 +195,14 @@ describe('Preferences Management E2E', () => {
       // Wait for content to load
       cy.contains('Herkünfte').should('be.visible');
 
-      // Intercept to spy on the actual API call
-      cy.intercept('POST', '**/hub/fairteiler/preferences**').as('addCompany');
-
       // Attempt to add a company from available options
       cy.get('[aria-label="Add Supermarkt"]').click();
 
-      // Verify that the request failed
-      cy.wait('@addCompany').then((interception) => {
-        expect(interception.response).to.exist;
-        expect(interception.response!.statusCode).to.be.equal(500);
-      });
+      // The optimistic update rolls back and the catalog hook surfaces the
+      // German denial toast (the action returns a serverError, not a 500).
+      cy.contains(
+        'Möglicherweise bist du nicht befugt diese Aktion auszuführen',
+      ).should('be.visible');
     });
   });
 });
