@@ -52,20 +52,7 @@ afterEach(() => {
 });
 
 describe('ContributionProvider', () => {
-  it('renders without violating Rules of Hooks when initialData is absent', async () => {
-    const { Wrapper } = makeWrapper();
-    expect(() =>
-      render(
-        <Wrapper>
-          <ContributionProvider pendingFallback={<div>pending</div>}>
-            <div>child</div>
-          </ContributionProvider>
-        </Wrapper>,
-      ),
-    ).not.toThrow();
-  });
-
-  it('transitions from pendingFallback to children once the queries resolve', async () => {
+  it('re-renders from pendingFallback to children once the queries resolve, without violating Rules of Hooks', async () => {
     const { Wrapper } = makeWrapper();
     const { getByText, queryByText } = render(
       <Wrapper>
