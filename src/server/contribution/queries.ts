@@ -71,6 +71,10 @@ export async function getContributions(options?: {
     throw new AuthError('No active organization selected.');
   }
 
+  if (options?.platformWide && session.user.role !== 'admin') {
+    throw new AuthError('Admin access required for platform-wide data.');
+  }
+
   const contributions = await loadContributions({
     fairteilerId: options?.platformWide ? null : fairteilerId,
     dateRange: options?.dateRange,
