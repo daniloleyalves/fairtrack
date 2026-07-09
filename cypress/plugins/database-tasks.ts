@@ -61,6 +61,27 @@ const cypressAuthClient = createAuthClient({
 });
 
 export const databaseTasks = {
+  // Onboarding reference data lives in the `gamification` schema and is not
+  // wiped by cleanDatabase. Ensure at least the standard levels exist so the
+  // onboarding wizard's experience step can be completed in tests.
+  async seedExperienceLevels() {
+    const levels = [
+      { value: 'newcomer', name: 'Neuling', sortIndex: 0, icon: 'star' },
+      {
+        value: 'experienced',
+        name: 'Erfahren',
+        sortIndex: 1,
+        icon: 'graduated',
+      },
+      { value: 'expert', name: 'Profi', sortIndex: 2, icon: 'rocket' },
+    ];
+    const existing = await testDb.select().from(schema.experienceLevels);
+    if (existing.length === 0) {
+      await testDb.insert(schema.experienceLevels).values(levels);
+    }
+    return null;
+  },
+
   async cleanDatabase() {
     try {
       // Clean up in correct order due to foreign keys

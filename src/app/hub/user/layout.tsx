@@ -1,27 +1,16 @@
 import { Dock } from '@/components/ui/dock';
 import { DockButton } from '@/components/ui/dock-button';
 import { Separator } from '@/components/ui/separator';
-import { getSession } from '@/server/user/queries';
-import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
 
-export default async function UserLayout({
+// The onboarding gate lives in `src/proxy.ts`, so this layout stays static
+// and can prerender its PPR shell. The middleware guarantees any request that
+// reaches here is authenticated and past onboarding, so the dock renders
+// unconditionally.
+export default function UserLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getSession(await headers());
-
-  // Redirect to onboarding if user hasn't completed it
-  if (session?.user?.isFirstLogin) {
-    redirect('/hub/onboarding');
-  }
-
-  return <LayoutMain>{children}</LayoutMain>;
-}
-
-async function LayoutMain({ children }: { children: React.ReactNode }) {
-  const session = await getSession(await headers());
   return (
     <main className='relative flex-1 overflow-y-auto'>
       {/* Decorative background element */}
@@ -29,21 +18,15 @@ async function LayoutMain({ children }: { children: React.ReactNode }) {
       {/* Content container */}
       <div className='relative z-10 mx-auto max-w-7xl'>{children}</div>
       <div className='fixed bottom-5 left-1/2 z-50 -translate-x-1/2 md:hidden'>
-        {!session?.user.isFirstLogin && (
-          <Dock direction='middle' className='flex gap-4'>
-            <DockButton href='/hub/user/dashboard' icon='LayoutDashboard' />
-            <DockButton href='/hub/user/fairteiler-finder' icon='Map' />
-            <DockButton href='/hub/user/history' icon='History' />
-            <DockButton href='/hub/user/feedback' icon='MessageCircle' />
-            <DockButton href='/hub/user/settings' icon='Settings2' />
-            {session && (
-              <>
-                <Separator orientation='vertical' />
-                <DockButton href='/hub/fairteiler/dashboard' icon='Coffee' />
-              </>
-            )}
-          </Dock>
-        )}
+        <Dock direction='middle' className='flex gap-4'>
+          <DockButton href='/hub/user/dashboard' icon='LayoutDashboard' />
+          <DockButton href='/hub/user/fairteiler-finder' icon='Map' />
+          <DockButton href='/hub/user/history' icon='History' />
+          <DockButton href='/hub/user/feedback' icon='MessageCircle' />
+          <DockButton href='/hub/user/settings' icon='Settings2' />
+          <Separator orientation='vertical' />
+          <DockButton href='/hub/fairteiler/dashboard' icon='Coffee' />
+        </Dock>
       </div>
     </main>
   );
