@@ -146,7 +146,6 @@ function ChangeRoleModal({
   const form = useForm<z.infer<typeof changeRoleSchema>>({
     resolver: zodResolver(changeRoleSchema),
     defaultValues: {
-      userId: member.user.id,
       memberId: member.id,
       role: member.role as MemberRolesEnum,
     },
@@ -166,7 +165,6 @@ function ChangeRoleModal({
   function onSubmit(values: z.infer<typeof changeRoleSchema>) {
     startTransition(() => {
       updateRole.execute({
-        userId: values.userId,
         memberId: values.memberId,
         role: values.role,
       });

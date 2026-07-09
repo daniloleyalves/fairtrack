@@ -9,7 +9,6 @@ import {
 
 describe('changeRoleSchema', () => {
   const createValidChangeRoleData = (overrides = {}) => ({
-    userId: 'user-123',
     memberId: 'member-456',
     role: MemberRolesEnum.MEMBER,
     ...overrides,
@@ -22,7 +21,6 @@ describe('changeRoleSchema', () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.userId).toBe('user-123');
         expect(result.data.memberId).toBe('member-456');
         expect(result.data.role).toBe(MemberRolesEnum.MEMBER);
       }
@@ -51,16 +49,6 @@ describe('changeRoleSchema', () => {
   });
 
   describe('required field validation', () => {
-    it('should reject missing userId', () => {
-      const invalidData = createValidChangeRoleData({ userId: undefined });
-      const result = changeRoleSchema.safeParse(invalidData);
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.issues[0].path).toEqual(['userId']);
-      }
-    });
-
     it('should reject missing memberId', () => {
       const invalidData = createValidChangeRoleData({ memberId: undefined });
       const result = changeRoleSchema.safeParse(invalidData);
@@ -105,7 +93,6 @@ describe('changeRoleSchema', () => {
   describe('string validation', () => {
     it('should accept empty strings for IDs', () => {
       const validData = createValidChangeRoleData({
-        userId: '',
         memberId: '',
       });
       const result = changeRoleSchema.safeParse(validData);

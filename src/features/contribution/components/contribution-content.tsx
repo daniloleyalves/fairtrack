@@ -39,7 +39,7 @@ export function ContributionContent() {
   const fairteilerWithMembers = fairteiler as FairteilerWithMembers;
 
   // Get current user's member record
-  const currentMemberRecord = fairteilerWithMembers?.members.find(
+  const currentMemberRecord = fairteilerWithMembers?.members?.find(
     (member) => member.user.id === user?.id,
   );
   const isOwner = currentMemberRecord?.role === MemberRolesEnum.OWNER;

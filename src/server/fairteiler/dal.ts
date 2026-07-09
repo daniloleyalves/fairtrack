@@ -63,6 +63,20 @@ export async function loadFairteilerMembership(
   return data;
 }
 
+export async function loadMemberById(memberId: string, fairteilerId: string) {
+  const [error, data] = await attempt(
+    db.query.member.findFirst({
+      where: and(
+        eq(member.id, memberId),
+        eq(member.organizationId, fairteilerId),
+      ),
+    }),
+  );
+
+  if (error) handleDatabaseError(error, 'loadMemberById');
+  return data;
+}
+
 export async function loadTagsByFairteiler(fairteilerId: string) {
   const [error, data] = await attempt(
     db.query.tag.findMany({

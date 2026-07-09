@@ -12,7 +12,7 @@ import {
 import { auth, checkPermissionOnServer } from '../auth';
 import { getActiveFairteiler } from '@server/fairteiler/queries';
 import { checkInvitationAndUser } from '@server/contribution/dal';
-import { updateFairteiler } from '@server/fairteiler/dal';
+import { updateFairteiler, loadMemberById } from '@server/fairteiler/dal';
 import { put, del } from '@vercel/blob';
 import { headers } from 'next/headers';
 import { MemberRolesEnum } from '../auth-permissions';
@@ -49,6 +49,7 @@ vi.mock('@server/contribution/dal', () => ({
 vi.mock('@server/fairteiler/dal', () => ({
   updateFairteiler: vi.fn(),
   toggleFairteilerVisibility: vi.fn(),
+  loadMemberById: vi.fn(),
 }));
 
 vi.mock('@server/user/dal', () => ({
@@ -655,12 +656,18 @@ describe('Authentication Actions', () => {
           banExpires: null,
         },
       });
+      vi.mocked(loadMemberById).mockResolvedValue({
+        id: 'member-123',
+        userId: 'user-123',
+        organizationId: 'fairteiler-123',
+        role: 'owner',
+        createdAt: new Date(),
+      });
     });
 
     it('should successfully update member role', async () => {
       await updateMemberRoleAction({
         memberId: 'member-123',
-        userId: 'user-123',
         role: MemberRolesEnum.MEMBER,
       });
 
@@ -678,7 +685,6 @@ describe('Authentication Actions', () => {
     it('should promote user to admin when role is owner', async () => {
       await updateMemberRoleAction({
         memberId: 'member-123',
-        userId: 'user-123',
         role: MemberRolesEnum.OWNER,
       });
 
@@ -699,13 +705,53 @@ describe('Authentication Actions', () => {
       });
     });
 
+    it('promotes the userId owned by the memberId, not a client-supplied id', async () => {
+      vi.mocked(loadMemberById).mockResolvedValue({
+        id: 'member-123',
+        userId: 'member-123-real-owner',
+        organizationId: 'fairteiler-123',
+        role: 'owner',
+        createdAt: new Date(),
+      });
+
+      await updateMemberRoleAction({
+        memberId: 'member-123',
+        role: MemberRolesEnum.OWNER,
+      });
+
+      expect(loadMemberById).toHaveBeenCalledWith(
+        'member-123',
+        'fairteiler-123',
+      );
+      expect(auth.api.setRole).toHaveBeenCalledWith({
+        headers: mockHeaders,
+        body: {
+          role: 'admin',
+          userId: 'member-123-real-owner',
+        },
+      });
+    });
+
+    it('rejects owner promotion when the member is not in the active org', async () => {
+      vi.mocked(loadMemberById).mockResolvedValue(undefined);
+
+      const result = await updateMemberRoleAction({
+        memberId: 'member-from-another-org',
+        role: MemberRolesEnum.OWNER,
+      });
+
+      expect(result?.serverError).toBe(
+        "Member with identifier 'member-from-another-org' not found",
+      );
+      expect(auth.api.setRole).not.toHaveBeenCalled();
+    });
+
     it('should surface role update errors as serverError', async () => {
       const updateError = new Error('Insufficient permissions');
       vi.mocked(auth.api.updateMemberRole).mockRejectedValue(updateError);
 
       const result = await updateMemberRoleAction({
         memberId: 'member-123',
-        userId: 'user-123',
         role: MemberRolesEnum.MEMBER,
       });
       expect(result?.serverError).toBe('Insufficient permissions');
@@ -717,7 +763,6 @@ describe('Authentication Actions', () => {
 
       const result = await updateMemberRoleAction({
         memberId: 'member-123',
-        userId: 'user-123',
         role: MemberRolesEnum.OWNER,
       });
       expect(result?.serverError).toBe('Failed to set admin role');
@@ -726,7 +771,6 @@ describe('Authentication Actions', () => {
     it('should surface validation errors for invalid input parameters', async () => {
       const result = await updateMemberRoleAction({
         memberId: '',
-        userId: '',
         role: 'invalid-role' as MemberRolesEnum.MEMBER,
       });
       expect(result?.validationErrors).toBeDefined();
@@ -1079,7 +1123,6 @@ describe('Authentication Actions', () => {
         const promises = Array.from({ length: 3 }, (_, i) =>
           updateMemberRoleAction({
             memberId: `member-${i}`,
-            userId: `user-${i}`,
             role: MemberRolesEnum.MEMBER,
           }),
         );

@@ -475,6 +475,32 @@ describe('DTO Layer', () => {
 
         expect(result).toEqual(mockContributions);
       });
+
+      it('allows an admin to request platform-wide contributions', async () => {
+        vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue(
+          mockSession,
+        );
+        vi.mocked(dal.loadContributions).mockResolvedValue(mockContributions);
+
+        const result = await getContributions({ platformWide: true });
+
+        expect(dal.loadContributions).toHaveBeenCalledWith(
+          expect.objectContaining({ fairteilerId: null }),
+        );
+        expect(result).toEqual(mockContributions);
+      });
+
+      it('denies non-admins platform-wide contributions without loading any data', async () => {
+        vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue({
+          ...mockSession,
+          user: { ...mockSession.user, role: 'member' },
+        });
+
+        await expect(getContributions({ platformWide: true })).rejects.toThrow(
+          'Admin access required for platform-wide data.',
+        );
+        expect(dal.loadContributions).not.toHaveBeenCalled();
+      });
     });
 
     describe('getVersionHistoryByCheckinId', () => {
