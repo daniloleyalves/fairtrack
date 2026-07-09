@@ -2,11 +2,15 @@
 
 import { toast } from 'sonner';
 import { FairteilerDisableToggle } from './fairteiler-disable-toggle';
-import { ACTIVE_FAIRTEILER_KEY } from '@/lib/config/api-routes';
-import useSWRSuspense from '@/lib/services/swr';
+import { Card, CardHeader } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { FairteilerWithMembers } from '@/server/db/db-types';
-import { updateFairteilerAction } from '@/lib/auth/auth-actions';
-import useSWRMutation from 'swr/mutation';
+import { toggleFairteilerDisabled } from '@/lib/auth/auth-actions';
+import { invokeAction } from '@/lib/hooks/use-form-action';
+import { getActiveFairteiler } from '@/server/fairteiler/queries';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { UserIcon } from 'lucide-react';
 
 interface FairteilerDisableWrapperProps {
   className?: string;
@@ -15,65 +19,88 @@ interface FairteilerDisableWrapperProps {
 export function FairteilerDisableWrapper({
   className,
 }: FairteilerDisableWrapperProps) {
-  const { data: fairteiler } = useSWRSuspense<FairteilerWithMembers>(
-    ACTIVE_FAIRTEILER_KEY,
-  );
+  const queryClient = useQueryClient();
+  const activeKey = fairteilerKeys.active().queryKey;
 
-  const handleToggle = (checked: boolean) => {
-    const formData = new FormData();
-    // Append all fairteiler properties to FormData
-    for (const [key, value] of Object.entries(fairteiler)) {
-      if (value != null) {
-        formData.append(key, String(value));
-      }
-    }
-    // Set the disabled property based on the checked state
-    formData.append('disabled', String(!checked));
-    toggleFairteilerVisibility(formData);
-  };
+  const {
+    data: fairteiler,
+    isPending,
+    error,
+  } = useQuery({
+    ...fairteilerKeys.active(),
+    queryFn: () => getActiveFairteiler(),
+  });
 
-  // --- Mutations ---
-  const { trigger: toggleFairteilerVisibility } = useSWRMutation(
-    ACTIVE_FAIRTEILER_KEY,
-    (_key, { arg }: { arg: FormData }) => updateFairteilerAction(arg),
-    {
-      optimisticData: (
-        currentFairteilerCache: FairteilerWithMembers | undefined,
-      ): FairteilerWithMembers => {
-        const baseFairteiler: FairteilerWithMembers =
-          currentFairteilerCache ?? fairteiler;
-
-        return {
-          ...baseFairteiler,
-          disabled: !fairteiler.disabled,
-        };
-      },
-      revalidate: false,
-      rollbackOnError: true,
-      onSuccess: (result) => {
-        if (result.success && result.data) {
-          toast.success(
-            result.message ??
-              'Fairteilersichtbarkeit erfolgreich aktualisiert!',
-          );
-        }
-        if (!result.success && result.error) {
-          toast.success(result.error);
-        }
-      },
-      onError: (err) => {
-        const message =
-          err instanceof Error ? err.message : 'Aktualisierung fehlgeschlagen.';
-        toast.error(message);
-      },
+  const toggle = useMutation({
+    mutationFn: (disabled: boolean) =>
+      invokeAction(toggleFairteilerDisabled, {
+        disabled,
+      }),
+    onMutate: async (disabled) => {
+      await queryClient.cancelQueries({ queryKey: activeKey });
+      const previous =
+        queryClient.getQueryData<FairteilerWithMembers>(activeKey);
+      queryClient.setQueryData<FairteilerWithMembers>(activeKey, (current) => {
+        const base = current ?? previous ?? fairteiler;
+        if (!base) return current;
+        return { ...base, disabled };
+      });
+      return { previous };
     },
-  );
+    onError: (err, _disabled, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(activeKey, context.previous);
+      }
+      toast.error(
+        err instanceof Error ? err.message : 'Aktualisierung fehlgeschlagen.',
+      );
+    },
+    onSuccess: () => {
+      toast.success('Fairteilersichtbarkeit erfolgreich aktualisiert!');
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({
+        queryKey: fairteilerKeys.all().queryKey,
+      });
+    },
+  });
+
+  if (isPending) {
+    return <FairteilerDisableSkeleton />;
+  }
+
+  if (error) {
+    throw error;
+  }
+
+  if (!fairteiler) return null;
 
   return (
     <FairteilerDisableToggle
       isDisabled={fairteiler.disabled}
-      onToggleDisabled={handleToggle}
+      onToggleDisabled={(checked) => toggle.mutate(checked)}
       className={className}
     />
+  );
+}
+
+function FairteilerDisableSkeleton() {
+  return (
+    <Card className='h-max'>
+      <CardHeader className='flex justify-between'>
+        <div className='flex flex-col gap-3 xs:flex-row'>
+          <div className='flex size-10 min-w-10 items-center justify-center rounded-lg bg-primary/10'>
+            <UserIcon className='size-5 text-primary' />
+          </div>
+          <div className='space-y-2'>
+            <Skeleton className='h-4 w-48 bg-secondary' />
+            <div className='space-y-1'>
+              <Skeleton className='h-2 w-56 bg-secondary' />
+            </div>
+          </div>
+        </div>
+        <Skeleton className='h-5 w-10 bg-secondary' />
+      </CardHeader>
+    </Card>
   );
 }

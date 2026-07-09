@@ -1,0 +1,1 @@
+ALTER TABLE "auth"."user" ALTER COLUMN "foodsharing_id" SET DATA TYPE integer USING "foodsharing_id"::integer;

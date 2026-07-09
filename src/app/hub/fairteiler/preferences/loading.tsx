@@ -31,45 +31,45 @@ export default function FairteilerPreferencesLoading() {
             <Card className='h-max' key={i}>
               <CardHeader>
                 <CardTitle>
-                  <Skeleton className='h-4 w-48 bg-secondary' />
+                  <Skeleton variant='onCard' className='h-4 w-48' />
                 </CardTitle>
                 <CardDescription>
-                  <Skeleton className='mt-1 h-3 w-full bg-secondary' />
-                  <Skeleton className='mt-1 size-3/4 bg-secondary' />
+                  <Skeleton variant='onCard' className='mt-1 h-3 w-full' />
+                  <Skeleton variant='onCard' className='mt-1 size-3/4' />
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Skeleton className='h-[70px] w-full bg-secondary' />
+                <Skeleton variant='onCard' className='h-[70px] w-full' />
               </CardContent>
               <Separator />
               <CardHeader>
                 <CardTitle>
-                  <Skeleton className='h-4 w-40 bg-secondary' />
+                  <Skeleton variant='onCard' className='h-4 w-40' />
                 </CardTitle>
                 <CardDescription>
-                  <Skeleton className='mt-1 h-3 w-full bg-secondary' />
-                  <Skeleton className='mt-1 h-3 w-full bg-secondary' />
+                  <Skeleton variant='onCard' className='mt-1 h-3 w-full' />
+                  <Skeleton variant='onCard' className='mt-1 h-3 w-full' />
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className='flex h-50 flex-col gap-2'>
-                  <Skeleton className='h-[50px] w-full bg-secondary' />
-                  <Skeleton className='h-[50px] w-full bg-secondary' />
-                  <Skeleton className='h-[50px] w-full bg-secondary' />
+                  <Skeleton variant='onCard' className='h-[50px] w-full' />
+                  <Skeleton variant='onCard' className='h-[50px] w-full' />
+                  <Skeleton variant='onCard' className='h-[50px] w-full' />
                 </div>
               </CardContent>
               <Separator />
               <CardHeader>
                 <CardTitle>
-                  <Skeleton className='h-4 w-40 bg-secondary' />
+                  <Skeleton variant='onCard' className='h-4 w-40' />
                 </CardTitle>
                 <CardDescription>
-                  <Skeleton className='mt-1 h-3 w-full bg-secondary' />
-                  <Skeleton className='mt-1 h-3 w-full bg-secondary' />
+                  <Skeleton variant='onCard' className='mt-1 h-3 w-full' />
+                  <Skeleton variant='onCard' className='mt-1 h-3 w-full' />
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Skeleton className='h-[32px] w-full bg-secondary' />
+                <Skeleton variant='onCard' className='h-[32px] w-full' />
               </CardContent>
             </Card>
           );

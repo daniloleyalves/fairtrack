@@ -116,36 +116,6 @@ describe('Fastmode Contribution Flow E2E', () => {
     });
   });
 
-  it('should validate shelf life constraints', () => {
-    // Setup user with fairteiler as owner
-    cy.setupUserWithFairteiler({ role: 'owner' }).then(() => {
-      cy.visitContributionPage();
-      cy.switchContributionMode('fast');
-      cy.addContributionRow();
-
-      const shelfLifeInput =
-        'table tbody tr:first-child td:nth-child(5) input[type="text"]';
-
-      // Test zero (unlimited shelf life)
-      cy.get(shelfLifeInput).clear().type('0');
-
-      cy.get('body').click();
-
-      cy.get(shelfLifeInput)
-        .parent()
-        .find('svg')
-        .should('have.class', 'lucide-infinity');
-
-      // Test future date
-      cy.get(shelfLifeInput).clear().type('7');
-      cy.get(shelfLifeInput).should('have.value', '7');
-
-      // Test very large number
-      cy.get(shelfLifeInput).clear().type('365');
-      cy.get(shelfLifeInput).should('have.value', '365');
-    });
-  });
-
   it('should validate text field length constraints', () => {
     // Setup user with fairteiler as owner (with test data)
     cy.setupUserWithFairteiler({ role: 'owner', withTestData: true }).then(

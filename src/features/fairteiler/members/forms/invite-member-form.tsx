@@ -15,14 +15,15 @@ import { Input } from '@components/ui/input';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Send } from 'lucide-react';
-import { Dispatch, SetStateAction, useTransition } from 'react';
+import { Dispatch, SetStateAction, startTransition } from 'react';
 import { useForm } from 'react-hook-form';
-import { useSWRConfig } from 'swr';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { z } from 'zod';
 import { RoleSelector } from '../components/role-selector';
 import { inviteMemberSchema } from '../schemas/members-schema';
-import { ACTIVE_FAIRTEILER_KEY } from '@/lib/config/api-routes';
-import { handleAsyncAction } from '@/lib/client-error-handling';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
+import { useFormAction } from '@/lib/hooks/use-form-action';
 
 export function InviteMemberForm({
   setOpen,
@@ -31,8 +32,7 @@ export function InviteMemberForm({
 }: React.ComponentProps<'form'> & {
   setOpen: Dispatch<SetStateAction<boolean>>;
 }) {
-  const { mutate } = useSWRConfig();
-  const [isPending, startTransition] = useTransition();
+  const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof inviteMemberSchema>>({
     resolver: zodResolver(inviteMemberSchema),
@@ -42,16 +42,23 @@ export function InviteMemberForm({
     },
   });
 
+  const inviteMember = useFormAction(inviteMemberAction, form, {
+    onSuccess: async () => {
+      toast.success(
+        `Einladung erfolgreich an ${form.getValues('email')} gesendet!`,
+      );
+      await queryClient.invalidateQueries({
+        queryKey: fairteilerKeys.all().queryKey,
+      });
+      form.reset();
+      setOpen(false);
+    },
+  });
+  const isPending = inviteMember.isPending;
+
   function onSubmit(values: z.infer<typeof inviteMemberSchema>) {
     startTransition(() => {
-      handleAsyncAction(() => inviteMemberAction(values), form, {
-        showToast: true,
-        onSuccess: async () => {
-          await mutate(ACTIVE_FAIRTEILER_KEY);
-          form.reset();
-          setOpen(false);
-        },
-      });
+      inviteMember.execute(values);
     });
   }
 

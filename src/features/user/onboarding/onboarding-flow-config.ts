@@ -1,11 +1,11 @@
-import { handleAsyncAction } from '@/lib/client-error-handling';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 import {
   createStepFlow,
   createStepFlowAPI,
   StepConfig,
 } from '@/lib/factories/step-flow-factory';
-import { saveOnboardingProgressAction } from '@/server/actions';
-import { OnboardingData } from '@/server/dto';
+import { saveOnboardingProgressAction } from '@/server/user/actions';
+import { OnboardingData } from '@/server/user/types';
 import {
   OnboardingMetadata,
   OnboardingStepData,
@@ -17,13 +17,11 @@ export const USER_ONBOARDING_FLOW_ID = 'onboarding';
 const createOnboardingAPI = () =>
   createStepFlowAPI<OnboardingStepData>({
     async saveProgress(data) {
-      await handleAsyncAction(
-        () => saveOnboardingProgressAction(data),
-        undefined,
-        {
-          showToast: false,
-        },
-      );
+      try {
+        await invokeAction(saveOnboardingProgressAction, data);
+      } catch (error) {
+        console.error('Failed to save onboarding progress:', error);
+      }
     },
   });
 

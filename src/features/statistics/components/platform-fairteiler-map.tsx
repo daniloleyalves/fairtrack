@@ -23,7 +23,7 @@ export function PlatformFairteilerMap({
 }: {
   fairteilers: Fairteiler[];
 }) {
-  const { env, isLoading: envLoading } = useClientEnv();
+  const { env, isLoading: envLoading, error: envError } = useClientEnv();
 
   const cardRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapRef>(null);
@@ -126,6 +126,28 @@ export function PlatformFairteilerMap({
         </CardHeader>
         <CardContent>
           <Skeleton className='h-[400px] w-full rounded-lg' />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (envError) {
+    return (
+      <Card ref={cardRef}>
+        <CardHeader>
+          <CardTitle className='flex items-center justify-between'>
+            <span>Fairteiler Karte</span>
+            <DownloadButton elementRef={cardRef} filename='fairteiler-map' />
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert variant='destructive'>
+            <AlertCircle className='size-4' />
+            <AlertDescription>
+              Die Karte konnte nicht geladen werden. Bitte versuche es später
+              erneut.
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
     );

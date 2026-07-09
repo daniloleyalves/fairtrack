@@ -14,7 +14,7 @@ import {
 } from '@components/ui/card';
 import { Skeleton } from '@components/ui/skeleton';
 import { siteConfig } from '@/lib/config/site-config';
-import { getRecentCheckinsWithinLastMinute } from '@server/dto';
+import { getRecentCheckinsWithinLastMinute } from '@server/contribution/queries';
 import {
   AlertTriangle,
   ArrowRight,
@@ -194,14 +194,14 @@ function ContributionSuccessCardSkeleton() {
     <div className='flex min-h-[calc(100vh-64px)] items-center justify-center bg-background p-4'>
       <Card className='w-full max-w-md'>
         <CardContent className='flex flex-col items-center p-8 pb-4 text-center'>
-          <Skeleton className='mb-6 size-16 rounded-full bg-secondary' />
-          <Skeleton className='mb-2 h-7 w-3/4 bg-secondary' />
-          <Skeleton className='mb-6 h-5 w-2/4 bg-secondary' />
+          <Skeleton variant='onCard' className='mb-6 size-16 rounded-full' />
+          <Skeleton variant='onCard' className='mb-2 h-7 w-3/4' />
+          <Skeleton variant='onCard' className='mb-6 h-5 w-2/4' />
           <div className='w-full space-y-3'>
-            <Skeleton className='h-12 w-full bg-secondary' />
-            <Skeleton className='h-12 w-full bg-secondary' />
+            <Skeleton variant='onCard' className='h-12 w-full' />
+            <Skeleton variant='onCard' className='h-12 w-full' />
           </div>
-          <Skeleton className='mt-6 h-4 w-1/2 bg-secondary' />
+          <Skeleton variant='onCard' className='mt-6 h-4 w-1/2' />
         </CardContent>
       </Card>
     </div>

@@ -9,10 +9,8 @@ import {
 import { FormControl, FormField, FormItem } from '@components/ui/form';
 import { TableCell, TableRow } from '@components/ui/table';
 import { GenericItem } from '@server/db/db-types';
-import { differenceInCalendarDays, startOfToday } from 'date-fns';
 import {
   Edit,
-  InfinityIcon,
   MoreHorizontal,
   PlusCircle,
   Save,
@@ -28,10 +26,7 @@ import { Button } from '@components/ui/button';
 import { cn } from '@/lib/utils';
 import { useContributionTable } from '../../context/contribution-table-context';
 import { FormSelect } from '@/components/form/form-select';
-import {
-  DaysToDateAdapter,
-  QuantityIncrementer,
-} from '@/components/form/quantity-incrementer';
+import { QuantityIncrementer } from '@/components/form/quantity-incrementer';
 
 interface EditableContributionRowProps {
   index: number;
@@ -59,24 +54,17 @@ export function EditableContributionRow({
   // --- FORM HOOKS ---
   const { control, setValue } = useFormContext<ContributionFormValues>();
   const categorySelectRef = useRef<HTMLButtonElement>(null);
-  const [
-    categoryId,
-    originId,
-    companyId,
-    customCompanyName,
-    quantity,
-    shelfLife,
-  ] = useWatch({
-    control,
-    name: [
-      `contributions.${index}.categoryId` as const,
-      `contributions.${index}.originId` as const,
-      `contributions.${index}.companyId` as const,
-      `contributions.${index}.company` as const,
-      `contributions.${index}.quantity` as const,
-      `contributions.${index}.shelfLife` as const,
-    ],
-  }) as [string, string, string, string | null, number, Date | null];
+  const [categoryId, originId, companyId, customCompanyName, quantity] =
+    useWatch({
+      control,
+      name: [
+        `contributions.${index}.categoryId` as const,
+        `contributions.${index}.originId` as const,
+        `contributions.${index}.companyId` as const,
+        `contributions.${index}.company` as const,
+        `contributions.${index}.quantity` as const,
+      ],
+    }) as [string, string, string, string | null, number];
 
   // --- SIDE EFFECTS ---
   useEffect(() => {
@@ -108,9 +96,6 @@ export function EditableContributionRow({
   const selectedCompany = formOptions.fairteilerCompanies?.find(
     (c) => c.id === companyId,
   );
-  const shelfLifeDays = shelfLife
-    ? differenceInCalendarDays(new Date(shelfLife), startOfToday())
-    : null;
 
   const { showAllColumns } = useContributionTable();
 
@@ -225,6 +210,7 @@ export function EditableContributionRow({
                     inputWidth={80}
                     index={index}
                     preventAutoFocus={true}
+                    showStepperButtons={false}
                   />
                 </FormControl>
               </FormItem>
@@ -243,38 +229,6 @@ export function EditableContributionRow({
           </div>
         )}
       </TableCell>
-      <TableCell className={cn(!showAllColumns && 'hidden', 'sm:table-cell')}>
-        {isEditing ? (
-          <FormField
-            name={`contributions.${index}.shelfLife`}
-            control={control}
-            render={({ field, fieldState }) => (
-              <FormItem>
-                <FormControl>
-                  <DaysToDateAdapter
-                    value={field.value}
-                    onChange={field.onChange}
-                    iconWhenZero={InfinityIcon}
-                    inputWidth={40}
-                    className={
-                      fieldState.error
-                        ? 'rounded-lg ring-2 ring-destructive ring-offset-2'
-                        : ''
-                    }
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        ) : (
-          <>
-            {shelfLifeDays !== null
-              ? `${shelfLifeDays} ${shelfLifeDays <= 1 ? 'Tag' : 'Tage'}`
-              : 'Unkritisch'}
-          </>
-        )}
-      </TableCell>
-
       {/* Actions Cell */}
       <TableCell className='w-[48px] pl-0'>
         <ContributionRowTableActions

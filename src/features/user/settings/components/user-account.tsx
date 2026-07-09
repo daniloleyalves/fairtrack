@@ -32,7 +32,7 @@ export default function UserAccountCard({
   onUpdateUser,
 }: {
   user: User;
-  onUpdateUser: (formData: FormData, isAnonymous: boolean) => void;
+  onUpdateUser: (updatedUser: User) => void;
 }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
@@ -55,16 +55,7 @@ export default function UserAccountCard({
   };
 
   const handleUpdateAnonymity = (isAnonymous: boolean) => {
-    const updatedUser: User = { ...user, isAnonymous };
-    const formData = new FormData();
-    for (const key in updatedUser) {
-      const value = updatedUser[key as keyof User];
-      if (value != null) {
-        formData.append(key, String(value));
-      }
-    }
-
-    onUpdateUser(formData, isAnonymous);
+    onUpdateUser({ ...user, isAnonymous });
   };
 
   return (

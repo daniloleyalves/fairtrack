@@ -17,15 +17,15 @@ import { Label } from '@components/ui/label';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Check, CirclePlus, Copy, Loader2 } from 'lucide-react';
-import { Dispatch, SetStateAction, useState, useTransition } from 'react';
+import { Dispatch, SetStateAction, startTransition, useState } from 'react';
 import { useForm } from 'react-hook-form'; // No need for UseFormReturn type export here
 
-import { useSWRConfig } from 'swr';
+import { useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { accessViewSchema } from '../schemas/members-schema';
 import { RoleSelector } from '../components/role-selector';
-import { ACTIVE_FAIRTEILER_KEY } from '@/lib/config/api-routes';
-import { handleAsyncAction } from '@/lib/client-error-handling';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
+import { useFormAction } from '@/lib/hooks/use-form-action';
 import { toast } from 'sonner';
 
 interface Credentials {
@@ -40,9 +40,8 @@ export function AddAccessViewForm({
 }: React.ComponentProps<'form'> & {
   setOpen: Dispatch<SetStateAction<boolean>>;
 }) {
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
 
-  const [isPending, startTransition] = useTransition();
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [credentials, setCredentials] = useState<Credentials | null>(null);
 
@@ -54,29 +53,30 @@ export function AddAccessViewForm({
     },
   });
 
+  const addAccessView = useFormAction(addAccessViewAction, form, {
+    showToast: false,
+    setFormError: false,
+    onSuccess: async (data) => {
+      if (data) {
+        setCredentials(data);
+        setFormSubmitted(true);
+        await queryClient.invalidateQueries({
+          queryKey: fairteilerKeys.all().queryKey,
+        });
+      }
+    },
+    onError: () => {
+      const errorMessage =
+        'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen';
+      form.setError('root.serverError', { message: errorMessage });
+      toast.error(errorMessage);
+    },
+  });
+  const isPending = addAccessView.isPending;
+
   function onSubmit(values: z.infer<typeof accessViewSchema>) {
     startTransition(() => {
-      handleAsyncAction(() => addAccessViewAction(values), form, {
-        showToast: false,
-        setFormError: false,
-        onSuccess: async (result) => {
-          if (result.data) {
-            setCredentials(result.data);
-          }
-          setFormSubmitted(true);
-          await mutate(ACTIVE_FAIRTEILER_KEY);
-        },
-        onError: (err) => {
-          console.error(err);
-          const errorMessage =
-            'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen';
-          // Set general form error
-          form.setError('root.serverError' as 'root' | `root.${string}`, {
-            message: errorMessage,
-          });
-          toast.error(errorMessage);
-        },
-      });
+      addAccessView.execute(values);
     });
   }
 

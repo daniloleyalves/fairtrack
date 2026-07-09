@@ -1,5 +1,16 @@
 import { Milestone, MilestoneEvent } from '@/server/db/db-types';
-import { MilestoneData, MilestoneDisplay } from './milestone-processor';
+
+export interface MilestoneDisplay {
+  id: string;
+  quantity: number;
+  isAchieved: boolean;
+  achievedAt?: Date;
+}
+
+export interface MilestoneData {
+  achieved: MilestoneDisplay[];
+  nextMilestone: MilestoneDisplay | null;
+}
 
 /**
  * Transform raw data into display format

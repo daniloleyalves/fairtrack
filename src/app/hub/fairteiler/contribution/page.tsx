@@ -3,19 +3,25 @@ import { ContributionContent } from '@/features/contribution/components/contribu
 import { Suspense } from 'react';
 import { Skeleton } from '@ui/skeleton';
 import { UserPreferencesProvider } from '@/lib/services/preferences-service';
+import { DataErrorBoundary } from '@/components/error-boundary';
 import { headers } from 'next/headers';
-import { getSession } from '@/server/dto';
+import { getSession } from '@/server/user/queries';
 
 export default async function FairteilerContributionPage() {
   const session = await getSession(await headers());
   return (
-    <Suspense fallback={<ContributionPageSkeleton />}>
-      <UserPreferencesProvider>
-        <ContributionProvider user={session ? session.user : null}>
-          <ContributionContent />
-        </ContributionProvider>
-      </UserPreferencesProvider>
-    </Suspense>
+    <DataErrorBoundary>
+      <Suspense fallback={<ContributionPageSkeleton />}>
+        <UserPreferencesProvider>
+          <ContributionProvider
+            user={session ? session.user : null}
+            pendingFallback={<ContributionPageSkeleton />}
+          >
+            <ContributionContent />
+          </ContributionProvider>
+        </UserPreferencesProvider>
+      </Suspense>
+    </DataErrorBoundary>
   );
 }
 

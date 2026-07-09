@@ -9,8 +9,6 @@ export interface ContributionItem {
   categoryId: string;
   companyId: string | null;
   company: string | null;
-  cool: boolean;
-  shelfLife: Date | null;
   allergens: string | null;
   comment: string | null;
 }
@@ -25,8 +23,6 @@ export function createContributionItem(): ContributionItem {
     categoryId: '',
     companyId: null,
     company: null,
-    cool: false,
-    shelfLife: null,
     allergens: null,
     comment: null,
   };

@@ -16,8 +16,9 @@ import {
   TutorialStepFormData,
 } from '../schemas/fairteiler-tutorial-schema';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn, extractImageKeyword } from '@/lib/utils';
-import { Loader2, Plus, Save, X } from 'lucide-react';
+import { AlertCircle, Loader2, Plus, Save, X } from 'lucide-react';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { Editor } from '@tinymce/tinymce-react';
@@ -39,7 +40,7 @@ export function TutorialStepForm({
   isModalView = false,
   tutorialId,
 }: TutorialFormProps) {
-  const { env, isLoading: envLoading } = useClientEnv();
+  const { env, isLoading: envLoading, error: envError } = useClientEnv();
   const { state, addStep, updateStep, clearStepForm } = useTutorial();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editorReady, setEditorReady] = useState(false);
@@ -115,39 +116,39 @@ export function TutorialStepForm({
   }, [editorReady, state.editingStep]);
 
   const onSubmit = (data: TutorialStepFormData) => {
-    handleClientOperation(
+    if (!tutorialId) return;
+    void handleClientOperation(
       async () => {
-        const formData = new FormData();
-
-        formData.append('title', data.title);
-        formData.append('content', data.content);
-        formData.append('sortIndex', data.sortIndex.toString());
-
-        if (data.media) formData.append('media', data.media);
-        if (data.id) formData.append('id', data.id);
-        if (tutorialId) formData.append('tutorialId', tutorialId);
-
-        try {
-          if (state.editingStep?.id) {
-            await updateStep(formData);
-          } else {
-            await addStep(formData);
-          }
-          clearStepForm();
-          clearForm();
-        } catch (error) {
-          console.error('Error submitting step:', error);
+        if (state.editingStep?.id && data.id) {
+          await updateStep({ ...data, id: data.id, tutorialId });
+        } else {
+          const { id: _ignored, ...rest } = data;
+          await addStep({ ...rest, tutorialId });
         }
+        clearStepForm();
+        clearForm();
       },
       setIsSubmitting,
       (error) => {
-        console.error('Error checking invitation:', error);
+        console.error('Error submitting step:', error);
       },
     );
   };
 
-  if (envLoading || !env) {
+  if (envLoading) {
     return <Skeleton className='h-[600px] w-full' />;
+  }
+
+  if (envError || !env) {
+    return (
+      <Alert className='mb-4' variant='destructive'>
+        <AlertCircle className='size-4' />
+        <AlertDescription>
+          Das Formular konnte nicht geladen werden. Bitte versuche es später
+          erneut.
+        </AlertDescription>
+      </Alert>
+    );
   }
 
   return (
@@ -346,5 +347,5 @@ export function TutorialStepForm({
 }
 
 function EditorSkeleton() {
-  return <Skeleton className='absolute h-[400px] w-full bg-secondary' />;
+  return <Skeleton variant='onCard' className='absolute h-[400px] w-full' />;
 }

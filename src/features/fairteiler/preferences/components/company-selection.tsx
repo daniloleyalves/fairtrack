@@ -5,11 +5,16 @@ import {
   removeFairteilerCompanyAction,
   suggestNewCompanyAction,
   updateCompanyAction,
-} from '@server/actions';
+} from '@server/fairteiler/actions';
+import {
+  getCompanies,
+  getCompaniesByFairteiler,
+  getOrigins,
+} from '@server/fairteiler/queries';
+import { companyKeys, originKeys } from '@server/fairteiler/query-keys';
 import { CompanyWithOrigin, GenericItem } from '@server/db/db-types';
 import { toast } from 'sonner';
 import { useState } from 'react';
-import useSWRMutation from 'swr/mutation';
 import { Badge } from '@ui/badge';
 import { Loader2, Plus, Pencil } from 'lucide-react';
 import { Button } from '@ui/button';
@@ -24,162 +29,61 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@ui/select';
-import useSWRSuspense from '@/lib/services/swr';
-import {
-  COMPANIES_BY_FAIRTEILER_KEY,
-  COMPANY_KEY,
-  ORIGIN_KEY,
-} from '@/lib/config/api-routes';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 import { v4 as uuidv4 } from 'uuid';
 import { EditItemDialog } from './edit-item-dialog';
-import { useSWRConfig } from 'swr';
+import { useQuery } from '@tanstack/react-query';
+import { useCatalogResource } from '../hooks/use-catalog-resource';
+import { CatalogSelectionSkeleton } from './catalog-selection-skeleton';
 
 // --- Main Component ---
 
 export function CompanySelectionWrapper() {
-  const { data: allCompanies } =
-    useSWRSuspense<CompanyWithOrigin[]>(COMPANY_KEY);
-  const { data: allOrigins } = useSWRSuspense<GenericItem[]>(ORIGIN_KEY);
+  const companies = useCatalogResource<CompanyWithOrigin, GenericItem>({
+    allKey: companyKeys.all(),
+    allQueryFn: getCompanies,
+    chosenKey: companyKeys.byFairteiler(),
+    chosenQueryFn: getCompaniesByFairteiler,
+    addToFairteiler: (item) => invokeAction(addFairteilerCompanyAction, item),
+    removeFromFairteiler: (item) =>
+      invokeAction(removeFairteilerCompanyAction, item),
+    updatePlatformItem: (item) => invokeAction(updateCompanyAction, item),
+    suggestPlatformItem: async (item) => {
+      await invokeAction(suggestNewCompanyAction, item);
+      return item;
+    },
+    messages: {
+      removeSuccess: 'Betrieb erfolgreich entfernt',
+      updateSuccess: 'Betrieb erfolgreich aktualisiert',
+    },
+  });
 
-  const { data: chosenCompanies } = useSWRSuspense<GenericItem[]>(
-    COMPANIES_BY_FAIRTEILER_KEY,
-  );
+  const {
+    data: allOriginsData,
+    isPending: isOriginsPending,
+    error: originsError,
+  } = useQuery({
+    ...originKeys.all(),
+    queryFn: getOrigins,
+  });
 
-  return (
-    <CompanySelection
-      allCompanies={allCompanies}
-      allOrigins={allOrigins}
-      chosenCompanies={chosenCompanies}
-    />
-  );
-}
+  if (originsError) throw originsError;
 
-function CompanySelection({
-  allCompanies,
-  allOrigins,
-  chosenCompanies,
-}: {
-  allCompanies: CompanyWithOrigin[];
-  allOrigins: GenericItem[];
-  chosenCompanies: GenericItem[];
-}) {
-  const { mutate } = useSWRConfig();
+  const allOrigins = allOriginsData ?? [];
 
-  // --- Mutations  ---
-  const { trigger: addFairteilerCompanyTrigger, isMutating: isAdding } =
-    useSWRMutation(
-      COMPANIES_BY_FAIRTEILER_KEY,
-      (_key, { arg }: { arg: GenericItem }) => addFairteilerCompanyAction(arg),
-      {
-        populateCache: (
-          addedCompany: GenericItem,
-          currentCompanies: GenericItem[] = [],
-        ) => {
-          if (!currentCompanies.length) {
-            return [addedCompany];
-          }
-          return [...currentCompanies, addedCompany];
-        },
-        revalidate: false,
-        rollbackOnError: true,
-        onError: () =>
-          toast.error(
-            'Fehlgeschlagen. Möglicherweise bist du nicht befug, diese Aktion auszuführen',
-          ),
-      },
-    );
-
-  const { trigger: removeFairteilerCompanyTrigger, isMutating: isRemoving } =
-    useSWRMutation(
-      COMPANIES_BY_FAIRTEILER_KEY,
-      (_key, { arg }: { arg: GenericItem }) =>
-        removeFairteilerCompanyAction(arg),
-      {
-        populateCache: (
-          removedCompany: GenericItem,
-          currentChosen: GenericItem[] = [],
-        ) => {
-          return (currentChosen || []).filter(
-            (c) => c.id !== removedCompany.id,
-          );
-        },
-        revalidate: false,
-        rollbackOnError: true,
-        onSuccess: () => {
-          toast.success('Betrieb erfolgreich entfernt');
-        },
-        onError: () => {
-          return toast.error(
-            'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen',
-          );
-        },
-      },
-    );
-
-  const { trigger: updateCompanyTrigger, isMutating: isUpdating } =
-    useSWRMutation(
-      COMPANIES_BY_FAIRTEILER_KEY,
-      (_key, { arg }: { arg: GenericItem }) => updateCompanyAction(arg),
-      {
-        populateCache: (
-          updatedCompany: GenericItem,
-          currentCompanies: GenericItem[] = [],
-        ) => {
-          return currentCompanies.map((c) =>
-            c.id === updatedCompany.id ? updatedCompany : c,
-          );
-        },
-        revalidate: false,
-        rollbackOnError: true,
-        onSuccess: () => {
-          mutate(COMPANY_KEY);
-          toast.success('Betrieb erfolgreich aktualisiert');
-        },
-        onError: () => {
-          return toast.error(
-            'Fehlgeschlagen. Möglicherweise bist du nicht befugt diese Aktion auszuführen',
-          );
-        },
-      },
-    );
-
-  // --- Handlers with Optimistic Updates ---
-
-  const handleAddCompany = (companyToAdd: GenericItem) => {
-    addFairteilerCompanyTrigger(companyToAdd, {
-      optimisticData: (currentChosen: GenericItem[] = []) => {
-        return [...currentChosen, companyToAdd];
-      },
-    });
-  };
-
-  const handleRemoveCompany = (companyToRemove: GenericItem) => {
-    removeFairteilerCompanyTrigger(companyToRemove, {
-      optimisticData: (currentChosen: GenericItem[] = []) => {
-        return currentChosen.filter((c) => c.id !== companyToRemove.id);
-      },
-    });
-  };
-
-  const handleUpdateCompany = (companyToUpdate: GenericItem) => {
-    updateCompanyTrigger(companyToUpdate, {
-      optimisticData: (currentCompanies: GenericItem[] = []) => {
-        return currentCompanies.map((c) =>
-          c.id === companyToUpdate.id ? companyToUpdate : c,
-        );
-      },
-    });
-  };
+  if (companies.flags.isLoading || isOriginsPending) {
+    return <CatalogSelectionSkeleton title='Betriebe' />;
+  }
 
   // --- Derived State  ---
 
-  const chosenCompanyIds = new Set(chosenCompanies.map((c) => c.id));
-  const availableCompanies = allCompanies.filter((company) => {
+  const chosenCompanyIds = new Set(companies.chosen.map((c) => c.id));
+  const availableCompanies = companies.all.filter((company) => {
     const isNotChosen = !chosenCompanyIds.has(company.id);
     const isNotPending = company.status !== 'pending';
     return isNotChosen && isNotPending;
   });
-  const pendingCompanies = allCompanies.filter(
+  const pendingCompanies = companies.all.filter(
     (company) => company.status === 'pending',
   );
 
@@ -196,11 +100,11 @@ function CompanySelection({
                 erscheinen im Rette-Formular.
               </p>
               <ChosenCompanies
-                companies={chosenCompanies}
-                onRemoveAction={handleRemoveCompany}
-                onUpdateAction={handleUpdateCompany}
-                isRemoving={isRemoving}
-                isUpdating={isUpdating}
+                companies={companies.chosen}
+                onRemoveAction={companies.removeFromFairteiler}
+                onUpdateAction={companies.updatePlatformItem}
+                isRemoving={companies.flags.isRemoving}
+                isUpdating={companies.flags.isUpdating}
                 allOrigins={allOrigins}
               />
             </div>
@@ -219,8 +123,8 @@ function CompanySelection({
                       <FormSelectionItem
                         key={company.id}
                         item={company}
-                        onAdd={() => handleAddCompany(company)}
-                        isAdding={isAdding}
+                        onAdd={() => companies.addToFairteiler(company)}
+                        isAdding={companies.flags.isAdding}
                         subtitle={company.originName ?? 'Keine Herkunft'}
                       />
                     ))
@@ -242,6 +146,8 @@ function CompanySelection({
             <SuggestCompanyForm
               pendingCompanies={pendingCompanies}
               allOrigins={allOrigins}
+              onSuggest={companies.suggestPlatformItem}
+              isSuggesting={companies.flags.isSuggesting}
             />
           </div>
         </div>
@@ -322,24 +228,19 @@ export function ChosenCompanies({
 export function SuggestCompanyForm({
   pendingCompanies,
   allOrigins,
+  onSuggest,
+  isSuggesting,
 }: {
   pendingCompanies: GenericItem[];
   allOrigins: GenericItem[];
+  onSuggest: (item: CompanyWithOrigin) => void;
+  isSuggesting: boolean;
 }) {
   const [newCompanyText, setNewCompanyText] = useState('');
   const [selectedOriginId, setSelectedOriginId] = useState<string | null>();
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
-  const { trigger: addTrigger, isMutating: isAdding } = useSWRMutation(
-    COMPANY_KEY,
-    (_key, { arg }: { arg: GenericItem }) => suggestNewCompanyAction(arg),
-    {
-      revalidate: false,
-      rollbackOnError: true,
-    },
-  );
-
-  const handleAddCompany = async (e: React.FormEvent) => {
+  const handleAddCompany = (e: React.FormEvent) => {
     e.preventDefault();
     setHasAttemptedSubmit(true);
 
@@ -353,31 +254,18 @@ export function SuggestCompanyForm({
       return;
     }
 
-    const newSuggestion: GenericItem & {
-      originId?: string;
-      originName?: string;
-    } = {
+    const newSuggestion: CompanyWithOrigin = {
       id: uuidv4(),
       name: newCompanyText.trim(),
       status: 'active',
-      originId: selectedOriginId ?? '',
+      originId: selectedOriginId,
       originName: allOrigins.find((item) => item.id === selectedOriginId)?.name,
     };
 
-    try {
-      await addTrigger(newSuggestion, {
-        optimisticData: (currentCompanies: GenericItem[] = []) => {
-          return [...currentCompanies, newSuggestion];
-        },
-      });
-
-      setNewCompanyText('');
-      setSelectedOriginId(null);
-      setHasAttemptedSubmit(false);
-    } catch (e) {
-      console.error('Failed to suggest company:', e);
-      toast.error('Fehlgeschlagen, ' + String(e));
-    }
+    onSuggest(newSuggestion);
+    setNewCompanyText('');
+    setSelectedOriginId(null);
+    setHasAttemptedSubmit(false);
   };
 
   return (
@@ -403,13 +291,13 @@ export function SuggestCompanyForm({
             value={newCompanyText}
             onChange={(e) => setNewCompanyText(e.target.value)}
             placeholder='Name des neuen Betriebs...'
-            disabled={isAdding}
+            disabled={isSuggesting}
           />
           <div className='flex gap-2'>
             <Select
               value={selectedOriginId ?? ''}
               onValueChange={(value) => setSelectedOriginId(value)}
-              disabled={isAdding}
+              disabled={isSuggesting}
             >
               <SelectTrigger
                 className={
@@ -435,7 +323,7 @@ export function SuggestCompanyForm({
               type='submit'
               variant='outline'
               disabled={
-                isAdding ||
+                isSuggesting ||
                 newCompanyText.length <= 0 ||
                 !selectedOriginId ||
                 selectedOriginId === 'none'
@@ -443,7 +331,7 @@ export function SuggestCompanyForm({
               className='shrink-0'
               aria-label='Suggest new company'
             >
-              {isAdding ? <Loader2 className='animate-spin' /> : <Plus />}
+              {isSuggesting ? <Loader2 className='animate-spin' /> : <Plus />}
             </Button>
           </div>
         </div>

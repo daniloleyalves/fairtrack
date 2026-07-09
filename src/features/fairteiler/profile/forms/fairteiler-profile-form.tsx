@@ -19,58 +19,43 @@ import { Loader2, X } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { toast } from 'sonner';
-import useSWRMutation from 'swr/mutation';
 import { z } from 'zod';
 import { FairteilerWithMembers } from '@server/db/db-types';
-import { preload, SWRConfig } from 'swr';
 import { FairteilerTagsWrapper } from '../components/fairteiler-tags-wrapper';
-import {
-  ACTIVE_FAIRTEILER_KEY,
-  CATEGORIES_BY_FAIRTEILER_KEY,
-  CATEGORY_KEY,
-  COMPANIES_BY_FAIRTEILER_KEY,
-  COMPANY_KEY,
-  ORIGIN_KEY,
-  ORIGINS_BY_FAIRTEILER_KEY,
-} from '@/lib/config/api-routes';
-import useSWRSuspense, { fetcher } from '@/lib/services/swr';
-
-preload(ORIGIN_KEY, fetcher);
-preload(CATEGORY_KEY, fetcher);
-preload(COMPANY_KEY, fetcher);
-preload(ORIGINS_BY_FAIRTEILER_KEY, fetcher);
-preload(CATEGORIES_BY_FAIRTEILER_KEY, fetcher);
-preload(COMPANIES_BY_FAIRTEILER_KEY, fetcher);
+import { useFormAction } from '@/lib/hooks/use-form-action';
+import { getActiveFairteiler } from '@/server/fairteiler/queries';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { FairteilerProfileFormSkeleton } from './fairteiler-profile-form-skeleton';
 
 // --- 2. Data Fetching Component ---
 export function ProfileFormWrapper() {
-  const { data: fairteiler } = useSWRSuspense<FairteilerWithMembers>(
-    ACTIVE_FAIRTEILER_KEY,
-    {
-      fetcher,
-      suspense: true,
-      revalidateIfStale: false,
-      revalidateOnFocus: false,
-      revalidateOnMount: false,
-    },
-  );
+  const {
+    data: fairteiler,
+    isPending,
+    error,
+  } = useQuery({
+    ...fairteilerKeys.active(),
+    queryFn: () => getActiveFairteiler(),
+  });
+
+  if (isPending) {
+    return <FairteilerProfileFormSkeleton />;
+  }
+
+  if (error) {
+    throw error;
+  }
+
+  if (!fairteiler) {
+    throw new Error('Fairteiler-Profil nicht gefunden.');
+  }
 
   return (
-    <SWRConfig
-      value={{
-        fetcher,
-        revalidateOnFocus: false,
-        revalidateOnMount: false,
-        revalidateIfStale: false,
-        revalidateOnReconnect: true,
-      }}
-    >
-      <div className='space-y-6'>
-        <FairteilerProfileForm fairteiler={fairteiler} />
-        <FairteilerTagsWrapper />
-      </div>
-    </SWRConfig>
+    <div className='space-y-6'>
+      <FairteilerProfileForm fairteiler={fairteiler} />
+      <FairteilerTagsWrapper />
+    </div>
   );
 }
 
@@ -81,54 +66,21 @@ function FairteilerProfileForm({
 }: React.ComponentProps<'div'> & {
   fairteiler: FairteilerWithMembers;
 }) {
-  // --- Mutations ---
-  const { trigger: updateTrigger, isMutating } = useSWRMutation(
-    ACTIVE_FAIRTEILER_KEY,
-    (_key, { arg }: { arg: FormData }) => updateFairteilerAction(arg),
-    {
-      optimisticData: (
-        currentFairteilerCache: FairteilerWithMembers | undefined,
-      ): FairteilerWithMembers => {
-        const baseFairteiler: FairteilerWithMembers =
-          currentFairteilerCache ?? fairteiler;
-
-        const values = form.getValues();
-
-        const updatedThumbnail =
-          values.thumbnail instanceof File
-            ? URL.createObjectURL(values.thumbnail)
-            : values.thumbnail;
-
-        return {
-          ...baseFairteiler,
-          ...values,
-          thumbnail: updatedThumbnail,
-        };
-      },
-      revalidate: false,
-      rollbackOnError: true,
-      onSuccess: (result) => {
-        if (result.success && result.data) {
-          toast.success(result.message ?? 'Profil erfolgreich aktualisiert!');
-          form.reset(result.data);
-        }
-        if (!result.success && result.error) {
-          toast.success(result.error);
-          form.reset();
-        }
-      },
-      onError: (err) => {
-        const message =
-          err instanceof Error ? err.message : 'Aktualisierung fehlgeschlagen.';
-        toast.error(message);
-        form.setError('root.serverError', { message });
-      },
-    },
-  );
-
   const form = useForm<z.infer<typeof fairteilerProfileSchema>>({
     resolver: zodResolver(fairteilerProfileSchema),
     defaultValues: fairteiler,
+  });
+
+  const queryClient = useQueryClient();
+
+  const { execute, isPending } = useFormAction(updateFairteilerAction, form, {
+    successMessage: 'Profil erfolgreich aktualisiert!',
+    onSuccess: (data) => {
+      if (data) form.reset(data);
+      void queryClient.invalidateQueries({
+        queryKey: fairteilerKeys.all().queryKey,
+      });
+    },
   });
 
   // --- Image Preview Logic  ---
@@ -151,18 +103,8 @@ function FairteilerProfileForm({
   }, [thumbnail]);
   // --- End of preview logic ---
 
-  async function onSubmit(values: z.infer<typeof fairteilerProfileSchema>) {
-    const formData = new FormData();
-    for (const key in values) {
-      const value = values[key as keyof typeof values];
-      if (value instanceof File) {
-        formData.append(key, value);
-      } else if (value != null) {
-        formData.append(key, String(value));
-      }
-    }
-
-    await updateTrigger(formData);
+  function onSubmit(values: z.infer<typeof fairteilerProfileSchema>) {
+    execute(values);
   }
 
   return (
@@ -207,7 +149,7 @@ function FairteilerProfileForm({
                               type='button'
                               variant='outline'
                               size='icon'
-                              disabled={isMutating}
+                              disabled={isPending}
                               onClick={() => field.onChange(null)}
                             >
                               <X className='size-4 text-destructive' />
@@ -219,7 +161,7 @@ function FairteilerProfileForm({
                           {...fileRef}
                           type='file'
                           accept='image/jpeg,image/jpg,image/png'
-                          disabled={isMutating}
+                          disabled={isPending}
                           onChange={(event) =>
                             field.onChange(event.target?.files?.[0] ?? null)
                           }
@@ -239,7 +181,7 @@ function FairteilerProfileForm({
                     <FormItem>
                       <FormLabel>Name</FormLabel>
                       <FormControl>
-                        <Input {...field} disabled={isMutating} />
+                        <Input {...field} disabled={isPending} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -257,7 +199,7 @@ function FairteilerProfileForm({
                         </span>
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} disabled={isMutating} />
+                        <Input {...field} disabled={isPending} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -275,7 +217,7 @@ function FairteilerProfileForm({
                         </span>
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} disabled={isMutating} />
+                        <Input {...field} disabled={isPending} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -297,7 +239,7 @@ function FairteilerProfileForm({
                         <Input
                           {...field}
                           value={field.value ?? ''}
-                          disabled={isMutating}
+                          disabled={isPending}
                         />
                       </FormControl>
                       <FormMessage />
@@ -319,7 +261,7 @@ function FairteilerProfileForm({
                         <Input
                           {...field}
                           value={field.value ?? ''}
-                          disabled={isMutating}
+                          disabled={isPending}
                         />
                       </FormControl>
                       <FormMessage />
@@ -341,7 +283,7 @@ function FairteilerProfileForm({
                         <Input
                           {...field}
                           value={field.value ?? ''}
-                          disabled={isMutating}
+                          disabled={isPending}
                         />
                       </FormControl>
                       <FormMessage />
@@ -360,9 +302,9 @@ function FairteilerProfileForm({
             <div className='mt-4 flex w-full justify-end'>
               <Button
                 type='submit'
-                disabled={isMutating || !form.formState.isDirty}
+                disabled={isPending || !form.formState.isDirty}
               >
-                {isMutating && <Loader2 className='mr-2 size-4 animate-spin' />}
+                {isPending && <Loader2 className='mr-2 size-4 animate-spin' />}
                 Profil aktualisieren
               </Button>
             </div>

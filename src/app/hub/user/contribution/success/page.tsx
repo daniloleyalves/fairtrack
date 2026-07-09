@@ -14,11 +14,12 @@ import {
 } from '@components/ui/card';
 import { Skeleton } from '@components/ui/skeleton';
 import { siteConfig } from '@/lib/config/site-config';
+import { getRecentCheckinsWithinLastMinute } from '@server/contribution/queries';
 import {
   getLatestContributions,
-  getRecentCheckinsWithinLastMinute,
+  getMilestoneData,
   getUserPreferences,
-} from '@server/dto';
+} from '@server/user/queries';
 import {
   AlertTriangle,
   ArrowRight,
@@ -30,7 +31,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Suspense, type ReactNode } from 'react';
 import { ContributionFeedback } from '@/features/contribution/components/contribution-feedback';
-import { getMilestoneData } from '@/server/dto';
 import { transformMilestoneData } from '@/features/user/gamification/milestones/milestone-utils';
 
 // Define a more specific type for the checkin data for better type safety.
@@ -88,17 +88,17 @@ function ResultCardLayout({
 
 // --- 4. Specific UI Components ---
 async function SuccessDisplay({ checkins }: { checkins: RecentCheckin[] }) {
-  const nextHeaders = await headers();
-  const userPreferences = await getUserPreferences(nextHeaders);
+  const userPreferences = await getUserPreferences();
 
   let feedbackData = null;
 
   if (userPreferences?.enableAIFeedback) {
     // Get user's latest contributions and milestone data for AI feedback
     try {
+      const nextHeaders = await headers();
       const [latestContributions, milestoneData] = await Promise.all([
         getLatestContributions(nextHeaders, 5),
-        getMilestoneData(nextHeaders),
+        getMilestoneData(),
       ]);
 
       const transformedMilestoneData = transformMilestoneData(milestoneData);
@@ -236,28 +236,23 @@ function ContributionSuccessCardSkeleton() {
     <div className='mt-24 flex h-max min-h-[calc(100vh-64px)] w-full justify-center p-4'>
       <Card className='h-max w-full max-w-md'>
         <CardContent className='flex flex-col items-center p-8 pb-4 text-center'>
-          {/* Icon skeleton - circle to match CheckCircle icon */}
           <div className='mb-6 flex size-16 items-center justify-center'>
-            <Skeleton className='size-16 rounded-full bg-secondary' />
+            <Skeleton variant='onCard' className='size-16 rounded-full' />
           </div>
 
-          {/* Title skeleton - matches "Super!" width */}
-          <Skeleton className='mb-2 h-8 w-24 bg-secondary' />
+          <Skeleton variant='onCard' className='mb-2 h-8 w-24' />
 
-          {/* Description skeleton - matches actual description length */}
-          <Skeleton className='mb-6 h-5 w-80 max-w-full bg-secondary' />
+          <Skeleton variant='onCard' className='mb-6 h-5 w-80 max-w-full' />
 
-          {/* Button skeletons - match actual button sizes */}
           <div className='w-full space-y-3'>
-            <Skeleton className='h-10 w-full bg-secondary' />
-            <Skeleton className='h-10 w-full bg-secondary' />
+            <Skeleton variant='onCard' className='h-10 w-full' />
+            <Skeleton variant='onCard' className='h-10 w-full' />
           </div>
 
-          {/* Accordion trigger skeleton - matches actual accordion styling */}
           <div className='mt-4 w-full'>
             <div className='flex h-[76px] items-center justify-around py-4'>
               <span className='h-px w-full bg-secondary'></span>
-              <Skeleton className='mx-4 h-4 w-32 bg-secondary' />
+              <Skeleton variant='onCard' className='mx-4 h-4 w-32' />
               <span className='h-px w-full bg-secondary'></span>
             </div>
           </div>

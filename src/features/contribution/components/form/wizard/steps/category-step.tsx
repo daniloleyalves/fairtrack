@@ -10,8 +10,7 @@ import { Separator } from '@components/ui/separator';
 import { GenericItem } from '@server/db/db-types';
 import type { ContributionItem } from '@features/contribution/models/contribution';
 import { cn, formatNumber } from '@/lib/utils';
-import { differenceInCalendarDays, startOfToday } from 'date-fns';
-import { InfinityIcon, Apple } from 'lucide-react';
+import { Apple } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 
@@ -41,8 +40,8 @@ export function CategoryStep({
       <DialogHeader className='pt-6'>
         <DialogTitle>Kategorien</DialogTitle>
         <DialogDescription>
-          Wähle alle zutreffenden Kategorien sowie die Menge und Haltbarkeit der
-          Lebensmittel, die aus der ausgewählten Herkunft stammen.
+          Wähle alle zutreffenden Kategorien sowie die Menge der Lebensmittel,
+          die aus der ausgewählten Herkunft stammen.
         </DialogDescription>
       </DialogHeader>
       <Separator className='my-6' />
@@ -85,25 +84,12 @@ export function CategoryStep({
               {contribution && (
                 <div
                   className={cn(
-                    'absolute bottom-0.5 left-1/2 z-50 flex h-[50px] w-[90px] -translate-x-1/2 translate-y-[100%] flex-col items-center justify-center rounded-b-lg',
+                    'absolute bottom-0.5 left-1/2 z-50 flex h-[40px] w-[90px] -translate-x-1/2 translate-y-[100%] flex-col items-center justify-center rounded-b-lg',
                     !contribution.quantity ? 'bg-destructive' : 'bg-primary',
                   )}
                 >
                   <span className='text-white'>
                     {formatNumber(contribution.quantity)} kg
-                  </span>
-                  <span className='text-xs text-white'>
-                    {contribution.shelfLife ? (
-                      <>
-                        {differenceInCalendarDays(
-                          contribution.shelfLife,
-                          startOfToday(),
-                        )}{' '}
-                        Tage
-                      </>
-                    ) : (
-                      <InfinityIcon className='size-4' />
-                    )}
                   </span>
                 </div>
               )}

@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { headers } from 'next/headers';
 import {
+  submitContributionAction,
+  editContributionAction,
+  exportContributionsAction,
+} from '../contribution/actions';
+import {
   suggestNewOriginAction,
   addFairteilerOriginAction,
   removeFairteilerOriginAction,
@@ -10,12 +15,16 @@ import {
   suggestNewCompanyAction,
   addFairteilerCompanyAction,
   removeFairteilerCompanyAction,
-  submitContributionAction,
-  editContributionAction,
-  exportContributionsAction,
-} from '../actions';
-import * as dal from '../dal';
-import { NotFoundError, ValidationError } from '../error-handling';
+} from '../fairteiler/actions';
+import {
+  addFairteilerTutorialStepAction,
+  removeFairteilerTutorialAction,
+  updateFairteilerTutorialAction,
+  updateFairteilerTutorialStepAction,
+} from '../tutorial/actions';
+import * as dal from '../contribution/dal';
+import * as fairteilerDal from '../fairteiler/dal';
+import * as tutorialDal from '../tutorial/dal';
 import { AuthError } from '../api-helpers';
 import type { GenericItem } from '../db/db-types';
 import {
@@ -26,15 +35,23 @@ import {
   mockSession,
 } from '@/__tests__/mocks/server-only';
 import { checkPermissionOnServer } from '@/lib/auth/auth';
-import { loadAuthenticatedSession } from '../dal';
+import { loadAuthenticatedSession } from '../user/dal';
 
 // Mockk all auth functions
 vi.mock('@lib/auth/auth', () => ({
+  auth: { api: {} },
   checkPermissionOnServer: vi.fn(),
 }));
 
 // Mock all DAL functions
-vi.mock('../dal', () => ({
+vi.mock('../contribution/dal', () => ({
+  checkinContribution: vi.fn(),
+  addVersionHistoryRecord: vi.fn(),
+  loadContributions: vi.fn(),
+  checkInvitationAndUser: vi.fn(),
+}));
+
+vi.mock('../fairteiler/dal', () => ({
   addOrigin: vi.fn(),
   addFairteilerOrigin: vi.fn(),
   removeFairteilerOrigin: vi.fn(),
@@ -44,11 +61,21 @@ vi.mock('../dal', () => ({
   addCompany: vi.fn(),
   addFairteilerCompany: vi.fn(),
   removeFairteilerCompany: vi.fn(),
-  checkinContribution: vi.fn(),
-  addVersionHistoryRecord: vi.fn(),
+  loadFairteilerMembership: vi.fn(),
+}));
+
+vi.mock('../tutorial/dal', () => ({
+  addFairteilerTutorial: vi.fn(),
+  addFairteilerTutorialStep: vi.fn(),
+  removeFairteilerTutorial: vi.fn(),
+  removeFairteilerTutorialStep: vi.fn(),
+  tutorialBelongsToFairteiler: vi.fn(),
+  updateFairteilerTutorial: vi.fn(),
+  updateFairteilerTutorialStep: vi.fn(),
+}));
+
+vi.mock('../user/dal', () => ({
   loadAuthenticatedSession: vi.fn(),
-  loadContributions: vi.fn(),
-  checkInvitationAndUser: vi.fn(),
 }));
 
 // Mock Next.js headers
@@ -80,28 +107,26 @@ describe('Server Actions', () => {
   describe('Origin Management Actions', () => {
     describe('suggestNewOriginAction', () => {
       it('should successfully suggest a new origin', async () => {
-        vi.mocked(dal.addOrigin).mockResolvedValue(mockOrigins);
+        vi.mocked(fairteilerDal.addOrigin).mockResolvedValue(mockOrigins);
 
         const result = await suggestNewOriginAction(mockGenericItem);
 
-        expect(dal.addOrigin).toHaveBeenCalledWith(mockGenericItem);
-        expect(result).toEqual({
-          success: true,
-          message: 'Herkunft erfolgreich vorgeschlagen.',
-          data: mockGenericItem,
-        });
+        expect(fairteilerDal.addOrigin).toHaveBeenCalledWith(mockGenericItem);
+        expect(result?.data).toEqual(mockGenericItem);
       });
 
-      it('should return error when origin creation fails', async () => {
+      it('should surface error when origin creation fails', async () => {
         (
-          vi.mocked(dal.addOrigin) as ReturnType<typeof vi.fn>
+          vi.mocked(fairteilerDal.addOrigin) as ReturnType<typeof vi.fn>
         ).mockResolvedValue(null);
 
-        await expect(suggestNewOriginAction(mockGenericItem)).rejects.toThrow();
+        const result = await suggestNewOriginAction(mockGenericItem);
+        expect(result?.serverError).toBe(
+          "Origin with identifier 'after creation' not found",
+        );
       });
 
-      it('should return validation error for invalid input', async () => {
-        // Use unknown to bypass TypeScript validation for testing
+      it('should surface validation errors on invalid input', async () => {
         const invalidInput = {
           id: '',
           name: '',
@@ -109,12 +134,7 @@ describe('Server Actions', () => {
         } as unknown as GenericItem;
 
         const result = await suggestNewOriginAction(invalidInput);
-
-        expect(result).toEqual({
-          success: false,
-          error: 'Ungültige Eingabe. Bitte überprüfen Sie Ihre Angaben.',
-          issues: expect.any(Array),
-        });
+        expect(result?.validationErrors).toBeDefined();
       });
     });
 
@@ -128,42 +148,44 @@ describe('Server Actions', () => {
             originId: 'test-id',
           },
         ];
-        vi.mocked(dal.addFairteilerOrigin).mockResolvedValue(
+        vi.mocked(fairteilerDal.addFairteilerOrigin).mockResolvedValue(
           mockFairteilerOriginResult,
         );
 
         const result = await addFairteilerOriginAction(mockGenericItem);
 
-        expect(dal.addFairteilerOrigin).toHaveBeenCalledWith(
+        expect(fairteilerDal.addFairteilerOrigin).toHaveBeenCalledWith(
           mockFairteiler.id,
           mockGenericItem,
         );
-        expect(result).toEqual(mockGenericItem);
+        expect(result?.data).toEqual(mockGenericItem);
       });
 
-      it('should throw Error when addition fails', async () => {
+      it('should surface serverError when addition fails', async () => {
         (
-          vi.mocked(dal.addFairteilerOrigin) as ReturnType<typeof vi.fn>
+          vi.mocked(fairteilerDal.addFairteilerOrigin) as ReturnType<
+            typeof vi.fn
+          >
         ).mockResolvedValue(null);
 
-        await expect(
-          addFairteilerOriginAction(mockGenericItem),
-        ).rejects.toThrow();
+        const result = await addFairteilerOriginAction(mockGenericItem);
+        expect(result?.serverError).toBe('Failed to add origin to fairteiler');
       });
 
-      it('should handle and re-throw DAL errors', async () => {
+      it('should surface DAL errors as serverError', async () => {
         const dalError = new Error('Database error');
-        vi.mocked(dal.addFairteilerOrigin).mockRejectedValue(dalError);
+        vi.mocked(fairteilerDal.addFairteilerOrigin).mockRejectedValue(
+          dalError,
+        );
 
-        await expect(
-          addFairteilerOriginAction(mockGenericItem),
-        ).rejects.toThrow(dalError);
+        const result = await addFairteilerOriginAction(mockGenericItem);
+        expect(result?.serverError).toBe('Database error');
       });
     });
 
     describe('removeFairteilerOriginAction', () => {
       it('should successfully remove origin from fairteiler', async () => {
-        vi.mocked(dal.removeFairteilerOrigin).mockResolvedValue([
+        vi.mocked(fairteilerDal.removeFairteilerOrigin).mockResolvedValue([
           {
             id: 'mock-id',
             createdAt: new Date(),
@@ -174,21 +196,22 @@ describe('Server Actions', () => {
 
         const result = await removeFairteilerOriginAction(mockGenericItem);
 
-        expect(dal.removeFairteilerOrigin).toHaveBeenCalledWith(
+        expect(fairteilerDal.removeFairteilerOrigin).toHaveBeenCalledWith(
           mockFairteiler.id,
           mockGenericItem,
         );
-        expect(result).toEqual(mockGenericItem);
+        expect(result?.data).toEqual(mockGenericItem);
       });
 
-      it('should throw NotFoundError when removal fails', async () => {
+      it('should surface NotFoundError as serverError when removal fails', async () => {
         (
-          vi.mocked(dal.removeFairteilerOrigin) as ReturnType<typeof vi.fn>
+          vi.mocked(fairteilerDal.removeFairteilerOrigin) as ReturnType<
+            typeof vi.fn
+          >
         ).mockResolvedValue(null);
 
-        await expect(
-          removeFairteilerOriginAction(mockGenericItem),
-        ).rejects.toThrow(NotFoundError);
+        const result = await removeFairteilerOriginAction(mockGenericItem);
+        expect(result?.serverError).toBe('Origin to remove not found');
       });
     });
   });
@@ -196,28 +219,29 @@ describe('Server Actions', () => {
   describe('Category Management Actions', () => {
     describe('suggestNewCategoryAction', () => {
       it('should successfully suggest a new category', async () => {
-        vi.mocked(dal.addCategory).mockResolvedValue(mockCategories);
+        vi.mocked(fairteilerDal.addCategory).mockResolvedValue(mockCategories);
 
         const result = await suggestNewCategoryAction(mockGenericItem);
 
-        expect(dal.addCategory).toHaveBeenCalledWith(mockGenericItem);
-        expect(result.success).toEqual(true);
+        expect(fairteilerDal.addCategory).toHaveBeenCalledWith(mockGenericItem);
+        expect(result?.data).toEqual(mockGenericItem);
       });
 
-      it('should throw Error when category creation fails', async () => {
+      it('should surface serverError when category creation fails', async () => {
         (
-          vi.mocked(dal.addCategory) as ReturnType<typeof vi.fn>
+          vi.mocked(fairteilerDal.addCategory) as ReturnType<typeof vi.fn>
         ).mockResolvedValue(null);
 
-        await expect(
-          suggestNewCategoryAction(mockGenericItem),
-        ).rejects.toThrow();
+        const result = await suggestNewCategoryAction(mockGenericItem);
+        expect(result?.serverError).toBe(
+          "Category with identifier 'after creation' not found",
+        );
       });
     });
 
     describe('addFairteilerCategoryAction', () => {
       it('should successfully add category to fairteiler', async () => {
-        vi.mocked(dal.addFairteilerCategory).mockResolvedValue([
+        vi.mocked(fairteilerDal.addFairteilerCategory).mockResolvedValue([
           {
             id: 'mock-id',
             createdAt: new Date(),
@@ -228,27 +252,30 @@ describe('Server Actions', () => {
 
         const result = await addFairteilerCategoryAction(mockGenericItem);
 
-        expect(dal.addFairteilerCategory).toHaveBeenCalledWith(
+        expect(fairteilerDal.addFairteilerCategory).toHaveBeenCalledWith(
           mockFairteiler.id,
           mockGenericItem,
         );
-        expect(result).toEqual(mockGenericItem);
+        expect(result?.data).toEqual(mockGenericItem);
       });
 
-      it('should throw Error when addition fails', async () => {
+      it('should surface serverError when addition fails', async () => {
         (
-          vi.mocked(dal.addFairteilerCategory) as ReturnType<typeof vi.fn>
+          vi.mocked(fairteilerDal.addFairteilerCategory) as ReturnType<
+            typeof vi.fn
+          >
         ).mockResolvedValue(null);
 
-        await expect(
-          addFairteilerCategoryAction(mockGenericItem),
-        ).rejects.toThrow();
+        const result = await addFairteilerCategoryAction(mockGenericItem);
+        expect(result?.serverError).toBe(
+          'Failed to add category to fairteiler',
+        );
       });
     });
 
     describe('removeFairteilerCategoryAction', () => {
       it('should successfully remove category from fairteiler', async () => {
-        vi.mocked(dal.removeFairteilerCategory).mockResolvedValue([
+        vi.mocked(fairteilerDal.removeFairteilerCategory).mockResolvedValue([
           {
             id: 'mock-id',
             createdAt: new Date(),
@@ -259,21 +286,22 @@ describe('Server Actions', () => {
 
         const result = await removeFairteilerCategoryAction(mockGenericItem);
 
-        expect(dal.removeFairteilerCategory).toHaveBeenCalledWith(
+        expect(fairteilerDal.removeFairteilerCategory).toHaveBeenCalledWith(
           mockFairteiler.id,
           mockGenericItem,
         );
-        expect(result).toEqual(mockGenericItem);
+        expect(result?.data).toEqual(mockGenericItem);
       });
 
-      it('should throw NotFoundError when removal fails', async () => {
+      it('should surface NotFoundError as serverError when removal fails', async () => {
         (
-          vi.mocked(dal.removeFairteilerCategory) as ReturnType<typeof vi.fn>
+          vi.mocked(fairteilerDal.removeFairteilerCategory) as ReturnType<
+            typeof vi.fn
+          >
         ).mockResolvedValue(null);
 
-        await expect(
-          removeFairteilerCategoryAction(mockGenericItem),
-        ).rejects.toThrow(NotFoundError);
+        const result = await removeFairteilerCategoryAction(mockGenericItem);
+        expect(result?.serverError).toBe('Category to remove not found');
       });
     });
   });
@@ -281,32 +309,28 @@ describe('Server Actions', () => {
   describe('Company Management Actions', () => {
     describe('suggestNewCompanyAction', () => {
       it('should successfully suggest a new company', async () => {
-        vi.mocked(dal.addCompany).mockResolvedValue(mockCompanies);
+        vi.mocked(fairteilerDal.addCompany).mockResolvedValue(mockCompanies);
 
         const result = await suggestNewCompanyAction(mockGenericItem);
 
-        expect(dal.addCompany).toHaveBeenCalledWith(
+        expect(fairteilerDal.addCompany).toHaveBeenCalledWith(
           mockFairteiler.id,
           mockGenericItem,
         );
-        expect(result.success).toEqual(true);
+        expect(result?.data).toEqual(mockGenericItem);
       });
 
-      it('should throw Error when company creation fails', async () => {
-        vi.mocked(dal.addCompany).mockResolvedValue(null);
+      it('should surface serverError when company creation fails', async () => {
+        vi.mocked(fairteilerDal.addCompany).mockResolvedValue(null);
 
         const result = await suggestNewCompanyAction(mockGenericItem);
-
-        expect(result).toEqual({
-          success: false,
-          error: 'Failed to create new company',
-        });
+        expect(result?.serverError).toBe('Failed to create new company');
       });
     });
 
     describe('addFairteilerCompanyAction', () => {
       it('should successfully add company to fairteiler', async () => {
-        vi.mocked(dal.addFairteilerCompany).mockResolvedValue([
+        vi.mocked(fairteilerDal.addFairteilerCompany).mockResolvedValue([
           {
             id: 'mock-id',
             createdAt: new Date(),
@@ -317,27 +341,28 @@ describe('Server Actions', () => {
 
         const result = await addFairteilerCompanyAction(mockGenericItem);
 
-        expect(dal.addFairteilerCompany).toHaveBeenCalledWith(
+        expect(fairteilerDal.addFairteilerCompany).toHaveBeenCalledWith(
           mockFairteiler.id,
           mockGenericItem,
         );
-        expect(result).toEqual(mockGenericItem);
+        expect(result?.data).toEqual(mockGenericItem);
       });
 
-      it('should throw Error when addition fails', async () => {
+      it('should surface serverError when addition fails', async () => {
         (
-          vi.mocked(dal.addFairteilerCompany) as ReturnType<typeof vi.fn>
+          vi.mocked(fairteilerDal.addFairteilerCompany) as ReturnType<
+            typeof vi.fn
+          >
         ).mockResolvedValue(null);
 
-        await expect(
-          addFairteilerCompanyAction(mockGenericItem),
-        ).rejects.toThrow();
+        const result = await addFairteilerCompanyAction(mockGenericItem);
+        expect(result?.serverError).toBe('Failed to add company to fairteiler');
       });
     });
 
     describe('removeFairteilerCompanyAction', () => {
       it('should successfully remove company from fairteiler', async () => {
-        vi.mocked(dal.removeFairteilerCompany).mockResolvedValue([
+        vi.mocked(fairteilerDal.removeFairteilerCompany).mockResolvedValue([
           {
             id: 'mock-id',
             createdAt: new Date(),
@@ -348,21 +373,22 @@ describe('Server Actions', () => {
 
         const result = await removeFairteilerCompanyAction(mockGenericItem);
 
-        expect(dal.removeFairteilerCompany).toHaveBeenCalledWith(
+        expect(fairteilerDal.removeFairteilerCompany).toHaveBeenCalledWith(
           mockFairteiler.id,
           mockGenericItem,
         );
-        expect(result).toEqual(mockGenericItem);
+        expect(result?.data).toEqual(mockGenericItem);
       });
 
-      it('should throw NotFoundError when removal fails', async () => {
+      it('should surface NotFoundError as serverError when removal fails', async () => {
         (
-          vi.mocked(dal.removeFairteilerCompany) as ReturnType<typeof vi.fn>
+          vi.mocked(fairteilerDal.removeFairteilerCompany) as ReturnType<
+            typeof vi.fn
+          >
         ).mockResolvedValue(null);
 
-        await expect(
-          removeFairteilerCompanyAction(mockGenericItem),
-        ).rejects.toThrow(NotFoundError);
+        const result = await removeFairteilerCompanyAction(mockGenericItem);
+        expect(result?.serverError).toBe('Company to remove not found');
       });
     });
   });
@@ -380,8 +406,6 @@ describe('Server Actions', () => {
             categoryId: '550e8400-e29b-41d4-a716-446655440002',
             companyId: '550e8400-e29b-41d4-a716-446655440003',
             company: 'Test Company',
-            cool: false,
-            shelfLife: futureDate,
             allergens: null,
             comment: 'Test notes',
           },
@@ -414,23 +438,100 @@ describe('Server Actions', () => {
           'user-123',
           mockContributionData.contributions,
         );
-        expect(result).toEqual({
-          success: true,
-          message: 'Lebensmittel erfolgreich beigetragen!',
-          data: { redirectTo: '/hub/user/contribution/success' },
+        expect(result?.data).toEqual({
+          redirectTo: '/hub/user/contribution/success',
         });
       });
 
-      it('should return error when DAL fails during submission', async () => {
+      it('should surface serverError when DAL fails during submission', async () => {
         const dalError = new Error('Checkin failed');
         vi.mocked(dal.checkinContribution).mockRejectedValue(dalError);
 
         const result = await submitContributionAction(mockContributionData);
+        expect(result?.serverError).toBe('Checkin failed');
+      });
 
-        expect(result).toEqual({
-          success: false,
-          error: 'Checkin failed',
+      const submitAsData = {
+        ...mockContributionData,
+        config: {
+          fairteilerId: 'fairteiler-123',
+          submitAsAccessViewId: 'access-view-user-9',
+        },
+      };
+
+      it('should submit as an access view that belongs to the target fairteiler', async () => {
+        vi.stubEnv('NEXT_PUBLIC_ENV_URL', 'http://localhost:3001');
+        vi.mocked(fairteilerDal.loadFairteilerMembership).mockResolvedValue({
+          id: 'member-9',
+          organizationId: 'fairteiler-123',
+          userId: 'access-view-user-9',
+          role: 'employee',
+          createdAt: new Date(),
         });
+        vi.mocked(dal.checkinContribution).mockResolvedValue([]);
+
+        const result = await submitContributionAction(submitAsData);
+
+        expect(checkPermissionOnServer).toHaveBeenCalledWith(
+          mockHeaders,
+          { member: ['create'] },
+          'fairteiler-123',
+        );
+        expect(dal.checkinContribution).toHaveBeenCalledWith(
+          'fairteiler-123',
+          'access-view-user-9',
+          submitAsData.contributions,
+        );
+        expect(result?.data?.redirectTo).toContain(
+          'submitAsUserId=access-view-user-9',
+        );
+
+        vi.unstubAllEnvs();
+      });
+
+      it('should reject submitting as an access view from another fairteiler', async () => {
+        vi.mocked(fairteilerDal.loadFairteilerMembership).mockResolvedValue(
+          undefined,
+        );
+
+        const result = await submitContributionAction(submitAsData);
+
+        expect(result?.serverError).toBe(
+          'Permission denied: Das ausgewählte Zugangsprofil gehört nicht zu diesem Fairteiler.',
+        );
+        expect(dal.checkinContribution).not.toHaveBeenCalled();
+      });
+
+      it('should reject submitting as a disabled access view', async () => {
+        vi.mocked(fairteilerDal.loadFairteilerMembership).mockResolvedValue({
+          id: 'member-9',
+          organizationId: 'fairteiler-123',
+          userId: 'access-view-user-9',
+          role: 'disabled',
+          createdAt: new Date(),
+        });
+
+        const result = await submitContributionAction(submitAsData);
+
+        expect(result?.serverError).toBe(
+          'Permission denied: Das ausgewählte Zugangsprofil gehört nicht zu diesem Fairteiler.',
+        );
+        expect(dal.checkinContribution).not.toHaveBeenCalled();
+      });
+
+      it('should reject submitAs when the caller lacks member:create on the target fairteiler', async () => {
+        vi.mocked(checkPermissionOnServer).mockResolvedValue({
+          success: false,
+          error: null,
+        });
+
+        const result = await submitContributionAction(submitAsData);
+
+        expect(result?.serverError).toBe(
+          'Permission denied: Nur Inhaber:innen dürfen Beiträge im Namen von Zugangsprofile einreichen.',
+        );
+        expect(fairteilerDal.loadFairteilerMembership).not.toHaveBeenCalled();
+        expect(dal.checkinContribution).not.toHaveBeenCalled();
       });
     });
 
@@ -439,7 +540,7 @@ describe('Server Actions', () => {
         checkinId: 'contrib-1',
         prevValue: '5',
         newValue: '10',
-        field: 'quantity',
+        field: 'quantity' as const,
       };
 
       it('should successfully edit contribution', async () => {
@@ -454,84 +555,154 @@ describe('Server Actions', () => {
           'user-123',
           mockEditData,
         );
-        expect(result).toEqual({
-          success: true,
-          message: 'Beitrag erfolgreich bearbeitet.',
-          data: mockEditData,
-        });
+        expect(result?.data).toEqual(mockEditData);
       });
 
-      it('should return error when DAL fails during edit', async () => {
+      it('should surface serverError when DAL fails during edit', async () => {
         const dalError = new Error('Version history failed');
         vi.mocked(dal.addVersionHistoryRecord).mockRejectedValue(dalError);
 
         const result = await editContributionAction(mockEditData);
-
-        expect(result).toEqual({
-          success: false,
-          error: 'Version history failed',
-        });
+        expect(result?.serverError).toBe('Version history failed');
       });
+    });
+  });
+
+  describe('Tutorial Actions (cross-tenant scoping)', () => {
+    it('rejects adding a step to a tutorial from another fairteiler', async () => {
+      vi.mocked(tutorialDal.tutorialBelongsToFairteiler).mockResolvedValue(
+        false,
+      );
+
+      const result = await addFairteilerTutorialStepAction({
+        title: 'Step',
+        content: 'Content',
+        sortIndex: 0,
+        media: null,
+        tutorialId: 'tutorial-from-other-org',
+      });
+
+      expect(result?.serverError).toBe(
+        'Permission denied: cannot create tutorial step',
+      );
+      expect(tutorialDal.addFairteilerTutorialStep).not.toHaveBeenCalled();
+    });
+
+    it('rejects updating a step under a tutorial from another fairteiler', async () => {
+      vi.mocked(tutorialDal.tutorialBelongsToFairteiler).mockResolvedValue(
+        false,
+      );
+
+      const result = await updateFairteilerTutorialStepAction({
+        id: 'step-1',
+        title: 'Step',
+        content: 'Content',
+        sortIndex: 0,
+        media: null,
+        tutorialId: 'tutorial-from-other-org',
+      });
+
+      expect(result?.serverError).toBe(
+        'Permission denied: cannot update tutorial step',
+      );
+      expect(tutorialDal.updateFairteilerTutorialStep).not.toHaveBeenCalled();
+    });
+
+    it('rejects updating a tutorial that does not belong to the active fairteiler', async () => {
+      vi.mocked(tutorialDal.updateFairteilerTutorial).mockResolvedValue([]);
+
+      const result = await updateFairteilerTutorialAction({
+        id: 'tutorial-from-other-org',
+        title: 'Hacked',
+        isActive: true,
+      });
+
+      expect(tutorialDal.updateFairteilerTutorial).toHaveBeenCalledWith(
+        'tutorial-from-other-org',
+        'fairteiler-123',
+        expect.objectContaining({ fairteilerId: 'fairteiler-123' }),
+      );
+      expect(result?.serverError).toBe('Failed to update tutorial');
+    });
+
+    it('rejects removing a tutorial that does not belong to the active fairteiler', async () => {
+      vi.mocked(tutorialDal.removeFairteilerTutorial).mockResolvedValue([]);
+
+      const result = await removeFairteilerTutorialAction({
+        id: 'tutorial-from-other-org',
+      });
+
+      expect(tutorialDal.removeFairteilerTutorial).toHaveBeenCalledWith(
+        'tutorial-from-other-org',
+        'fairteiler-123',
+      );
+      expect(result?.serverError).toBe('Failed to delete tutorial');
+    });
+
+    it('removes a tutorial that belongs to the active fairteiler', async () => {
+      const removed = [
+        {
+          id: 'tutorial-1',
+          fairteilerId: 'fairteiler-123',
+          title: 'Tutorial',
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
+      vi.mocked(tutorialDal.removeFairteilerTutorial).mockResolvedValue(
+        removed,
+      );
+
+      const result = await removeFairteilerTutorialAction({ id: 'tutorial-1' });
+
+      expect(tutorialDal.removeFairteilerTutorial).toHaveBeenCalledWith(
+        'tutorial-1',
+        'fairteiler-123',
+      );
+      expect(result?.data).toEqual(removed);
     });
   });
 
   describe('Error Handling Across All Actions', () => {
     describe('Database Connection Failures', () => {
-      it('should handle database errors in origin actions', async () => {
+      it('should surface database errors in origin actions as serverError', async () => {
         const dbError = new Error('Database connection lost');
-        vi.mocked(dal.addOrigin).mockRejectedValue(dbError);
+        vi.mocked(fairteilerDal.addOrigin).mockRejectedValue(dbError);
 
         const result = await suggestNewOriginAction(mockGenericItem);
-
-        expect(result).toEqual({
-          success: false,
-          error: 'Database connection lost',
-        });
+        expect(result?.serverError).toBe('Database connection lost');
       });
 
-      it('should handle database errors in category actions', async () => {
+      it('should surface database errors in category actions as serverError', async () => {
         const dbError = new Error('Database timeout');
-        vi.mocked(dal.addCategory).mockRejectedValue(dbError);
+        vi.mocked(fairteilerDal.addCategory).mockRejectedValue(dbError);
 
         const result = await suggestNewCategoryAction(mockGenericItem);
-
-        expect(result).toEqual({
-          success: false,
-          error: 'Database timeout',
-        });
+        expect(result?.serverError).toBe('Database timeout');
       });
 
-      it('should handle database errors in company actions', async () => {
+      it('should surface database errors in company actions as serverError', async () => {
         const dbError = new Error('Connection pool exhausted');
-        vi.mocked(dal.addCompany).mockRejectedValue(dbError);
+        vi.mocked(fairteilerDal.addCompany).mockRejectedValue(dbError);
 
         const result = await suggestNewCompanyAction(mockGenericItem);
-
-        expect(result).toEqual({
-          success: false,
-          error: 'Connection pool exhausted',
-        });
+        expect(result?.serverError).toBe('Connection pool exhausted');
       });
     });
 
     describe('Authentication Errors', () => {
-      it('should handle authentication errors in export action', async () => {
+      it('should surface auth errors in export action as serverError', async () => {
         const authError = new AuthError('Session expired');
-        vi.mocked(dal.loadAuthenticatedSession).mockRejectedValue(authError);
+        vi.mocked(loadAuthenticatedSession).mockRejectedValue(authError);
 
-        const result = await exportContributionsAction({
-          scope: 'fairteiler',
-        });
-
-        expect(result).toEqual({
-          success: false,
-          error: 'Session expired',
-        });
+        const result = await exportContributionsAction({ scope: 'fairteiler' });
+        expect(result?.serverError).toBe('Session expired');
       });
     });
 
     describe('Concurrent Operation Handling', () => {
-      it('should handle concurrent modification in contribution edit', async () => {
+      it('should surface concurrent modification in contribution edit as serverError', async () => {
         const concurrencyError = new Error(
           'Record was modified by another user',
         );
@@ -545,26 +716,21 @@ describe('Server Actions', () => {
           newValue: '10',
           field: 'quantity',
         });
-
-        expect(result).toEqual({
-          success: false,
-          error: 'Record was modified by another user',
-        });
+        expect(result?.serverError).toBe('Record was modified by another user');
       });
     });
   });
 
   describe('Edge Cases and Boundary Conditions', () => {
     describe('Contribution Actions Edge Cases', () => {
-      it('should handle empty contributions array', async () => {
-        await expect(
-          submitContributionAction({
-            contributions: [],
-            config: {
-              fairteilerId: 'fairteiler-123',
-            },
-          }),
-        ).rejects.toThrow(new ValidationError('Keine Einträge gefunden.'));
+      it('should surface validation error for empty contributions array', async () => {
+        const result = await submitContributionAction({
+          contributions: [],
+          config: {
+            fairteilerId: 'fairteiler-123',
+          },
+        });
+        expect(result?.serverError).toBe('Keine Einträge gefunden.');
       });
 
       it('should handle large contributions array', async () => {
@@ -577,8 +743,6 @@ describe('Server Actions', () => {
           categoryId: '550e8400-e29b-41d4-a716-446655440002',
           companyId: '550e8400-e29b-41d4-a716-446655440003',
           company: `Test Company ${i}`,
-          cool: i % 2 === 0,
-          shelfLife: futureDate,
           allergens: null,
           comment: `Test notes ${i}`,
         }));
@@ -590,7 +754,7 @@ describe('Server Actions', () => {
           originId: contrib.originId,
           companyId: contrib.companyId,
           company: contrib.company,
-          cool: contrib.cool,
+          cool: false,
           allergens: contrib.allergens,
           comment: contrib.comment,
           createdAt: new Date(),
@@ -610,10 +774,8 @@ describe('Server Actions', () => {
           'user-123',
           largeContributionsArray,
         );
-        expect(result).toEqual({
-          success: true,
-          message: 'Lebensmittel erfolgreich beigetragen!',
-          data: { redirectTo: '/hub/user/contribution/success' },
+        expect(result?.data).toEqual({
+          redirectTo: '/hub/user/contribution/success',
         });
       });
 
@@ -632,8 +794,6 @@ describe('Server Actions', () => {
               categoryId: '550e8400-e29b-41d4-a716-446655440002',
               companyId: '550e8400-e29b-41d4-a716-446655440003',
               company: 'Test Company',
-              cool: true,
-              shelfLife: futureDate,
               allergens: null,
               comment: 'Very long shelf life',
             },
@@ -660,10 +820,8 @@ describe('Server Actions', () => {
 
         const result = await submitContributionAction(contributionData);
 
-        expect(result).toEqual({
-          success: true,
-          message: 'Lebensmittel erfolgreich beigetragen!',
-          data: { redirectTo: '/hub/user/contribution/success' },
+        expect(result?.data).toEqual({
+          redirectTo: '/hub/user/contribution/success',
         });
       });
     });
@@ -675,7 +833,7 @@ describe('Server Actions', () => {
             checkinId: 'contrib-1',
             contributionDate: new Date(),
             quantity: 5,
-            shelfLife: new Date('2024-12-31'),
+            shelfLife: null,
             categoryName: 'Test Category',
             categoryImage: null,
             originName: 'Test Origin',
@@ -695,7 +853,7 @@ describe('Server Actions', () => {
           },
         ];
 
-        vi.mocked(dal.loadAuthenticatedSession).mockResolvedValue(mockSession);
+        vi.mocked(loadAuthenticatedSession).mockResolvedValue(mockSession);
         vi.mocked(dal.loadContributions).mockResolvedValue({
           data: mockContributions,
           total: 1,
@@ -711,26 +869,16 @@ describe('Server Actions', () => {
 
         const result = await exportContributionsAction(exportData);
 
-        expect(result).toEqual({
-          success: true,
-          message: 'Fairteiler-Daten erfolgreich exportiert.',
-          data: mockContributions,
-        });
+        expect(result?.data).toEqual(mockContributions);
       });
 
-      it('should handle export timeout gracefully', async () => {
+      it('should surface export timeout as serverError', async () => {
         const timeoutError = new Error('Query timeout');
-        vi.mocked(dal.loadAuthenticatedSession).mockResolvedValue(mockSession);
+        vi.mocked(loadAuthenticatedSession).mockResolvedValue(mockSession);
         vi.mocked(dal.loadContributions).mockRejectedValue(timeoutError);
 
-        const result = await exportContributionsAction({
-          scope: 'fairteiler',
-        });
-
-        expect(result).toEqual({
-          success: false,
-          error: 'Query timeout',
-        });
+        const result = await exportContributionsAction({ scope: 'fairteiler' });
+        expect(result?.serverError).toBe('Query timeout');
       });
     });
   });
@@ -739,7 +887,7 @@ describe('Server Actions', () => {
     describe('Multi-step Operations', () => {
       it('should handle sequential origin operations', async () => {
         // First suggest a new origin
-        vi.mocked(dal.addOrigin).mockResolvedValue([
+        vi.mocked(fairteilerDal.addOrigin).mockResolvedValue([
           {
             id: 'new-origin',
             name: 'New Origin',
@@ -756,10 +904,14 @@ describe('Server Actions', () => {
           status: 'active',
         });
 
-        expect(suggestResult.success).toBe(true);
+        expect(suggestResult?.data).toEqual({
+          id: 'new-origin',
+          name: 'New Origin',
+          status: 'active',
+        });
 
         // Then add it to fairteiler
-        vi.mocked(dal.addFairteilerOrigin).mockResolvedValue([
+        vi.mocked(fairteilerDal.addFairteilerOrigin).mockResolvedValue([
           {
             id: 'fairteiler-origin-1',
             createdAt: new Date(),
@@ -774,14 +926,14 @@ describe('Server Actions', () => {
           status: 'active',
         });
 
-        expect(addResult).toEqual({
+        expect(addResult?.data).toEqual({
           id: 'new-origin',
           name: 'New Origin',
           status: 'active',
         });
 
         // Finally remove it
-        vi.mocked(dal.removeFairteilerOrigin).mockResolvedValue([
+        vi.mocked(fairteilerDal.removeFairteilerOrigin).mockResolvedValue([
           {
             id: 'fairteiler-origin-1',
             createdAt: new Date(),
@@ -796,7 +948,7 @@ describe('Server Actions', () => {
           status: 'active',
         });
 
-        expect(removeResult).toEqual({
+        expect(removeResult?.data).toEqual({
           id: 'new-origin',
           name: 'New Origin',
           status: 'active',
@@ -833,8 +985,6 @@ describe('Server Actions', () => {
               categoryId: '550e8400-e29b-41d4-a716-446655440002',
               companyId: '550e8400-e29b-41d4-a716-446655440003',
               company: 'Test Company',
-              cool: false,
-              shelfLife: futureDate,
               allergens: null,
               comment: 'Test notes',
             },
@@ -844,7 +994,9 @@ describe('Server Actions', () => {
           },
         });
 
-        expect(submitResult.success).toBe(true);
+        expect(submitResult?.data).toEqual({
+          redirectTo: '/hub/user/contribution/success',
+        });
 
         // Edit the contribution
         vi.mocked(dal.addVersionHistoryRecord).mockResolvedValue(undefined);
@@ -856,15 +1008,12 @@ describe('Server Actions', () => {
           field: 'quantity',
         });
 
-        expect(editResult.success).toBe(true);
-        if (editResult.success) {
-          expect(editResult.data).toEqual({
-            checkinId: 'contrib-1',
-            prevValue: '5',
-            newValue: '10',
-            field: 'quantity',
-          });
-        }
+        expect(editResult?.data).toEqual({
+          checkinId: 'contrib-1',
+          prevValue: '5',
+          newValue: '10',
+          field: 'quantity',
+        });
       });
     });
   });

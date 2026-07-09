@@ -20,13 +20,14 @@ import { routes } from '@/lib/config/routes';
 import { ChevronsUpDown, Loader2, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTransition, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { LoadingBar } from '@components/ui/loading-bar';
 import { UserAvatar } from '../user-avatar';
-import { handleAsyncAction } from '@/lib/client-error-handling';
+import { useFormAction } from '@/lib/hooks/use-form-action';
 import { User } from '@/server/db/db-types';
 import { authClient } from '@/lib/auth/auth-client';
+import { useQueryClient } from '@tanstack/react-query';
 
 // --- 1. The Main Orchestrator Component ---
 export function NavUser({ user, routeKey }: { user: User; routeKey: string }) {
@@ -144,23 +145,21 @@ function UserMenuLink({
 
 // --- 4. The Sign Out Item Component ---
 export function SignOutMenuItem() {
-  const [isPending, startTransition] = useTransition();
   const { refetch } = authClient.useSession();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { execute, isPending } = useFormAction(signOutAction, undefined, {
+    showToast: false,
+    onSuccess: (data) => {
+      queryClient.clear();
+      if (data?.redirectTo) {
+        router.push(data.redirectTo);
+        refetch();
+      }
+    },
+  });
 
-  const handleSignOut = () => {
-    startTransition(() => {
-      handleAsyncAction(() => signOutAction({}), undefined, {
-        showToast: false,
-        onSuccess: (result) => {
-          if (result.data?.redirectTo) {
-            router.push(result.data.redirectTo);
-            refetch();
-          }
-        },
-      });
-    });
-  };
+  const handleSignOut = () => execute({});
 
   return (
     <DropdownMenuItem onClick={handleSignOut} disabled={isPending}>

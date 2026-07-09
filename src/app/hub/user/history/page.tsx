@@ -1,13 +1,11 @@
-import { Suspense } from 'react';
 import { UserHistoryWrapper } from '@/features/user/history/components/user-history-wrapper';
 import { BlurFade } from '@/components/magicui/blur-fade';
 import { NavButton } from '@/components/ui/nav-button';
 import { UserNav } from '@/components/nav/user-nav';
-import { getSession } from '@/server/dto';
+import { getSession } from '@/server/user/queries';
 import { headers } from 'next/headers';
 import { UnauthorizedAccess } from '@/components/unauthorized-access';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent } from '@/components/ui/card';
+import { DataErrorBoundary } from '@/components/error-boundary';
 
 export default async function UserHistoryPage() {
   const nextHeaders = await headers();
@@ -74,73 +72,9 @@ export default async function UserHistoryPage() {
         </div>
       </div>
 
-      <Suspense fallback={<UserHistorySkeleton />}>
+      <DataErrorBoundary>
         <UserHistoryWrapper />
-      </Suspense>
+      </DataErrorBoundary>
     </div>
-  );
-}
-
-function UserHistorySkeleton() {
-  const rowCount = 8;
-  const colCount = 6;
-
-  return (
-    <Card>
-      <CardContent>
-        <div className='mb-4 flex flex-1 flex-col flex-wrap gap-2 md:flex-row md:items-center md:gap-4'>
-          <Skeleton className='h-9 w-[250px] bg-secondary' />
-
-          <Skeleton className='h-9 w-[200px] bg-secondary' />
-
-          <div className='flex flex-wrap gap-2'>
-            <Skeleton className='h-9 w-[120px] bg-secondary' />
-            <Skeleton className='h-9 w-[100px] bg-secondary' />
-            <Skeleton className='h-9 w-[110px] bg-secondary' />
-            <Skeleton className='h-9 w-[90px] bg-secondary' />
-          </div>
-        </div>
-
-        <div className='rounded-md border'>
-          <table className='w-full'>
-            <thead>
-              <tr className='border-b'>
-                {Array.from({ length: colCount }).map((_, i) => (
-                  <th
-                    key={i}
-                    className='h-12 px-4 text-left align-middle font-medium text-muted-foreground'
-                  >
-                    <Skeleton className='h-5 w-3/4 bg-secondary' />
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {Array.from({ length: rowCount }).map((_, rowIndex) => (
-                <tr key={rowIndex} className='border-b transition-colors'>
-                  {Array.from({ length: colCount }).map((_, colIndex) => (
-                    <td key={colIndex} className='p-4 align-middle'>
-                      <Skeleton className='h-6 w-full bg-secondary' />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className='flex flex-col items-center justify-between gap-6 pt-4 sm:flex-row'>
-          <div className='flex items-center gap-2'>
-            <Skeleton className='h-8 w-[100px] bg-secondary' />
-          </div>
-
-          <div className='flex items-center gap-2'>
-            <Skeleton className='h-8 w-[70px] bg-secondary' />
-            <Skeleton className='h-5 w-[120px] bg-secondary' />
-            <Skeleton className='h-8 w-[70px] bg-secondary' />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
