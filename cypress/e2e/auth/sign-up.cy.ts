@@ -34,8 +34,9 @@ describe('User Registration E2E', () => {
         .should('contain', 'Jetzt Registrieren')
         .click();
 
-      // 5. Wait for redirect to dashboard
-      cy.url({ timeout: 15000 }).should('include', '/hub/user/dashboard');
+      // 5. A new (first-login) user is routed to onboarding by the middleware
+      // gate before reaching the dashboard.
+      cy.url({ timeout: 15000 }).should('include', '/hub/onboarding');
 
       // // 6. Verify user was created in database
       // cy.getUserByEmail(validUser.email).then((user) => {
@@ -198,11 +199,8 @@ describe('User Registration E2E', () => {
               cy.get('button[role="checkbox"]').first().click();
               cy.get('button[type="submit"]').click();
 
-              // Should redirect to dashboard
-              cy.url({ timeout: 15000 }).should(
-                'include',
-                '/hub/user/dashboard',
-              );
+              // A new (first-login) user is routed to onboarding first.
+              cy.url({ timeout: 15000 }).should('include', '/hub/onboarding');
 
               // Verify user is member of fairteiler
               // cy.getUserByEmail(invitedUser.email).then((user) => {
