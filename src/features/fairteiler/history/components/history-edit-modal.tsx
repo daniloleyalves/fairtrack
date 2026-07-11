@@ -40,7 +40,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
-import { Dispatch, SetStateAction, useEffect, useTransition } from 'react';
+import { Dispatch, SetStateAction, useEffect } from 'react';
 import { useForm, UseFormReturn } from 'react-hook-form';
 import * as z from 'zod';
 import { HistoryVersionHistory } from './history-version-history';
@@ -64,7 +64,6 @@ export function HistoryEditModal({ item, open, setOpen }: EditModalProps) {
   const queryClient = useQueryClient();
   const { refresh } = useHistoryData();
   const isMobile = useIsMobile();
-  const [isSubmitting, startTransition] = useTransition();
 
   const form = useForm<EditContributionFormValues>({
     resolver: zodResolver(editContributionFormSchema),
@@ -91,6 +90,8 @@ export function HistoryEditModal({ item, open, setOpen }: EditModalProps) {
     },
   });
 
+  const isSubmitting = editContribution.isPending;
+
   // Reset form when modal opens or item changes
   useEffect(() => {
     if (open) {
@@ -108,13 +109,11 @@ export function HistoryEditModal({ item, open, setOpen }: EditModalProps) {
       return;
     }
 
-    startTransition(() => {
-      editContribution.execute({
-        checkinId: item.checkinId,
-        prevValue: item.quantity.toString(),
-        newValue: values.quantity.toString(),
-        field: 'quantity',
-      });
+    editContribution.execute({
+      checkinId: item.checkinId,
+      prevValue: item.quantity.toString(),
+      newValue: values.quantity.toString(),
+      field: 'quantity',
     });
   }
 
