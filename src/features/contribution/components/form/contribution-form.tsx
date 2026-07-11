@@ -44,6 +44,8 @@ export function ContributionForm({
   const submitContribution = useFormAction(submitContributionAction, form, {
     successMessage: 'Lebensmittel erfolgreich beigetragen!',
     onSuccess: (data) => {
+      form.reset();
+
       void queryClient.invalidateQueries({
         queryKey: fairteilerKeys.dashboard().queryKey,
       });
