@@ -17,7 +17,7 @@ export async function getFairteilerTutorialWithSteps(fairteilerId?: string) {
     throw new AuthError('No active organization.');
   }
 
-  return await loadFairteilerTutorialWithSteps(fairteilerIdentifier);
+  return (await loadFairteilerTutorialWithSteps(fairteilerIdentifier)) ?? null;
 }
 
 /**
