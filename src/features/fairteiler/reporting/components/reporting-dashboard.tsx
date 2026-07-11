@@ -6,7 +6,6 @@ import { TimespanPicker } from '@/features/statistics/components/timespan-picker
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { vContribution } from '@/server/db/db-types';
-import { BlurFade } from '@components/magicui/blur-fade';
 import { startOfYear } from 'date-fns';
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
@@ -162,16 +161,16 @@ export function ReportingDashboard({ data }: ReportingDashboardProps) {
       </Card>
 
       <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4'>
-        {keyFigureData.map((fig, i) => (
-          <BlurFade key={fig.description} delay={i * 0.05} duration={0.2}>
+        {keyFigureData.map((fig) => (
+          <div key={fig.description}>
             <KeyFigure keyFigure={fig} />
-          </BlurFade>
+          </div>
         ))}
       </div>
 
       {/* Variety & Sourcing Section */}
       <div className='grid grid-cols-1 gap-4 xl:grid-cols-2'>
-        <BlurFade delay={0.15} duration={0.2}>
+        <div>
           <AttributeDistributionChart
             attributeDistribution={{
               name: 'Kategorie',
@@ -182,8 +181,8 @@ export function ReportingDashboard({ data }: ReportingDashboardProps) {
             }
             title='Kategorien'
           />
-        </BlurFade>
-        <BlurFade delay={0.2} duration={0.2}>
+        </div>
+        <div>
           <AttributeDistributionChart
             attributeDistribution={{
               name: 'Herkunft',
@@ -194,8 +193,8 @@ export function ReportingDashboard({ data }: ReportingDashboardProps) {
             }
             title='Herkünfte'
           />
-        </BlurFade>
-        <BlurFade delay={0.25} duration={0.2}>
+        </div>
+        <div>
           <AttributeDistributionChart
             attributeDistribution={{
               name: 'Betrieb',
@@ -206,36 +205,36 @@ export function ReportingDashboard({ data }: ReportingDashboardProps) {
             }
             title='Betriebe'
           />
-        </BlurFade>
+        </div>
       </div>
 
       {/* Time Normalized Momentum Chart */}
-      <BlurFade delay={0.25} duration={0.2}>
+      <div>
         <TimeNormalizedMomentumChart
           data={volumeTrendData}
           title='Momentum'
           dateRange={filters.dateRange}
         />
-      </BlurFade>
+      </div>
 
       {/* Volume Trend Section */}
-      <BlurFade delay={0.1} duration={0.2}>
+      <div>
         <VolumeTrendChart
           title='Gerettete Lebensmittel über Zeit'
           data={volumeTrendData}
         />
-      </BlurFade>
+      </div>
 
       {/* Cumulative Trend Chart */}
-      <BlurFade delay={0.15} duration={0.2}>
+      <div>
         <CumulativeTrendChart
           data={volumeTrendData}
           title='Gerettete Lebensmittel über Zeit (Kumulativ)'
         />
-      </BlurFade>
+      </div>
 
       {/* Calendar */}
-      <BlurFade delay={0.3} duration={0.2}>
+      <div>
         <div className='max-w-xl'>
           <DataCalendar
             data={calendarData}
@@ -244,7 +243,7 @@ export function ReportingDashboard({ data }: ReportingDashboardProps) {
             exportFilename='fairteiler-kalender'
           />
         </div>
-      </BlurFade>
+      </div>
     </>
   );
 }

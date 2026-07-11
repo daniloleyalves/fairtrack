@@ -1,6 +1,5 @@
 'use client';
 
-import { BlurFade } from '@components/magicui/blur-fade';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { HistoryTable } from './history-table';
@@ -61,7 +60,7 @@ export function FairteilerHistoryWrapper() {
     </div>
   );
   return (
-    <BlurFade duration={0.2}>
+    <div>
       <Card>
         <CardContent>
           <HistoryTable
@@ -70,7 +69,7 @@ export function FairteilerHistoryWrapper() {
           />
         </CardContent>
       </Card>
-    </BlurFade>
+    </div>
   );
 }
 

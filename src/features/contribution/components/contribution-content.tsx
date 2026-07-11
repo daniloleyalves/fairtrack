@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { ContributionForm } from './form/contribution-form';
 import { AlertCircle, HelpCircle } from 'lucide-react';
-import { BlurFade } from '@/components/magicui/blur-fade';
 import ContributionTable from './contribution-table';
 import { ContributionInfos } from './contribution-infos';
 import { usePathname } from 'next/navigation';
@@ -128,9 +127,9 @@ export function ContributionContent() {
           </div>
         </div>
         <ContributionForm config={defaultConfig()}>
-          <BlurFade duration={0.2}>
+          <div>
             <ContributionTable />
-          </BlurFade>
+          </div>
         </ContributionForm>
       </div>
       <ContributionInstructions

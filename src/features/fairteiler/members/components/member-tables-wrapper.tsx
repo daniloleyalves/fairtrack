@@ -1,7 +1,6 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { BlurFade } from '@components/magicui/blur-fade';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   ACCESS_VIEW_ROLES,
@@ -48,12 +47,12 @@ export function MemberTablesWrapper() {
 
   return (
     <>
-      <BlurFade duration={0.2}>
+      <div>
         <MemberTable members={teamMembers} />
-      </BlurFade>
-      <BlurFade duration={0.2} delay={0.1}>
+      </div>
+      <div>
         <AccessViewTable accessViews={accessViews} />
-      </BlurFade>
+      </div>
     </>
   );
 }

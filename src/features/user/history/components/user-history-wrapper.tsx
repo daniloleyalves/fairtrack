@@ -1,6 +1,5 @@
 'use client';
 
-import { BlurFade } from '@components/magicui/blur-fade';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton, TableSkeleton } from '@/components/ui/skeleton';
 import { UserHistoryTable } from './user-history-table';
@@ -61,7 +60,7 @@ export function UserHistoryWrapper() {
     </div>
   );
   return (
-    <BlurFade duration={0.2}>
+    <div>
       <Card>
         <CardContent>
           <UserHistoryTable
@@ -70,7 +69,7 @@ export function UserHistoryWrapper() {
           />
         </CardContent>
       </Card>
-    </BlurFade>
+    </div>
   );
 }
 

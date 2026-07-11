@@ -4,7 +4,6 @@ import { AttributeDistributionChart } from '@/features/statistics/components/att
 import { DataCalendar } from '@/features/fairteiler/dashboard/components/contribution-calendar';
 import { KeyFigure } from '@/features/statistics/components/key-figure';
 import { RecentContributions } from '@/features/statistics/components/recent-contributions';
-import { BlurFade } from '@components/magicui/blur-fade';
 import { Card } from '@components/ui/card';
 import { UserDashboardData } from './user-dashboard-wrapper';
 import { Milestones } from '../gamification/milestones/milestones';
@@ -24,25 +23,19 @@ export function UserDashboard({
           {/* Main Statistics */}
           <div className='md:col-span1 order-1 col-span-12 flex flex-col gap-2 md:flex-row lg:col-span-4 lg:flex-col'>
             {dashboardData.keyFigures.map((kf, i) => (
-              <BlurFade key={i} delay={i * 0.08} className='h-full w-full'>
+              <div key={i} className='h-full w-full'>
                 <KeyFigure keyFigure={kf} />
-              </BlurFade>
+              </div>
             ))}
           </div>
 
           {/* Milestones - order 2 on mobile, order 3 on md+ */}
-          <BlurFade
-            delay={0.07}
-            className='order-2 col-span-12 md:order-3 md:col-span-2 lg:col-span-1'
-          >
+          <div className='order-2 col-span-12 md:order-3 md:col-span-2 lg:col-span-1'>
             <Milestones milestoneData={dashboardData.milestoneData} />
-          </BlurFade>
+          </div>
 
           {/* Distribution Charts - order 3 on mobile, order 2 on md+ */}
-          <BlurFade
-            delay={0.12}
-            className='order-3 col-span-12 w-full md:order-2 md:col-span-10 lg:col-span-7'
-          >
+          <div className='order-3 col-span-12 w-full md:order-2 md:col-span-10 lg:col-span-7'>
             <Card className='h-full flex-col gap-4 rounded-lg bg-white md:gap-0 md:py-2'>
               <AttributeDistributionChart
                 attributeDistribution={dashboardData.categoryDistribution}
@@ -53,27 +46,27 @@ export function UserDashboard({
                 attributeDistribution={dashboardData.originDistribution}
               />
             </Card>
-          </BlurFade>
+          </div>
 
           {/* Bottom Row Content */}
           <div className='order-4 col-span-12 flex flex-col-reverse gap-4 md:col-span-10 lg:col-span-11 lg:flex-row'>
-            <BlurFade delay={0.2} className='w-full'>
+            <div className='w-full'>
               <RecentContributions
                 recentContributions={dashboardData.recentContributions}
               />
-            </BlurFade>
-            <BlurFade delay={0.25} className='w-full'>
+            </div>
+            <div className='w-full'>
               <DataCalendar
                 data={dashboardData.calendarData}
                 unit='kg'
                 enableExport={true}
                 exportFilename='meine-beitraege-kalender'
               />
-            </BlurFade>
+            </div>
           </div>
         </>
       ) : (
-        <BlurFade delay={0.1} className='col-span-12'>
+        <div className='col-span-12'>
           <Card>
             <div className='bg-grid-pattern absolute inset-0 opacity-5' />
             <div className='relative flex flex-col items-center justify-center gap-6 p-12 text-center'>
@@ -112,7 +105,7 @@ export function UserDashboard({
               </Button>
             </div>
           </Card>
-        </BlurFade>
+        </div>
       )}
     </div>
   );
