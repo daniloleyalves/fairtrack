@@ -80,11 +80,8 @@ export const submitContributionAction = authedAction
       parsedInput.contributions,
     );
 
-    const defaultRevalidatePaths = ['/hub/user/dashboard'];
     const defaultSuccessRedirect = '/hub/user/contribution/success';
 
-    const revalidatePaths =
-      parsedInput.config?.revalidatePaths ?? defaultRevalidatePaths;
     let successRedirect =
       parsedInput.config?.successRedirect ?? defaultSuccessRedirect;
 
@@ -96,8 +93,6 @@ export const submitContributionAction = authedAction
       );
       successRedirect = url.pathname + url.search;
     }
-
-    revalidatePaths.forEach((path) => revalidatePath(path));
 
     return { redirectTo: successRedirect };
   });
