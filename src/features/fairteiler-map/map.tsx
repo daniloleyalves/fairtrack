@@ -422,6 +422,7 @@ export function FairteilerMap({
 
       <Map
         ref={mapRef}
+        reuseMaps
         style={{
           borderRadius: isMobile ? '0px' : '10px',
           boxShadow:
