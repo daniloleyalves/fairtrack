@@ -1,5 +1,4 @@
 import { UserHistoryWrapper } from '@/features/user/history/components/user-history-wrapper';
-import { BlurFade } from '@/components/magicui/blur-fade';
 import { NavButton } from '@/components/ui/nav-button';
 import { UserNav } from '@/components/nav/user-nav';
 import { getSession } from '@/server/user/queries';
@@ -19,14 +18,14 @@ export default async function UserHistoryPage() {
   return (
     <div className='mx-2 mt-8 mb-64 sm:mx-8'>
       <div className='mb-4 flex items-center justify-between gap-2 md:flex-row'>
-        <BlurFade delay={0.1}>
+        <div>
           <h2 className='font-londrina text-4xl font-bold tracking-wider text-white'>
             Meine Beiträge
           </h2>
-        </BlurFade>
+        </div>
 
         <div className='hidden gap-2 md:flex'>
-          <BlurFade delay={0.15}>
+          <div>
             <div className='hidden lg:block'>
               <NavButton
                 title='Dashboard'
@@ -44,9 +43,9 @@ export default async function UserHistoryPage() {
                 size='icon'
               />
             </div>
-          </BlurFade>
+          </div>
 
-          <BlurFade delay={0.17}>
+          <div>
             <div className='hidden lg:block'>
               <NavButton
                 title='Fairteiler finden'
@@ -64,11 +63,11 @@ export default async function UserHistoryPage() {
                 size='icon'
               />
             </div>
-          </BlurFade>
+          </div>
 
-          <BlurFade delay={0.2}>
+          <div>
             <UserNav user={user} routeKey='userRoutes' />
-          </BlurFade>
+          </div>
         </div>
       </div>
 

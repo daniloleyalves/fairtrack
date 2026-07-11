@@ -1,5 +1,4 @@
 import { ProfileFormWrapper } from '@/features/fairteiler/profile/forms/fairteiler-profile-form';
-import { BlurFade } from '@components/magicui/blur-fade';
 import { FormErrorBoundary } from '@components/error-boundary';
 
 export default function FairteilerProfilePage() {
@@ -11,9 +10,9 @@ export default function FairteilerProfilePage() {
         </h2>
       </div>
       <FormErrorBoundary>
-        <BlurFade duration={0.2}>
+        <div>
           <ProfileFormWrapper />
-        </BlurFade>
+        </div>
       </FormErrorBoundary>
     </div>
   );
