@@ -120,6 +120,7 @@
     "concurrently": "^9.2.1",
     "cypress": "^15.7.1",
     "cypress-mochawesome-reporter": "^4.0.2",
+    "cypress-real-events": "^1.15.0",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.8",
     "eslint": "^9.39.2",

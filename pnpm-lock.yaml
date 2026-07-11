@@ -287,6 +287,9 @@ importers:
       cypress-mochawesome-reporter:
         specifier: ^4.0.2
         version: 4.0.2(cypress@15.7.1)(mocha@11.7.2)
+      cypress-real-events:
+        specifier: ^1.15.0
+        version: 1.15.0(cypress@15.7.1)
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3
@@ -4110,6 +4113,11 @@ packages:
     hasBin: true
     peerDependencies:
       cypress: '>=6.2.0'
+
+  cypress-real-events@1.15.0:
+    resolution: {integrity: sha512-in98xxTnnM9Z7lZBvvVozm99PBT2eEOjXRG5LKWyYvQnj9mGWXMiPNpfw7e7WiraBFh7XlXIxnE9Cu5o+52kQQ==}
+    peerDependencies:
+      cypress: ^4.x || ^5.x || ^6.x || ^7.x || ^8.x || ^9.x || ^10.x || ^11.x || ^12.x || ^13.x || ^14.x || ^15.x
 
   cypress@15.7.1:
     resolution: {integrity: sha512-U3sYnJ+Cnpgr6IPycxsznTg//mGVXfPGeGV+om7VQCyp5XyVkhG4oPr3X3hTq1+OB0Om0O5DxusYmt7cbvwqMQ==}
@@ -11011,6 +11019,10 @@ snapshots:
       mochawesome-report-generator: 6.3.2
     transitivePeerDependencies:
       - mocha
+
+  cypress-real-events@1.15.0(cypress@15.7.1):
+    dependencies:
+      cypress: 15.7.1
 
   cypress@15.7.1:
     dependencies:
