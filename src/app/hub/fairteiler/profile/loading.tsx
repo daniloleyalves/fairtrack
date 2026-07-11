@@ -1,4 +1,4 @@
-import { Skeleton } from '@components/ui/skeleton';
+import { FairteilerProfileFormSkeleton } from '@/features/fairteiler/profile/forms/fairteiler-profile-form-skeleton';
 
 export default function FairteilerProfileLoading() {
   return (
@@ -9,7 +9,7 @@ export default function FairteilerProfileLoading() {
         </h2>
       </div>
 
-      <Skeleton className='h-[484px] w-full' />
+      <FairteilerProfileFormSkeleton />
     </div>
   );
 }

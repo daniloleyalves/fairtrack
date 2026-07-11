@@ -11,7 +11,7 @@ import { invokeAction } from '@/lib/hooks/use-form-action';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { getTags } from '@/server/fairteiler/queries';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Skeleton } from '@/components/ui/skeleton';
+import { FairteilerTagsSkeleton } from './fairteiler-tags-skeleton';
 
 interface FairteilerTagsWrapperProps {
   className?: string;
@@ -81,12 +81,7 @@ export function FairteilerTagsWrapper({
   });
 
   if (isPending) {
-    return (
-      <div className='flex gap-2'>
-        <Skeleton className='h-[22px] w-16 bg-secondary' />
-        <Skeleton className='h-[22px] w-12 bg-secondary' />
-      </div>
-    );
+    return <FairteilerTagsSkeleton className={className} />;
   }
 
   return (
