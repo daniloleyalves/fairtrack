@@ -2,6 +2,7 @@
 
 import { NumberTicker } from '@/components/magicui/number-ticker';
 import { BlurFade } from '@/components/magicui/blur-fade';
+import { Squiggle } from '@/components/site/organic/squiggle';
 import {
   Tooltip,
   TooltipContent,
@@ -40,6 +41,7 @@ export function ImpactSection({ stats }: { stats: PublicImpactStats }) {
         >
           Wirkung, die man messen kann
         </h2>
+        <Squiggle className='mx-auto mt-1 h-3 w-32' />
         <p className='mx-auto mt-4 max-w-2xl text-center text-muted-foreground'>
           Jede Abgabe an einem Fairteiler wird mit FairTrack digital erfasst.
           Diese Zahlen sind keine Hochrechnung – sie kommen direkt aus den
@@ -69,9 +71,9 @@ export function ImpactSection({ stats }: { stats: PublicImpactStats }) {
       </div>
 
       <BlurFade inView delay={0.15}>
-        <div className='mt-4 grid grid-cols-1 gap-4 rounded-2xl bg-primary p-6 text-primary-foreground sm:grid-cols-2 sm:p-8'>
+        <div className='mt-4 grid grid-cols-1 gap-4 rounded-[2.5rem] bg-primary p-6 text-primary-foreground sm:grid-cols-2 sm:p-8'>
           <div className='flex items-center gap-4'>
-            <div className='flex size-12 shrink-0 items-center justify-center rounded-xl bg-white/15'>
+            <div className='blob flex size-12 shrink-0 items-center justify-center bg-white/15'>
               <Utensils className='size-6' />
             </div>
             <div>
@@ -87,7 +89,7 @@ export function ImpactSection({ stats }: { stats: PublicImpactStats }) {
             </div>
           </div>
           <div className='flex items-center gap-4'>
-            <div className='flex size-12 shrink-0 items-center justify-center rounded-xl bg-white/15'>
+            <div className='blob flex size-12 shrink-0 items-center justify-center bg-white/15'>
               <Cloud className='size-6' />
             </div>
             <div>
@@ -152,7 +154,7 @@ function StatTile({
   return (
     <BlurFade inView delay={delay}>
       <div className='flex h-full flex-col gap-3 rounded-2xl border border-primary/10 bg-white p-6'>
-        <div className='flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary'>
+        <div className='blob flex size-10 items-center justify-center bg-primary/10 text-primary'>
           {icon}
         </div>
         <p className='text-4xl font-semibold text-foreground'>

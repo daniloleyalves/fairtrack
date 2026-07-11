@@ -1,5 +1,7 @@
 import { BlurFade } from '@/components/magicui/blur-fade';
 import { SectionNav } from '@/components/site/section-nav';
+import { MorphingBlob } from '@/components/site/organic/morphing-blob';
+import { Squiggle } from '@/components/site/organic/squiggle';
 import { Illustrations } from '@/lib/assets/illustrations';
 import {
   Accordion,
@@ -219,10 +221,16 @@ const TROUBLESHOOTING: { problem: string; steps: string[] }[] = [
 export default function FairTrackInfo() {
   return (
     <div className='mb-8 px-4 sm:px-0 2xl:mb-56'>
-      <div className='flex w-full flex-col items-start gap-2 pt-10 lg:w-2/3'>
+      <div className='relative flex w-full flex-col items-start gap-2 pt-10 lg:w-2/3'>
+        <MorphingBlob
+          fill='#99BB44'
+          seed={29}
+          className='absolute -top-6 -left-16 -z-10 w-44 opacity-15'
+        />
         <h1 className='font-londrina text-5xl font-semibold tracking-wider text-primary'>
           Informationen & FAQ
         </h1>
+        <Squiggle className='h-3 w-32' />
         <p className='text-md font-medium text-muted-foreground'>
           Umfassende Informationen über FairTrack – das digitale Tracking-Tool
           für Fairteilerstandorte. Hier findest du alles über Funktionen,
