@@ -8,6 +8,7 @@ import type {
 } from 'next-safe-action/hooks';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { SafeActionFn } from 'next-safe-action';
+import { useRef } from 'react';
 import { FieldValues, Path, UseFormReturn } from 'react-hook-form';
 import { toast } from 'sonner';
 import { ERROR_MESSAGES } from '@/lib/client-error-handling';
@@ -130,6 +131,8 @@ export function useFormAction<
     onError,
   } = options;
 
+  const pendingCallbackRef = useRef(false);
+
   const callbacks: HookCallbacks<
     string,
     TSchema,
@@ -137,13 +140,18 @@ export function useFormAction<
     TData
   > = {
     onExecute: () => {
+      pendingCallbackRef.current = true;
       form?.clearErrors();
     },
     onSuccess: async ({ data }) => {
+      if (!pendingCallbackRef.current) return;
+      pendingCallbackRef.current = false;
       if (successMessage) toast.success(successMessage);
       if (onSuccess) await onSuccess(data);
     },
     onError: async ({ error }) => {
+      if (!pendingCallbackRef.current) return;
+      pendingCallbackRef.current = false;
       const validationErrors = isFlattenedValidationErrors(
         error.validationErrors,
       )

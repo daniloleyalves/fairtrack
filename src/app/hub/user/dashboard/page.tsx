@@ -1,5 +1,4 @@
 import { DataErrorBoundary } from '@/components/error-boundary';
-import { BlurFade } from '@/components/magicui/blur-fade';
 import { UserNav } from '@/components/nav/user-nav';
 import { UnauthorizedAccess } from '@/components/unauthorized-access';
 import UserDashboardWrapper from '@/features/user/dashboard/user-dashboard-wrapper';
@@ -34,17 +33,17 @@ export default async function UserDashboardPage() {
       <div className='mb-8 flex items-center justify-between gap-2 md:mb-4 md:flex-row'>
         <div className='flex w-full flex-col items-center gap-4 md:flex-row md:gap-6 lg:w-auto'>
           <h2 className='flex items-center gap-2 font-londrina text-4xl font-bold tracking-wider text-white'>
-            <BlurFade delay={0.1}>
+            <div>
               <h3>Hallo</h3>
-            </BlurFade>
-            <BlurFade delay={0.2}>
+            </div>
+            <div>
               <h3>{user.firstName}!</h3>
-            </BlurFade>
+            </div>
           </h2>
           {userStreak && (
-            <BlurFade delay={0.25}>
+            <div>
               <Streak streak={userStreak} />
-            </BlurFade>
+            </div>
           )}
         </div>
         <div className='hidden gap-2 md:flex'>
@@ -52,7 +51,7 @@ export default async function UserDashboardPage() {
             <>
               {!user.email.includes('guest') &&
                 !user.email.includes('employee') && (
-                  <BlurFade delay={0.15}>
+                  <div>
                     <div className='hidden lg:block'>
                       <NavButton
                         title='Fairteiler Dashboard'
@@ -70,12 +69,12 @@ export default async function UserDashboardPage() {
                         size='icon'
                       />
                     </div>
-                  </BlurFade>
+                  </div>
                 )}
 
               {(user.email.includes('guest') ||
                 user.email.includes('employee')) && (
-                <BlurFade delay={0.15}>
+                <div>
                   <div className='hidden lg:block'>
                     <NavButton
                       title='Retteformular'
@@ -93,11 +92,11 @@ export default async function UserDashboardPage() {
                       size='icon'
                     />
                   </div>
-                </BlurFade>
+                </div>
               )}
             </>
           )}
-          <BlurFade delay={0.17}>
+          <div>
             <NavButton
               title='Fairteiler finden'
               href='/hub/user/fairteiler-finder'
@@ -105,10 +104,10 @@ export default async function UserDashboardPage() {
               variant='tertiary'
               size='lg'
             />
-          </BlurFade>
-          <BlurFade delay={0.2}>
+          </div>
+          <div>
             <UserNav user={user} routeKey='userRoutes' />
-          </BlurFade>
+          </div>
         </div>
       </div>
       <DataErrorBoundary>

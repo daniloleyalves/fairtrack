@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
 import { Skeleton } from '@components/ui/skeleton';
+import { FairteilerTagsSkeleton } from '../components/fairteiler-tags-skeleton';
 
 export function FairteilerProfileFormSkeleton() {
   return (
@@ -75,22 +76,7 @@ export function FairteilerProfileFormSkeleton() {
           </div>
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Tags</CardTitle>
-        </CardHeader>
-        <CardContent className='space-y-6'>
-          <div className='flex gap-2'>
-            <Skeleton className='h-[22px] w-16 bg-secondary' />
-            <Skeleton className='h-[22px] w-12 bg-secondary' />
-          </div>
-          {/* New Tag field */}
-          <div className='space-y-2'>
-            <Skeleton className='h-[14px] w-24 bg-secondary' /> {/* Label */}
-            <Skeleton className='h-9 w-full bg-secondary' /> {/* Input */}
-          </div>
-        </CardContent>
-      </Card>
+      <FairteilerTagsSkeleton />
     </div>
   );
 }

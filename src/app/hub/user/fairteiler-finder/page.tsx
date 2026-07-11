@@ -1,5 +1,4 @@
 import { DataErrorBoundary } from '@/components/error-boundary';
-import { BlurFade } from '@/components/magicui/blur-fade';
 import { UserNav } from '@/components/nav/user-nav';
 import { NavButton } from '@/components/ui/nav-button';
 import { UnauthorizedAccess } from '@/components/unauthorized-access';
@@ -7,7 +6,6 @@ import { FairteilerMapWrapper } from '@/features/fairteiler-map/components/fairt
 import { getFairteilers } from '@/server/fairteiler/queries';
 import { getSession } from '@/server/user/queries';
 import { headers } from 'next/headers';
-import { Suspense } from 'react';
 
 export default async function FairteilerFinderPage() {
   const fairteilers = await getFairteilers();
@@ -22,17 +20,17 @@ export default async function FairteilerFinderPage() {
   return (
     <div className='md:mx-8 md:mt-8'>
       <div className='mb-4 hidden items-end justify-between md:flex'>
-        <BlurFade delay={0.1}>
+        <div>
           <h2 className='font-londrina text-4xl font-bold tracking-wider text-white'>
             Fairteiler-Finder
           </h2>
-        </BlurFade>
+        </div>
         <div className='hidden gap-2 md:flex'>
           {auth.session.activeOrganizationId && (
             <>
               {!user.email.includes('guest') &&
                 !user.email.includes('employee') && (
-                  <BlurFade delay={0.15}>
+                  <div>
                     <div className='hidden lg:block'>
                       <NavButton
                         title='Fairteiler Dashboard'
@@ -50,12 +48,12 @@ export default async function FairteilerFinderPage() {
                         size='icon'
                       />
                     </div>
-                  </BlurFade>
+                  </div>
                 )}
 
               {(user.email.includes('guest') ||
                 user.email.includes('employee')) && (
-                <BlurFade delay={0.15}>
+                <div>
                   <div className='hidden lg:block'>
                     <NavButton
                       title='Retteformular'
@@ -73,11 +71,11 @@ export default async function FairteilerFinderPage() {
                       size='icon'
                     />
                   </div>
-                </BlurFade>
+                </div>
               )}
             </>
           )}
-          <BlurFade delay={0.17}>
+          <div>
             <NavButton
               title='Dashboard'
               href='/hub/user/dashboard'
@@ -85,16 +83,17 @@ export default async function FairteilerFinderPage() {
               variant='tertiary'
               size='lg'
             />
-          </BlurFade>
-          <BlurFade delay={0.2}>
+          </div>
+          <div>
             <UserNav user={user} routeKey='userRoutes' />
-          </BlurFade>
+          </div>
         </div>
       </div>
       <DataErrorBoundary>
-        <Suspense fallback={<div>Loading...</div>}>
-          <FairteilerMapWrapper fairteilers={fairteilers} />
-        </Suspense>
+        <FairteilerMapWrapper
+          fairteilers={fairteilers}
+          mapboxToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+        />
       </DataErrorBoundary>
     </div>
   );
