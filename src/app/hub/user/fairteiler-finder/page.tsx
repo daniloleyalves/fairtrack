@@ -7,7 +7,6 @@ import { FairteilerMapWrapper } from '@/features/fairteiler-map/components/fairt
 import { getFairteilers } from '@/server/fairteiler/queries';
 import { getSession } from '@/server/user/queries';
 import { headers } from 'next/headers';
-import { Suspense } from 'react';
 
 export default async function FairteilerFinderPage() {
   const fairteilers = await getFairteilers();
@@ -92,9 +91,10 @@ export default async function FairteilerFinderPage() {
         </div>
       </div>
       <DataErrorBoundary>
-        <Suspense fallback={<div>Loading...</div>}>
-          <FairteilerMapWrapper fairteilers={fairteilers} />
-        </Suspense>
+        <FairteilerMapWrapper
+          fairteilers={fairteilers}
+          mapboxToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+        />
       </DataErrorBoundary>
     </div>
   );
