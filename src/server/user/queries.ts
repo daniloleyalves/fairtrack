@@ -248,16 +248,14 @@ export async function getOnboardingData(
 /**
  * Get user preferences for the authenticated user
  */
-export async function getUserPreferences(): Promise<
-  UserPreferences | null | undefined
-> {
+export async function getUserPreferences(): Promise<UserPreferences | null> {
   const session = await loadAuthenticatedSession(await headers());
   const userId = session.user.id;
   if (!userId) {
     throw new AuthError('No active session.');
   }
 
-  return await loadUserPreferences(userId);
+  return (await loadUserPreferences(userId)) ?? null;
 }
 
 export async function getUserStreak(headers: Headers) {
