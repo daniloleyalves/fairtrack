@@ -144,17 +144,23 @@ function UserMenuLink({
 }
 
 // --- 4. The Sign Out Item Component ---
-export function SignOutMenuItem() {
+export function SignOutMenuItem({
+  redirectTo = '/sign-in',
+}: {
+  redirectTo?: string | null;
+}) {
   const { refetch } = authClient.useSession();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { execute, isPending } = useFormAction(signOutAction, undefined, {
     showToast: false,
-    onSuccess: (data) => {
+    onSuccess: async () => {
       queryClient.clear();
-      if (data?.redirectTo) {
-        router.push(data.redirectTo);
-        refetch();
+      await refetch();
+      if (redirectTo) {
+        router.push(redirectTo);
+      } else {
+        router.refresh();
       }
     },
   });
