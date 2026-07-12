@@ -18,6 +18,7 @@ import {
   getPlatformCalendarData,
 } from '../converter';
 import { PlatformFairteilerMap } from '../../../statistics/components/platform-fairteiler-map';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { ChartFilter } from '@/features/statistics/components/chart-filter';
 import { VolumeTrendChart } from '@/features/statistics/components/volume-trend-chart';
 import { Fairteiler, vContribution } from '@/server/db/db-types';
@@ -243,7 +244,9 @@ export function PlatformReportingDashboard({
 
       {/* Geographic Map */}
       <div>
-        <PlatformFairteilerMap fairteilers={fairteilers} />
+        <ErrorBoundary sentryTags={{ component: 'platform-fairteiler-map' }}>
+          <PlatformFairteilerMap fairteilers={fairteilers} />
+        </ErrorBoundary>
       </div>
 
       {/* Time Normalized Momentum Chart */}
