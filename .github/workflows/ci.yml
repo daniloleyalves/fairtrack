@@ -81,6 +81,7 @@ jobs:
     environment: testing
     env:
       NEXT_PUBLIC_ENV: ${{ vars.NEXT_PUBLIC_ENV }}
+      DATABASE_TEST_URL: ${{ secrets.DATABASE_TEST_URL }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
