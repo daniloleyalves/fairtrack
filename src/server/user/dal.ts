@@ -54,7 +54,6 @@ export const loadAuthenticatedSession = cache(
 
 export const loadSession = cache(
   async (headers: Headers, invalidateCookieCache = false) => {
-    console.log('loading session');
     return await auth.api.getSession({
       query: {
         disableCookieCache: invalidateCookieCache,
