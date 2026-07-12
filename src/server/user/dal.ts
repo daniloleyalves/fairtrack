@@ -364,14 +364,16 @@ export const updateUserPreferences = async (
     enableStreaks?: boolean;
     enableQuests?: boolean;
     enableAIFeedback?: boolean;
-    isAnonymous?: boolean;
   },
 ) => {
   const [error, data] = await attempt(
     db
-      .update(userPreferences)
-      .set(preferences)
-      .where(eq(userPreferences.userId, userId))
+      .insert(userPreferences)
+      .values({ userId, ...preferences })
+      .onConflictDoUpdate({
+        target: userPreferences.userId,
+        set: preferences,
+      })
       .returning(),
   );
 

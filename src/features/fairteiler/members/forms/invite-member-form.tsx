@@ -15,7 +15,7 @@ import { Input } from '@components/ui/input';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Send } from 'lucide-react';
-import { Dispatch, SetStateAction, startTransition } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -57,9 +57,7 @@ export function InviteMemberForm({
   const isPending = inviteMember.isPending;
 
   function onSubmit(values: z.infer<typeof inviteMemberSchema>) {
-    startTransition(() => {
-      inviteMember.execute(values);
-    });
+    inviteMember.execute(values);
   }
 
   return (

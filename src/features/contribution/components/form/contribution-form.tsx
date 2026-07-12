@@ -7,7 +7,7 @@ import {
   ContributionFormValues,
 } from '@features/contribution/schemas/contribution-schema';
 import { zodResolver } from '@hookform/resolvers/zod';
-import React, { startTransition } from 'react';
+import React from 'react';
 import { DefaultValues, SubmitHandler, useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { useFormAction } from '@/lib/hooks/use-form-action';
@@ -44,6 +44,8 @@ export function ContributionForm({
   const submitContribution = useFormAction(submitContributionAction, form, {
     successMessage: 'Lebensmittel erfolgreich beigetragen!',
     onSuccess: (data) => {
+      form.reset();
+
       void queryClient.invalidateQueries({
         queryKey: fairteilerKeys.dashboard().queryKey,
       });
@@ -76,9 +78,7 @@ export function ContributionForm({
       },
     };
 
-    startTransition(() => {
-      submitContribution.execute(submissionData);
-    });
+    submitContribution.execute(submissionData);
   };
 
   return (

@@ -17,7 +17,7 @@ import { Label } from '@components/ui/label';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Check, CirclePlus, Copy, Loader2 } from 'lucide-react';
-import { Dispatch, SetStateAction, startTransition, useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import { useForm } from 'react-hook-form'; // No need for UseFormReturn type export here
 
 import { useQueryClient } from '@tanstack/react-query';
@@ -75,9 +75,7 @@ export function AddAccessViewForm({
   const isPending = addAccessView.isPending;
 
   function onSubmit(values: z.infer<typeof accessViewSchema>) {
-    startTransition(() => {
-      addAccessView.execute(values);
-    });
+    addAccessView.execute(values);
   }
 
   // --- Conditional Rendering for Different Views ---

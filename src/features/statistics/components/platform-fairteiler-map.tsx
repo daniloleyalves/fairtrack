@@ -213,6 +213,7 @@ export function PlatformFairteilerMap({
           />
           <Map
             ref={mapRef}
+            reuseMaps
             mapboxAccessToken={env.MAPBOX_TOKEN}
             attributionControl={false}
             mapStyle='mapbox://styles/dayno/cmfljv0c3008m01sb743xhwi5'
