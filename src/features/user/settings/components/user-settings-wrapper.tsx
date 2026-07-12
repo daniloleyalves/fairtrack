@@ -15,7 +15,7 @@ export default function UserSettingsWrapper({ user }: { user: User }) {
   const queryClient = useQueryClient();
   const profileKey = userKeys.profile().queryKey;
 
-  const { data: userData = user } = useQuery({
+  const { data: userData = user, error } = useQuery({
     ...userKeys.profile(),
     queryFn: getUserProfile,
     initialData: user,
@@ -56,6 +56,10 @@ export default function UserSettingsWrapper({ user }: { user: User }) {
       void queryClient.invalidateQueries({ queryKey: userKeys.all().queryKey });
     },
   });
+
+  if (error) {
+    throw error;
+  }
 
   return (
     <UserPreferencesProvider>
