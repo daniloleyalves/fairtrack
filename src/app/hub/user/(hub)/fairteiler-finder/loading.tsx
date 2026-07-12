@@ -5,14 +5,7 @@ export default function FairteilerFinderLoading() {
   return (
     <div className='mx-2 mt-8 mb-64 sm:mx-8'>
       {/* Header Section */}
-      <div className='mb-4 hidden items-end justify-between md:flex'>
-        <Skeleton variant='onCard' className='h-10 w-64 rounded-md' />
-        <div className='flex gap-2'>
-          <Skeleton variant='onCard' className='h-10 w-32 rounded-md' />
-          <Skeleton variant='onCard' className='h-10 w-24 rounded-md' />
-          <Skeleton variant='onCard' className='size-10 rounded-md' />
-        </div>
-      </div>
+      <Skeleton variant='onCard' className='mb-4 h-10 w-64 rounded-md' />
 
       {/* Map Container */}
       <Card className='relative h-[calc(100vh-12rem)] w-full overflow-hidden rounded-lg'>
