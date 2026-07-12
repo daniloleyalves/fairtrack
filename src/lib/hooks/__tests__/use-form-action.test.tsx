@@ -52,6 +52,23 @@ afterEach(() => {
 
 const noopAction = vi.fn();
 
+// The hook only runs its result callbacks for a live execution (onExecute
+// arms them, they disarm after firing once) — mirror the real
+// next-safe-action lifecycle when driving the captured callbacks.
+async function fireSuccess(data: unknown) {
+  await act(async () => {
+    capturedCallbacks?.onExecute?.();
+    await capturedCallbacks?.onSuccess?.({ data });
+  });
+}
+
+async function fireError(error: unknown) {
+  await act(async () => {
+    capturedCallbacks?.onExecute?.();
+    await capturedCallbacks?.onError?.({ error });
+  });
+}
+
 function renderUseFormAction(
   options: Parameters<typeof useFormAction>[2] = {},
   withForm = false,
@@ -76,7 +93,7 @@ describe('useFormAction', () => {
     const onSuccess = vi.fn();
     renderUseFormAction({ successMessage: 'Saved!', onSuccess });
 
-    await capturedCallbacks?.onSuccess?.({ data: { id: 42 } });
+    await fireSuccess({ id: 42 });
 
     expect(toastSuccess).toHaveBeenCalledExactlyOnceWith('Saved!');
     expect(onSuccess).toHaveBeenCalledExactlyOnceWith({ id: 42 });
@@ -84,16 +101,14 @@ describe('useFormAction', () => {
 
   it('skips the success toast when successMessage is omitted', async () => {
     renderUseFormAction({});
-    await capturedCallbacks?.onSuccess?.({ data: undefined });
+    await fireSuccess(undefined);
     expect(toastSuccess).not.toHaveBeenCalled();
   });
 
   it('toasts the serverError and mirrors it to root.serverError when a form is supplied', async () => {
     const { result } = renderUseFormAction({}, true);
     const setError = vi.spyOn(result.current.form, 'setError');
-    await act(async () => {
-      await capturedCallbacks?.onError?.({ error: { serverError: 'boom' } });
-    });
+    await fireError({ serverError: 'boom' });
 
     expect(toastError).toHaveBeenCalledExactlyOnceWith('boom');
     expect(setError).toHaveBeenCalledWith('root.serverError', {
@@ -107,9 +122,7 @@ describe('useFormAction', () => {
       true,
     );
     const setError = vi.spyOn(result.current.form, 'setError');
-    await act(async () => {
-      await capturedCallbacks?.onError?.({ error: { serverError: 'oops' } });
-    });
+    await fireError({ serverError: 'oops' });
 
     expect(setError).toHaveBeenCalledWith('root.network', { message: 'oops' });
   });
@@ -117,15 +130,11 @@ describe('useFormAction', () => {
   it('maps flattened validationErrors.fieldErrors onto form.setError(path)', async () => {
     const { result } = renderUseFormAction({}, true);
     const setError = vi.spyOn(result.current.form, 'setError');
-    await act(async () => {
-      await capturedCallbacks?.onError?.({
-        error: {
-          validationErrors: {
-            formErrors: [],
-            fieldErrors: { name: ['Name is required'] },
-          },
-        },
-      });
+    await fireError({
+      validationErrors: {
+        formErrors: [],
+        fieldErrors: { name: ['Name is required'] },
+      },
     });
 
     expect(setError).toHaveBeenCalledWith('name', {
@@ -137,15 +146,11 @@ describe('useFormAction', () => {
   it('maps formErrors[0] onto root.serverError', async () => {
     const { result } = renderUseFormAction({}, true);
     const setError = vi.spyOn(result.current.form, 'setError');
-    await act(async () => {
-      await capturedCallbacks?.onError?.({
-        error: {
-          validationErrors: {
-            formErrors: ['Form is invalid'],
-            fieldErrors: {},
-          },
-        },
-      });
+    await fireError({
+      validationErrors: {
+        formErrors: ['Form is invalid'],
+        fieldErrors: {},
+      },
     });
 
     expect(setError).toHaveBeenCalledWith('root.serverError', {
@@ -155,16 +160,14 @@ describe('useFormAction', () => {
 
   it('falls back to a generic toast when neither serverError nor validationErrors are set', async () => {
     renderUseFormAction({}, true);
-    await capturedCallbacks?.onError?.({ error: {} });
+    await fireError({});
     expect(toastError).toHaveBeenCalledOnce();
   });
 
   it('respects showToast: false — no toast even on serverError', async () => {
     const { result } = renderUseFormAction({ showToast: false }, true);
     const setError = vi.spyOn(result.current.form, 'setError');
-    await act(async () => {
-      await capturedCallbacks?.onError?.({ error: { serverError: 'silent' } });
-    });
+    await fireError({ serverError: 'silent' });
 
     expect(toastError).not.toHaveBeenCalled();
     // serverError still mirrored to the form because setFormError defaults to true when a form is supplied
@@ -176,11 +179,7 @@ describe('useFormAction', () => {
   it('respects setFormError: false — serverError toasts but does NOT touch the form', async () => {
     const { result } = renderUseFormAction({ setFormError: false }, true);
     const setError = vi.spyOn(result.current.form, 'setError');
-    await act(async () => {
-      await capturedCallbacks?.onError?.({
-        error: { serverError: 'just-toast' },
-      });
-    });
+    await fireError({ serverError: 'just-toast' });
 
     expect(toastError).toHaveBeenCalledExactlyOnceWith('just-toast');
     expect(setError).not.toHaveBeenCalled();
@@ -189,11 +188,9 @@ describe('useFormAction', () => {
   it('calls the user-supplied onError with the normalized payload', async () => {
     const onError = vi.fn();
     renderUseFormAction({ onError, showToast: false });
-    await capturedCallbacks?.onError?.({
-      error: {
-        serverError: 'srv',
-        validationErrors: { formErrors: [], fieldErrors: {} },
-      },
+    await fireError({
+      serverError: 'srv',
+      validationErrors: { formErrors: [], fieldErrors: {} },
     });
 
     expect(onError).toHaveBeenCalledOnce();
@@ -206,6 +203,33 @@ describe('useFormAction', () => {
       formErrors: [],
       fieldErrors: {},
     });
+  });
+
+  it('fires result callbacks once per execution — replayed callbacks are ignored', async () => {
+    const onSuccess = vi.fn();
+    renderUseFormAction({ successMessage: 'Saved!', onSuccess });
+
+    await fireSuccess({ id: 1 });
+    // Replay without a new onExecute — simulates Next re-mounting the
+    // segment and next-safe-action re-delivering the last result.
+    await act(async () => {
+      await capturedCallbacks?.onSuccess?.({ data: { id: 1 } });
+    });
+
+    expect(toastSuccess).toHaveBeenCalledExactlyOnceWith('Saved!');
+    expect(onSuccess).toHaveBeenCalledOnce();
+  });
+
+  it('ignores result callbacks that arrive without any execution', async () => {
+    const onError = vi.fn();
+    renderUseFormAction({ onError });
+
+    await act(async () => {
+      await capturedCallbacks?.onError?.({ error: { serverError: 'stale' } });
+    });
+
+    expect(toastError).not.toHaveBeenCalled();
+    expect(onError).not.toHaveBeenCalled();
   });
 
   it('calls form.clearErrors on onExecute', () => {
