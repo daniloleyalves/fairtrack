@@ -63,11 +63,15 @@ export function ExportButton({ filters, scope, className }: ExportButtonProps) {
       toast.success(successMessage);
     } catch (error) {
       console.error('Export error:', error);
-      const errorMessage =
+      const fallbackMessage =
         scope === 'fairteiler'
           ? 'Fehler beim Exportieren der Fairteiler-Daten'
           : 'Fehler beim Exportieren der Plattform-Daten';
-      toast.error(errorMessage);
+      toast.error(
+        error instanceof Error && error.message
+          ? error.message
+          : fallbackMessage,
+      );
     } finally {
       setIsExporting(false);
     }
