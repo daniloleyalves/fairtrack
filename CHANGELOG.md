@@ -20,6 +20,8 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-07-12
+
 ### Added
 
 - Data layer migrated from SWR + in-house action wrapper to TanStack Query + `next-safe-action`, and server code reorganized by domain (`user`, `fairteiler`, `contribution`, `tutorial`, `platform`). No functional change.
@@ -31,7 +33,7 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 - Platform export surfaces real server errors instead of swallowing them.
 - Password hashing migrated from bcrypt to better-auth's built-in scrypt; `better-auth` upgraded 1.4.7 → 1.6.11. See Deployment notes.
 - `user.phone` and `user.foodsharing_id` columns corrected to `text`/`integer` to match their actual data.
-- CI Node version bumped to 22.
+- CI pipeline modernized: GitHub Actions bumped off the deprecated node20 runtime, and missing `TINYMCE_KEY`/`NEXT_PUBLIC_MAPBOX_TOKEN` test-env secrets (was flooding e2e logs) fixed.
 
 ### Removed
 
@@ -46,5 +48,6 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 
 - Password reset/change hook (`account.update.after`) now correctly handles both flows via better-auth's `onPasswordReset`.
 - `hasPermission` / `checkRolePermission` call sites updated for the 1.5 `permission` → `permissions` rename.
+- Stray `console.log('loading session')` removed from `loadSession`, which fired on every session check.
 - `checkPermissionOnServer` retries on `MEMBER_NOT_FOUND` — a transient consistency gap right after a membership is created (e.g. accepting an invitation), not a real authorization failure.
 - CI `test`/`e2e` jobs share a `concurrency` group — multiple simultaneous workflow runs were racing against the same test database, corrupting each other's fixtures mid-run.
