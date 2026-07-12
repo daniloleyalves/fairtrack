@@ -65,12 +65,6 @@ export const auth = betterAuth({
     enabled: process.env.NEXT_PUBLIC_ENV !== 'testing',
     window: 10,
     max: 100,
-    // customRules: {
-    //     "/example/path": {
-    //         window: 10,
-    //         max: 100
-    //     }
-    // },
     storage: 'memory',
     modelName: 'rateLimit',
   },
@@ -98,19 +92,6 @@ export const auth = betterAuth({
         },
       },
     },
-    // user: {
-    //     create: {
-    //         after: async (user) => {
-    //             await auth.api.addMember({
-    //                 body: {
-    //                     userId: user.id,
-    //                     organizationId: defaultOrganizationId,
-    //                     role: 'disabled'
-    //                 }
-    //             });
-    //         }
-    //     }
-    // }
   },
   plugins: [
     // jwt(),
