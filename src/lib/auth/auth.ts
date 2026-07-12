@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { betterAuth } from 'better-auth';
+import { APIError, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { nextCookies } from 'better-auth/next-js';
 import { admin, organization } from 'better-auth/plugins';
@@ -245,6 +245,13 @@ export async function getActiveOrganizationId(
 /**
  * Checks permissions on the server by forwarding the request headers and
  * permission checks to the authentication service.
+ *
+ * Retries a few times on MEMBER_NOT_FOUND: this call can immediately follow
+ * a membership being created (e.g. right after accepting an invitation), and
+ * that write may not yet be visible to this read given Neon's stateless HTTP
+ * driver has no shared transaction between the two. It's a transient
+ * consistency gap, not a real authorization failure.
+ *
  * @param headers The incoming request headers.
  * @param checks An object specifying the permissions to check.
  *               Example: { "dashboard": ["read"], "settings": ["read", "write"] }
@@ -254,12 +261,22 @@ export async function checkPermissionOnServer(
   checks: Record<string, string[]>,
   organizationId?: string,
 ) {
-  console.log('SERVER: Forwarding permission check to auth service.');
-  return auth.api.hasPermission({
-    headers: headers,
-    body: {
-      permissions: checks,
-      ...(organizationId ? { organizationId } : {}),
-    },
-  });
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await auth.api.hasPermission({
+        headers: headers,
+        body: {
+          permissions: checks,
+          ...(organizationId ? { organizationId } : {}),
+        },
+      });
+    } catch (error) {
+      const isMemberNotFound =
+        error instanceof APIError && error.body?.code === 'MEMBER_NOT_FOUND';
+      if (!isMemberNotFound || attempt === maxAttempts) throw error;
+      await new Promise((resolve) => setTimeout(resolve, attempt * 150));
+    }
+  }
+  throw new Error('unreachable');
 }
