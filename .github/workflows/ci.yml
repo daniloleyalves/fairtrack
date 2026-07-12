@@ -79,6 +79,9 @@ jobs:
     name: Unit & Integration Tests
     runs-on: ubuntu-latest
     environment: testing
+    concurrency:
+      group: shared-test-database
+      cancel-in-progress: false
     env:
       NEXT_PUBLIC_ENV: ${{ vars.NEXT_PUBLIC_ENV }}
       DATABASE_TEST_URL: ${{ secrets.DATABASE_TEST_URL }}
@@ -168,6 +171,9 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     environment: testing
+    concurrency:
+      group: shared-test-database
+      cancel-in-progress: false
     env:
       NEXT_PUBLIC_ENV: ${{ vars.NEXT_PUBLIC_ENV }}
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}

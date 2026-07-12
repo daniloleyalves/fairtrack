@@ -47,3 +47,4 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 - Password reset/change hook (`account.update.after`) now correctly handles both flows via better-auth's `onPasswordReset`.
 - `hasPermission` / `checkRolePermission` call sites updated for the 1.5 `permission` → `permissions` rename.
 - `checkPermissionOnServer` retries on `MEMBER_NOT_FOUND` — a transient consistency gap right after a membership is created (e.g. accepting an invitation), not a real authorization failure.
+- CI `test`/`e2e` jobs share a `concurrency` group — multiple simultaneous workflow runs were racing against the same test database, corrupting each other's fixtures mid-run.
