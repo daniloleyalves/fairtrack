@@ -13,7 +13,11 @@ const PLATFORM_REPORTING_QUERY_OPTIONS = {
   limit: 100000,
 } as const;
 
-export default function PlatformReportingWrapper() {
+export default function PlatformReportingWrapper({
+  canExport,
+}: {
+  canExport: boolean;
+}) {
   const contributionsQuery = useQuery({
     ...contributionKeys.list(PLATFORM_REPORTING_QUERY_OPTIONS),
     queryFn: () => getContributions(PLATFORM_REPORTING_QUERY_OPTIONS),
@@ -43,6 +47,7 @@ export default function PlatformReportingWrapper() {
     <PlatformReportingDashboard
       data={contributionsQuery.data.data}
       fairteilers={fairteilersQuery.data}
+      canExport={canExport}
     />
   );
 }

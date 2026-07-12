@@ -1,7 +1,10 @@
 import { DataErrorBoundary } from '@/components/error-boundary';
 import PlatformReportingWrapper from '@/features/platform/reporting/components/platform-reporting-wrapper';
+import { getIsPlatformAdmin } from '@/server/user/queries';
+import { headers } from 'next/headers';
 
-export default function FairteilerPlatformReportingPage() {
+export default async function FairteilerPlatformReportingPage() {
+  const canExport = await getIsPlatformAdmin(await headers());
   return (
     <div className='mx-2 mt-8 mb-64 flex flex-col gap-4 sm:mx-8'>
       <div className='mb-4 flex flex-col gap-2 text-center sm:text-start'>
@@ -19,7 +22,7 @@ export default function FairteilerPlatformReportingPage() {
       </div>
 
       <DataErrorBoundary>
-        <PlatformReportingWrapper />
+        <PlatformReportingWrapper canExport={canExport} />
       </DataErrorBoundary>
     </div>
   );

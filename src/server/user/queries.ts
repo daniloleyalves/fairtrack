@@ -26,6 +26,11 @@ import { calculateUserAllTimeStreaks } from '@/features/user/gamification/streak
 import { gamificationElements } from '@/features/user/gamification/gamification-config';
 import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
 
+export async function getIsPlatformAdmin(headers: Headers) {
+  const session = await loadSession(headers);
+  return session?.user.role === 'admin';
+}
+
 export async function getUserProfile() {
   const session = await getSession(await headers());
   if (!session?.user) {

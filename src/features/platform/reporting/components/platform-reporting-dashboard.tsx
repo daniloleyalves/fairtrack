@@ -31,11 +31,13 @@ import { DataCalendar } from '@/features/fairteiler/dashboard/components/contrib
 interface PlatformReportingDashboardProps {
   data: vContribution[];
   fairteilers: Fairteiler[];
+  canExport: boolean;
 }
 
 export function PlatformReportingDashboard({
   data,
   fairteilers,
+  canExport,
 }: PlatformReportingDashboardProps) {
   const [filters, setFilters] = useState<ReportFilters>(() => {
     const today = new Date();
@@ -78,10 +80,11 @@ export function PlatformReportingDashboard({
 
   return (
     <>
-      {/* Export Button */}
-      <div className='flex items-center justify-center sm:justify-end'>
-        <ExportButton filters={filters} scope='platform' />
-      </div>
+      {canExport && (
+        <div className='flex items-center justify-center sm:justify-end'>
+          <ExportButton filters={filters} scope='platform' />
+        </div>
+      )}
       {/* Active Filters Display */}
       <Card className='flex flex-col py-0 lg:flex-row'>
         <CardContent className='flex flex-wrap items-center justify-center gap-x-4 gap-y-2 py-4 sm:justify-start'>
