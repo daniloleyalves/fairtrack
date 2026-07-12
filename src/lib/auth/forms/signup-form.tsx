@@ -27,7 +27,7 @@ import { handleClientOperation, noop } from '@/lib/client-error-handling';
 import { SignUpFormValues, signUpSchema } from '../schemas';
 import {
   checkInvitationAndUserAction,
-  checkUserSecureStatusAction,
+  checkUserPasswordStatusAction,
 } from '../auth-actions';
 import { invokeAction } from '@/lib/hooks/use-form-action';
 
@@ -105,7 +105,7 @@ export function SignUpForm({
     // the user sees a clear error instead of being silently redirected to sign-in.
     setIsPending(true);
     try {
-      const existing = await invokeAction(checkUserSecureStatusAction, {
+      const existing = await invokeAction(checkUserPasswordStatusAction, {
         email: values.email,
       });
       if (existing.userExists) {

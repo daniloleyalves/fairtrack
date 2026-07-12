@@ -19,6 +19,7 @@ import { auth } from '@/lib/auth/auth';
 import { defaultDateRange } from '@/lib/config/site-config';
 import { db } from '../db/drizzle';
 import {
+  account,
   checkin,
   experienceLevels,
   experiencLevelEvents,
@@ -91,17 +92,22 @@ export async function validateResetPasswordToken(token: string) {
 
 export async function loadUserByEmail(email: string) {
   const [error, data] = await attempt(
-    db.query.user.findFirst({
-      where: eq(user.email, email),
-      columns: {
-        id: true,
-        email: true,
-        secure: true,
-      },
-    }),
+    db
+      .select({
+        id: user.id,
+        email: user.email,
+        hasPassword: sql<boolean>`${account.password} is not null`,
+      })
+      .from(user)
+      .leftJoin(
+        account,
+        and(eq(account.userId, user.id), eq(account.providerId, 'credential')),
+      )
+      .where(eq(user.email, email))
+      .limit(1),
   );
   if (error) handleDatabaseError(error, 'loadUserByEmail');
-  return data;
+  return data?.[0];
 }
 
 export async function updateUserSecureStatus(userId: string, secure: boolean) {
