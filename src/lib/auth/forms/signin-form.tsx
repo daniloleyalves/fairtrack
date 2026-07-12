@@ -28,9 +28,6 @@ import {
   checkUserSecureStatusAction,
 } from '../auth-actions';
 import { invokeAction } from '@/lib/hooks/use-form-action';
-import { MemberRolesEnum } from '../auth-permissions';
-import { User } from '@/server/db/db-types';
-import { SuccessContext } from 'better-auth/react';
 import { SecurityModal } from '../components/security-modal';
 
 export function SignInForm({
@@ -169,13 +166,7 @@ export function SignInForm({
             password: values.password,
           },
           {
-            onSuccess: async (
-              res: SuccessContext<{
-                redirect: boolean;
-                token: string;
-                user: User;
-              }>,
-            ) => {
+            onSuccess: async () => {
               emailForm.reset();
               signInForm.reset();
               setUserChecked(false);
@@ -188,14 +179,6 @@ export function SignInForm({
                   await authClient.organization.acceptInvitation({
                     invitationId: invitationData.invitation.id,
                   });
-                  if (
-                    invitationData.invitation.role === MemberRolesEnum.OWNER
-                  ) {
-                    await authClient.admin.setRole({
-                      userId: res.data.user.id,
-                      role: 'admin',
-                    });
-                  }
                 } catch (error) {
                   Sentry.captureException(error, {
                     tags: { flow: 'sign-in', step: 'accept-invitation' },

@@ -27,6 +27,7 @@ import {
   milestones,
   onboardingStepsEvents,
   questBadgeEvents,
+  session,
   user,
   userFeedback,
   userPreferences,
@@ -109,6 +110,25 @@ export async function updateUserSecureStatus(userId: string, secure: boolean) {
   );
   if (error) handleDatabaseError(error, 'updateUserSecureStatus');
   return data;
+}
+
+/**
+ * Server-authority counterpart to better-auth's admin-gated `banUser`
+ * endpoint: bans the user and deletes their sessions so an active login
+ * is terminated immediately. Callers must authorize the operation
+ * themselves (e.g. via an organization-level permission check).
+ */
+export async function banUserAndRevokeSessions(userId: string, reason: string) {
+  const [error] = await attempt(
+    Promise.all([
+      db
+        .update(user)
+        .set({ banned: true, banReason: reason })
+        .where(eq(user.id, userId)),
+      db.delete(session).where(eq(session.userId, userId)),
+    ]),
+  );
+  if (error) handleDatabaseError(error, 'banUserAndRevokeSessions');
 }
 
 // ------- USER DASHBOARD DATA ----------
