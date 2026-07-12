@@ -29,9 +29,9 @@ export function FairteilerHistoryWrapper() {
 
   if (isEmpty) {
     return (
-      <div className='py-8 text-center'>
+      <Card className='py-8 text-center'>
         <p className='text-muted-foreground'>Keine Einträge gefunden</p>
-      </div>
+      </Card>
     );
   }
 

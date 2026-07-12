@@ -68,7 +68,6 @@ export function UserDashboard({
       ) : (
         <div className='col-span-12'>
           <Card>
-            <div className='bg-grid-pattern absolute inset-0 opacity-5' />
             <div className='relative flex flex-col items-center justify-center gap-6 p-12 text-center'>
               {/* Icon Circle */}
               <div className='relative'>
