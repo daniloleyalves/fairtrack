@@ -157,6 +157,9 @@
       "baseline-browser-mapping": "^2.10.32",
       "import-in-the-middle": "^2.0.0",
       "require-in-the-middle": "^8.0.1"
+    },
+    "patchedDependencies": {
+      "@vis.gl/react-mapbox@8.1.0": "patches/@vis.gl__react-mapbox@8.1.0.patch"
     }
   }
 }

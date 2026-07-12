@@ -9,6 +9,11 @@ overrides:
   import-in-the-middle: ^2.0.0
   require-in-the-middle: ^8.0.1
 
+patchedDependencies:
+  '@vis.gl/react-mapbox@8.1.0':
+    hash: a0c49c5ea50365e53091a2f534662d5d93e22e88d25fc7a055d3c613ad62c177
+    path: patches/@vis.gl__react-mapbox@8.1.0.patch
+
 importers:
 
   .:
@@ -10268,7 +10273,7 @@ snapshots:
       next: 16.2.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react: 19.2.3
 
-  '@vis.gl/react-mapbox@8.1.0(mapbox-gl@3.17.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+  '@vis.gl/react-mapbox@8.1.0(patch_hash=a0c49c5ea50365e53091a2f534662d5d93e22e88d25fc7a055d3c613ad62c177)(mapbox-gl@3.17.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
@@ -13314,7 +13319,7 @@ snapshots:
 
   react-map-gl@8.1.0(mapbox-gl@3.17.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
-      '@vis.gl/react-mapbox': 8.1.0(mapbox-gl@3.17.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@vis.gl/react-mapbox': 8.1.0(patch_hash=a0c49c5ea50365e53091a2f534662d5d93e22e88d25fc7a055d3c613ad62c177)(mapbox-gl@3.17.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@vis.gl/react-maplibre': 8.1.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)

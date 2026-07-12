@@ -1,0 +1,64 @@
+diff --git a/dist/index.cjs b/dist/index.cjs
+index 12ae609c532537847698e57649fedb8d3d4c72cf..20261403ed66bb4818b84e66f5ff82c2f8f51ce1 100644
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -505,9 +505,13 @@ var Mapbox = class {
+     }
+     const map = that.map;
+     const oldContainer = map.getContainer();
+-    container.className = oldContainer.className;
+-    while (oldContainer.childNodes.length > 0) {
+-      container.appendChild(oldContainer.childNodes[0]);
++    if (container !== oldContainer) {
++      const staleChildren = oldContainer.querySelector("[mapboxgl-children]");
++      staleChildren == null ? void 0 : staleChildren.remove();
++      container.className = oldContainer.className;
++      while (oldContainer.childNodes.length > 0) {
++        container.appendChild(oldContainer.childNodes[0]);
++      }
+     }
+     map._container = container;
+     that.setProps({ ...props, styleDiffing: false });
+@@ -602,9 +606,6 @@ var Mapbox = class {
+   }
+   /* eslint-enable complexity,max-statements */
+   recycle() {
+-    const container = this.map.getContainer();
+-    const children = container.querySelector("[mapboxgl-children]");
+-    children == null ? void 0 : children.remove();
+     Mapbox.savedMaps.push(this);
+   }
+   destroy() {
+diff --git a/dist/mapbox/mapbox.js b/dist/mapbox/mapbox.js
+index 1c11bb0b89048ef60206d7646616f1a1fca2dae3..b6f3881aab61ef0e4abd5f4bdacce780cd960afd 100644
+--- a/dist/mapbox/mapbox.js
++++ b/dist/mapbox/mapbox.js
+@@ -174,9 +174,14 @@ class Mapbox {
+         // intoto the new container from the props.
+         // Step 1: reparenting child nodes from old container to new container
+         const oldContainer = map.getContainer();
+-        container.className = oldContainer.className;
+-        while (oldContainer.childNodes.length > 0) {
+-            container.appendChild(oldContainer.childNodes[0]);
++        if (container !== oldContainer) {
++            // Clean up the stale children element from the previous React tree
++            // before reparenting; the new tree renders its own.
++            oldContainer.querySelector('[mapboxgl-children]')?.remove();
++            container.className = oldContainer.className;
++            while (oldContainer.childNodes.length > 0) {
++                container.appendChild(oldContainer.childNodes[0]);
++            }
+         }
+         // Step 2: replace the internal container with new container from the react component
+         // @ts-ignore
+@@ -297,10 +302,6 @@ class Mapbox {
+     }
+     /* eslint-enable complexity,max-statements */
+     recycle() {
+-        // Clean up unnecessary elements before storing for reuse.
+-        const container = this.map.getContainer();
+-        const children = container.querySelector('[mapboxgl-children]');
+-        children?.remove();
+         Mapbox.savedMaps.push(this);
+     }
+     destroy() {
