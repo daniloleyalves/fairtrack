@@ -39,7 +39,7 @@ export function UserHubNav() {
                   href='/hub/fairteiler/contribution'
                   icon='ClipboardList'
                   variant='secondary'
-                  size='lg'
+                  size='sm'
                   responsiveTitle
                 />
               ) : (
@@ -48,7 +48,7 @@ export function UserHubNav() {
                   href='/hub/fairteiler/dashboard'
                   icon='Coffee'
                   variant='secondary'
-                  size='lg'
+                  size='sm'
                   responsiveTitle
                 />
               ))}
