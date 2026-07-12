@@ -4,6 +4,9 @@ node_modules
 # next
 .next
 
+# typescript
+*.tsbuildinfo
+
 # turbo
 .turbo
 
