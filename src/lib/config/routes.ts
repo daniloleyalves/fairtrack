@@ -52,38 +52,6 @@ export const routes: Record<string, Route[]> = {
       disabled: false,
       reqPermissions: { section: 'dashboard', permissions: ['read'] },
     },
-    // {
-    //   title: 'Verwaltung',
-    //   icon: Boxes,
-    //   url: `/hub/fairteiler/operations`,
-    //   disabled: false,
-    //   reqPermissions: {
-    //     section: 'operations',
-    //     permissions: ['read', 'update'],
-    //   },
-    //   routes: [
-    //     {
-    //       title: 'Lager',
-    //       icon: Icons.boxes,
-    //       url: `/${modules.fairteiler.slug}/operations/warehouse`,
-    //       disabled: false,
-    //       reqPermissions: {
-    //         section: 'operations',
-    //         permissions: ['read', 'update'],
-    //       },
-    //     },
-    //     {
-    //       title: 'Retteformular',
-    //       icon: Icons.shoppingBasket,
-    //       url: `/${modules.fairteiler.slug}/operations/contribution`,
-    //       disabled: false,
-    //       reqPermissions: {
-    //         section: 'contribution',
-    //         permissions: ['read', 'create'],
-    //       },
-    //     },
-    //   ],
-    // },
     {
       title: 'Retteformular',
       icon: ClipboardList,
@@ -170,13 +138,6 @@ export const routes: Record<string, Route[]> = {
           disabled: false,
           reqPermissions: { section: 'user', permissions: ['read', 'update'] },
         },
-        // {
-        //   title: 'Präferenzen',
-        //   icon: Icons.settings,
-        //   // illustration: Illustrations.preferencesIllustration,
-        //   url: `/user/settings/preferences`,
-        //   disabled: true,
-        // },
       ],
     },
   ],
