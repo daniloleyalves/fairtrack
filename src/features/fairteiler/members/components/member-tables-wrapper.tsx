@@ -1,7 +1,6 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   ACCESS_VIEW_ROLES,
   MemberRolesEnum,
@@ -10,6 +9,7 @@ import { getActiveFairteiler } from '@/server/fairteiler/queries';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { AccessViewTable } from './access-view-table';
 import { MemberTable } from './member-table';
+import { MembersSkeleton } from './members-skeleton';
 
 export function MemberTablesWrapper() {
   const {
@@ -22,12 +22,7 @@ export function MemberTablesWrapper() {
   });
 
   if (isPending) {
-    return (
-      <>
-        <Skeleton className='h-[250px] w-full' />
-        <Skeleton className='h-[250px] w-full' />
-      </>
-    );
+    return <MembersSkeleton />;
   }
 
   if (error) {

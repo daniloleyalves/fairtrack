@@ -1,8 +1,8 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Loader2 } from 'lucide-react';
 import { formatInTimeZone } from 'date-fns-tz';
+import { Skeleton } from '@/components/ui/skeleton';
 import { getVersionHistoryByCheckinId } from '@/server/contribution/queries';
 import { contributionKeys } from '@/server/contribution/query-keys';
 
@@ -17,20 +17,22 @@ export function HistoryVersionHistory({ checkinId }: VersionHistoryProps) {
   });
 
   if (isPending) {
-    return <Loader2 className='mx-auto animate-spin' />;
+    return <VersionHistorySkeleton />;
   }
 
   if (error) {
     return (
-      <p>
-        Beim laden des Versionsverlaufs ist ein unerwarteter Fehler unterlaufen
+      <p className='text-center text-muted-foreground'>
+        Beim Laden des Versionsverlaufs ist ein unerwarteter Fehler unterlaufen
       </p>
     );
   }
 
   if (!data.length) {
     return (
-      <p className='text-center'>Es wurden keine Änderungen vorgenommen</p>
+      <p className='text-center text-muted-foreground'>
+        Es wurden keine Änderungen vorgenommen
+      </p>
     );
   }
 
@@ -53,6 +55,23 @@ export function HistoryVersionHistory({ checkinId }: VersionHistoryProps) {
               'dd.MM.yyyy',
             )}`}
           </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function VersionHistorySkeleton() {
+  return (
+    <div className='space-y-2'>
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div key={index} className='relative space-y-1 pl-6'>
+          {index < 2 && (
+            <div className='absolute top-1 left-[7px] h-full w-px bg-border' />
+          )}
+          <div className='absolute top-1 left-1 size-2 rounded-full bg-secondary' />
+          <Skeleton className='h-4 w-48 bg-secondary' />
+          <Skeleton className='h-3 w-32 bg-secondary' />
         </div>
       ))}
     </div>

@@ -84,7 +84,7 @@ export function FairteilerDisableWrapper({
   );
 }
 
-function FairteilerDisableSkeleton() {
+export function FairteilerDisableSkeleton() {
   return (
     <Card className='h-max'>
       <CardHeader className='flex justify-between'>
