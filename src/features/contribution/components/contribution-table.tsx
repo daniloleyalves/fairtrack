@@ -43,7 +43,7 @@ export default function ContributionTable() {
   return (
     <ContributionTableProvider isFastView={isFormTableViewFast}>
       <Card>
-        <CardContent className='p-4 md:p-6'>
+        <CardContent>
           <div className='rounded-md border'>
             <Table>
               <TableHeader>

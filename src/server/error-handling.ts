@@ -1,4 +1,5 @@
 import 'server-only';
+import * as Sentry from '@sentry/nextjs';
 
 /**
  * Standard error types for the application
@@ -99,6 +100,9 @@ export function handleDatabaseError(
   }
 
   // Generic database error
+  Sentry.captureException(error, {
+    tags: { operation, resource: resource ?? 'unknown' },
+  });
   throw new DatabaseError(
     `Failed to ${operation} ${resource ?? 'data'}`,
     operation,

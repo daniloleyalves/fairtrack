@@ -14,7 +14,7 @@ export function getPlatformKeyFigures(
   const totalContributions = filteredData.length;
 
   const uniqueContributors = new Set(
-    filteredData.map((contribution) => contribution.contributorEmail),
+    filteredData.map((contribution) => contribution.contributorId),
   );
   const activeContributors = uniqueContributors.size;
 

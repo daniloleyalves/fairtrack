@@ -46,6 +46,9 @@ declare global {
       navigateToProfile(): Chainable<void>;
       navigateToContributions(): Chainable<void>;
       navigateToPreferences(): Chainable<void>;
+      navigateToHistory(): Chainable<void>;
+      navigateToReporting(): Chainable<void>;
+      navigateToPlatformReporting(): Chainable<void>;
     }
   }
 }
@@ -179,6 +182,27 @@ Cypress.Commands.add('navigateToPreferences', () => {
   cy.url({ timeout: 15000 }).should('include', '/hub/fairteiler/dashboard');
   cy.visit('/hub/fairteiler/preferences');
   cy.contains('Präferenzen').should('be.visible');
+});
+
+// Navigate to contribution history page
+Cypress.Commands.add('navigateToHistory', () => {
+  cy.url({ timeout: 15000 }).should('include', '/hub/fairteiler/dashboard');
+  cy.visit('/hub/fairteiler/history');
+  cy.contains('Lebensmittelabgaben-Verlauf').should('be.visible');
+});
+
+// Navigate to fairteiler reporting page
+Cypress.Commands.add('navigateToReporting', () => {
+  cy.url({ timeout: 15000 }).should('include', '/hub/fairteiler/dashboard');
+  cy.visit('/hub/fairteiler/reporting');
+  cy.contains('Statistiken').should('be.visible');
+});
+
+// Navigate to platform reporting page
+Cypress.Commands.add('navigateToPlatformReporting', () => {
+  cy.url({ timeout: 15000 }).should('include', '/hub/fairteiler/dashboard');
+  cy.visit('/hub/fairteiler/platform-reporting');
+  cy.contains('Platform-Statistiken').should('be.visible');
 });
 
 export {};

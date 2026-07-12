@@ -147,7 +147,7 @@ function UserMenuLink({
 export function SignOutMenuItem({
   redirectTo = '/sign-in',
 }: {
-  redirectTo?: string | null;
+  redirectTo?: string;
 }) {
   const { refetch } = authClient.useSession();
   const router = useRouter();
@@ -165,10 +165,13 @@ export function SignOutMenuItem({
     },
   });
 
-  const handleSignOut = () => execute({});
+  const handleSignOut = (event: Event) => {
+    event.preventDefault();
+    execute({});
+  };
 
   return (
-    <DropdownMenuItem onClick={handleSignOut} disabled={isPending}>
+    <DropdownMenuItem onSelect={handleSignOut} disabled={isPending}>
       {isPending ? (
         <Loader2 className='mr-2 size-4 animate-spin' />
       ) : (

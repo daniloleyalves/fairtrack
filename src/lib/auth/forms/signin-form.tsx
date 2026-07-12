@@ -18,6 +18,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import * as Sentry from '@sentry/nextjs';
 import { authClient } from '../auth-client';
 import { getErrorMessage } from '../auth-helpers';
 import { handleClientOperation, noop } from '@/lib/client-error-handling';
@@ -27,9 +28,6 @@ import {
   checkUserSecureStatusAction,
 } from '../auth-actions';
 import { invokeAction } from '@/lib/hooks/use-form-action';
-import { MemberRolesEnum } from '../auth-permissions';
-import { User } from '@/server/db/db-types';
-import { SuccessContext } from 'better-auth/react';
 import { SecurityModal } from '../components/security-modal';
 
 export function SignInForm({
@@ -168,28 +166,23 @@ export function SignInForm({
             password: values.password,
           },
           {
-            onSuccess: async (
-              res: SuccessContext<{
-                redirect: boolean;
-                token: string;
-                user: User;
-              }>,
-            ) => {
+            onSuccess: async () => {
+              emailForm.reset();
+              signInForm.reset();
+              setUserChecked(false);
+              setUserIsSecure(null);
+              setCurrentEmail('');
+
               // Accept invitation if present and valid
               if (invitationData?.isValid) {
                 try {
                   await authClient.organization.acceptInvitation({
                     invitationId: invitationData.invitation.id,
                   });
-                  if (
-                    invitationData.invitation.role === MemberRolesEnum.OWNER
-                  ) {
-                    await authClient.admin.setRole({
-                      userId: res.data.user.id,
-                      role: 'admin',
-                    });
-                  }
                 } catch (error) {
+                  Sentry.captureException(error, {
+                    tags: { flow: 'sign-in', step: 'accept-invitation' },
+                  });
                   console.error('Error accepting invitation:', error);
                 }
               }
@@ -211,6 +204,9 @@ export function SignInForm({
                     : '/hub/user/dashboard',
                 );
               } catch (error) {
+                Sentry.captureException(error, {
+                  tags: { flow: 'sign-in', step: 'session-check' },
+                });
                 console.error('Error checking session:', error);
                 router.push('/hub/user/dashboard');
               }
@@ -227,6 +223,9 @@ export function SignInForm({
       },
       setIsPending,
       (error) => {
+        Sentry.captureException(error, {
+          tags: { flow: 'sign-in', step: 'submit' },
+        });
         console.error('Error signing in:', error);
         signInForm.setError('root.serverError', {
           message: 'Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.',

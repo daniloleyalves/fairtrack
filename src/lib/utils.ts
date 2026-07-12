@@ -77,10 +77,6 @@ export function extractImageKeyword(url: string) {
   return null; // Return null if unable to extract or URL is invalid
 }
 
-export function sleep(ms = 2000): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 export const getEnvVariable = (name: string) => {
   const value = process.env[name]!;
   if (!value) throw new Error(`Environment variable ${name} not found`);

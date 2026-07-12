@@ -71,13 +71,11 @@ export default function RootLayout({
             </div>
           }
         >
-          {/* <AuthErrorBoundary> */}
           <AuthProvider>
             <QueryProvider>
               <ErrorBoundary>{children}</ErrorBoundary>
             </QueryProvider>
           </AuthProvider>
-          {/* </AuthErrorBoundary> */}
         </Suspense>
         <Toaster />
         <SpeedInsights />

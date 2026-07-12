@@ -1,5 +1,4 @@
 import { DataErrorBoundary } from '@/components/error-boundary';
-import { BlurFade } from '@/components/magicui/blur-fade';
 import { UnauthorizedAccess } from '@/components/unauthorized-access';
 import { FeedbackForm } from '@/features/feedback/forms/feedback-form';
 import { getSession } from '@/server/user/queries';
@@ -20,9 +19,7 @@ export default async function FeedbackPage() {
       </h2>
 
       <DataErrorBoundary>
-        <BlurFade delay={0.2}>
-          <FeedbackForm />
-        </BlurFade>
+        <FeedbackForm />
       </DataErrorBoundary>
     </div>
   );

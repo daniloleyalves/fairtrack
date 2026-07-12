@@ -1,5 +1,6 @@
 'use server';
 
+import * as Sentry from '@sentry/nextjs';
 import { headers } from 'next/headers';
 import {
   addMilestoneEvent,
@@ -25,6 +26,11 @@ import { transformMilestoneData } from '@/features/user/gamification/milestones/
 import { calculateUserAllTimeStreaks } from '@/features/user/gamification/streaks/streak-processor';
 import { gamificationElements } from '@/features/user/gamification/gamification-config';
 import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
+
+export async function getIsPlatformAdmin(headers: Headers) {
+  const session = await loadSession(headers);
+  return session?.user.role === 'admin';
+}
 
 export async function getUserProfile() {
   const session = await getSession(await headers());
@@ -136,14 +142,18 @@ export async function getUserDashboardData() {
     recentContributions,
     calendarData,
     milestoneData,
-  ] = await Promise.all([
-    loadUserKeyFigures(userId),
-    loadUserCategoryDistribution(userId),
-    loadUserOriginDistribution(userId),
-    loadUserRecentContributions(userId),
-    loadUserCalendarData(userId),
-    loadMilestonesByUser(userId),
-  ]);
+  ] = await Sentry.startSpan(
+    { name: 'getUserDashboardData', op: 'db.query' },
+    () =>
+      Promise.all([
+        loadUserKeyFigures(userId),
+        loadUserCategoryDistribution(userId),
+        loadUserOriginDistribution(userId),
+        loadUserRecentContributions(userId),
+        loadUserCalendarData(userId),
+        loadMilestonesByUser(userId),
+      ]),
+  );
 
   const formattedKeyFigures = [
     {

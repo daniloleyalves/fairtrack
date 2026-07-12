@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import {
   createSafeActionClient,
   DEFAULT_SERVER_ERROR_MESSAGE,
@@ -5,6 +6,7 @@ import {
 import { headers } from 'next/headers';
 import { loadAuthenticatedSession } from '@/server/user/dal';
 import { AuthError } from '@/server/api-helpers';
+import { captureUnexpected } from '@/server/_lib/sentry-capture';
 
 /**
  * Base safe-action client.
@@ -18,6 +20,7 @@ import { AuthError } from '@/server/api-helpers';
 export const action = createSafeActionClient({
   defaultValidationErrorsShape: 'flattened',
   handleServerError(e) {
+    captureUnexpected(e);
     if (e instanceof Error) return e.message;
     return DEFAULT_SERVER_ERROR_MESSAGE;
   },
@@ -30,6 +33,7 @@ export const action = createSafeActionClient({
  */
 export const authedAction = action.use(async ({ next }) => {
   const session = await loadAuthenticatedSession(await headers());
+  Sentry.setUser({ id: session.user.id });
   return next({ ctx: { session } });
 });
 
@@ -46,5 +50,6 @@ export const fairteilerAction = authedAction.use(async ({ ctx, next }) => {
   if (!fairteilerId) {
     throw new AuthError('No active organization selected.');
   }
+  Sentry.setTag('fairteilerId', fairteilerId);
   return next({ ctx: { ...ctx, fairteilerId } });
 });

@@ -1,4 +1,5 @@
 import { render } from '@react-email/render';
+import * as Sentry from '@sentry/nextjs';
 import { FeedbackNotificationEmail } from './feedback-notification-email';
 import feedbackNotificationTxt from './feedback-notification.txt?raw';
 import { createElement } from 'react';
@@ -84,16 +85,23 @@ export async function sendFeedbackNotification(
 
     const subject = getFeedbackNotificationSubject(data.category);
 
-    const result = await resend.emails.send({
-      from: 'support@fairteiler-tracker.de',
-      to: [adminEmail],
-      replyTo: data.userEmail,
-      subject,
-      html: htmlTemplate,
-      text: textTemplate,
-    });
+    const result = await Sentry.startSpan(
+      { name: 'resend.feedback-notification', op: 'http.client' },
+      () =>
+        resend.emails.send({
+          from: 'support@fairteiler-tracker.de',
+          to: [adminEmail],
+          replyTo: data.userEmail,
+          subject,
+          html: htmlTemplate,
+          text: textTemplate,
+        }),
+    );
 
     if (result.error) {
+      Sentry.captureException(result.error, {
+        tags: { service: 'resend', email: 'feedback-notification' },
+      });
       console.error('Failed to send feedback notification:', result.error);
       return { success: false, error: result.error.message };
     }
@@ -101,6 +109,9 @@ export async function sendFeedbackNotification(
     console.log('Feedback notification sent successfully:', result.data?.id);
     return { success: true };
   } catch (error) {
+    Sentry.captureException(error, {
+      tags: { service: 'resend', email: 'feedback-notification' },
+    });
     console.error('Error sending feedback notification:', error);
     return {
       success: false,

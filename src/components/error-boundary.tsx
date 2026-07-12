@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import * as Sentry from '@sentry/nextjs';
 import { Button } from '@components/ui/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader } from '@components/ui/card';
@@ -17,6 +18,7 @@ interface ErrorBoundaryProps {
   children: React.ReactNode;
   fallback?: React.ComponentType<FallbackProps>;
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+  sentryTags?: Record<string, string>;
 }
 
 interface ErrorBoundaryState {
@@ -43,6 +45,14 @@ class ErrorBoundaryClass extends React.Component<
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('Error Boundary caught an error:', error, errorInfo);
     this.setState({ error, errorInfo });
+    if (!isAuthError(error)) {
+      Sentry.captureException(error, {
+        tags: this.props.sentryTags,
+        contexts: {
+          react: { componentStack: errorInfo.componentStack },
+        },
+      });
+    }
     this.props.onError?.(error, errorInfo);
   }
 

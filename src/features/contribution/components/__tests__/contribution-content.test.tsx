@@ -25,9 +25,6 @@ vi.mock('../access-view-selector', () => ({
 vi.mock('../../tutorial/components/tutorial-carousel', () => ({
   TutorialCarousel: () => <div>carousel</div>,
 }));
-vi.mock('@/components/magicui/blur-fade', () => ({
-  BlurFade: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
 vi.mock('next/navigation', () => ({
   usePathname: () => '/hub/user/contribution',
 }));

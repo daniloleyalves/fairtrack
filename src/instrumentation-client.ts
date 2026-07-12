@@ -3,22 +3,28 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from '@sentry/nextjs';
+import {
+  SENTRY_DSN,
+  SENTRY_ENVIRONMENT,
+  sentryTracesSampler,
+} from '@/lib/monitoring/sentry';
 
 Sentry.init({
   enabled: process.env.NODE_ENV === 'production',
 
-  dsn: 'https://58a1a1907f0139cb73444bbee77f46ad@o4509632474775552.ingest.de.sentry.io/4509632476217424',
+  dsn: SENTRY_DSN,
+
+  environment: SENTRY_ENVIRONMENT,
 
   // Add optional integrations for additional features
   integrations: [
     Sentry.replayIntegration({
-      maskAllText: false,
-      blockAllMedia: false,
+      maskAllText: true,
+      blockAllMedia: true,
     }),
   ],
 
-  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1,
+  tracesSampler: sentryTracesSampler,
 
   // Define how likely Replay events are sampled.
   // This sets the sample rate to be 10%. You may want this to be 100% while
