@@ -22,15 +22,15 @@ jobs:
       NEXT_PUBLIC_ENV: ${{ vars.NEXT_PUBLIC_ENV }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
@@ -55,15 +55,15 @@ jobs:
       NEXT_PUBLIC_ENV: ${{ vars.NEXT_PUBLIC_ENV }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
@@ -84,15 +84,15 @@ jobs:
       DATABASE_TEST_URL: ${{ secrets.DATABASE_TEST_URL }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
@@ -104,7 +104,7 @@ jobs:
         run: pnpm run test
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: unit-test-results
@@ -124,20 +124,22 @@ jobs:
       RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
       BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
       BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+      TINYMCE_KEY: ${{ secrets.TINYMCE_KEY }}
+      NEXT_PUBLIC_MAPBOX_TOKEN: ${{ secrets.NEXT_PUBLIC_MAPBOX_TOKEN }}
     needs: [security, lint, test]
     outputs:
       cache-key: ${{ steps.cache-key.outputs.key }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
@@ -151,7 +153,7 @@ jobs:
           echo "key=build-${{ github.sha }}-${{ github.run_id }}" >> $GITHUB_OUTPUT
 
       - name: Cache build
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             .next/
@@ -173,6 +175,8 @@ jobs:
       RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
       BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
       BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+      TINYMCE_KEY: ${{ secrets.TINYMCE_KEY }}
+      NEXT_PUBLIC_MAPBOX_TOKEN: ${{ secrets.NEXT_PUBLIC_MAPBOX_TOKEN }}
     needs: [build]
     # strategy:
     #   matrix:
@@ -181,21 +185,21 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
 
       - name: Restore build cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             .next/
@@ -213,7 +217,7 @@ jobs:
           pnpm exec start-server-and-test "pnpm start -p 3001" http://localhost:3001 "cypress run"
 
       - name: Upload Cypress artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: cypress-results
@@ -231,10 +235,10 @@ jobs:
     if: always()
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download all test artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: '*-results*'
           path: .test-results
