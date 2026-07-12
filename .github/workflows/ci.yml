@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  PNPM_VERSION: latest
+  PNPM_VERSION: 10.12.1
 
 jobs:
   # Security and dependency checks
