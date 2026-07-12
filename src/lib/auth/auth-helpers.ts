@@ -111,4 +111,9 @@ export const checkAccess = (
   });
 };
 
+export const isGuestOrEmployeeEmail = (email: string): boolean => {
+  const normalized = email.toLowerCase();
+  return normalized.includes('guest') || normalized.includes('employee');
+};
+
 export const ANONYMOUS_USER_NAME = 'Anonyme Person';

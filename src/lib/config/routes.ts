@@ -180,6 +180,32 @@ export const routes: Record<string, Route[]> = {
       ],
     },
   ],
+  userHubTabs: [
+    {
+      title: 'Dashboard',
+      icon: LayoutDashboardIcon,
+      url: `/hub/user/dashboard`,
+      disabled: false,
+    },
+    {
+      title: 'Fairteiler-Finder',
+      icon: Map,
+      url: `/hub/user/fairteiler-finder`,
+      disabled: false,
+    },
+    {
+      title: 'Meine Beiträge',
+      icon: History,
+      url: `/hub/user/history`,
+      disabled: false,
+    },
+    {
+      title: 'Feedback',
+      icon: MessageCircleHeart,
+      url: `/hub/user/feedback`,
+      disabled: false,
+    },
+  ],
   adminRoutes: [
     {
       title: 'Fairteilerprofil',
