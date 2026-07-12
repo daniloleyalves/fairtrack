@@ -288,24 +288,24 @@ export const validateResetPasswordTokenAction = action
     return { isValid: true };
   });
 
-const checkUserSecureStatusSchema = z.object({
+const checkUserPasswordStatusSchema = z.object({
   email: z.string().email({ message: 'Ungültige E-Mail-Adresse.' }),
 });
 
-interface UserSecureStatusResult {
+interface UserPasswordStatusResult {
   userExists: boolean;
-  isSecure?: boolean;
+  hasPassword?: boolean;
 }
 
-export const checkUserSecureStatusAction = action
-  .inputSchema(checkUserSecureStatusSchema)
-  .action(async ({ parsedInput }): Promise<UserSecureStatusResult> => {
+export const checkUserPasswordStatusAction = action
+  .inputSchema(checkUserPasswordStatusSchema)
+  .action(async ({ parsedInput }): Promise<UserPasswordStatusResult> => {
     const result = await loadUserByEmail(parsedInput.email);
     if (!result) {
       return { userExists: false };
     }
     return {
       userExists: true,
-      isSecure: result.secure,
+      hasPassword: result.hasPassword,
     };
   });

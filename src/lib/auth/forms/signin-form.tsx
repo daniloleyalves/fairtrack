@@ -25,7 +25,7 @@ import { handleClientOperation, noop } from '@/lib/client-error-handling';
 import { signInSchema, emailOnlySchema } from '../schemas';
 import {
   checkInvitationAndUserAction,
-  checkUserSecureStatusAction,
+  checkUserPasswordStatusAction,
 } from '../auth-actions';
 import { invokeAction } from '@/lib/hooks/use-form-action';
 import { SecurityModal } from '../components/security-modal';
@@ -37,7 +37,7 @@ export function SignInForm({
   const [isPending, setIsPending] = useState(false);
   const [isCheckingUser, setIsCheckingUser] = useState(false);
   const [userChecked, setUserChecked] = useState(false);
-  const [userIsSecure, setUserIsSecure] = useState<boolean | null>(null);
+  const [userHasPassword, setUserHasPassword] = useState<boolean | null>(null);
   const [showSecurityModal, setShowSecurityModal] = useState(false);
   const [currentEmail, setCurrentEmail] = useState('');
   const [invitationData, setInvitationData] = useState<{
@@ -108,7 +108,7 @@ export function SignInForm({
 
   function handleBackToEmail() {
     setUserChecked(false);
-    setUserIsSecure(null);
+    setUserHasPassword(null);
     signInForm.reset();
   }
 
@@ -118,7 +118,7 @@ export function SignInForm({
 
     await handleClientOperation(
       async () => {
-        const data = await invokeAction(checkUserSecureStatusAction, {
+        const data = await invokeAction(checkUserPasswordStatusAction, {
           email: values.email,
         });
 
@@ -130,17 +130,15 @@ export function SignInForm({
         }
 
         setUserChecked(true);
-        setUserIsSecure(data.isSecure ?? false);
+        setUserHasPassword(data.hasPassword ?? false);
 
-        if (data.isSecure) {
-          // User is secure, show password field
+        if (data.hasPassword) {
           signInForm.setValue('email', values.email);
           // Focus password field after a short delay to ensure it's rendered
           setTimeout(() => {
             passwordInputRef.current?.focus();
           }, 100);
         } else {
-          // User is not secure, show modal
           setShowSecurityModal(true);
         }
       },
@@ -170,7 +168,7 @@ export function SignInForm({
               emailForm.reset();
               signInForm.reset();
               setUserChecked(false);
-              setUserIsSecure(null);
+              setUserHasPassword(null);
               setCurrentEmail('');
 
               // Accept invitation if present and valid
@@ -244,7 +242,7 @@ export function SignInForm({
         </div>
       )}
 
-      {!userChecked || !userIsSecure ? (
+      {!userChecked || !userHasPassword ? (
         <Form {...emailForm}>
           <form
             onSubmit={emailForm.handleSubmit(onEmailSubmit)}
