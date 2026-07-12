@@ -1,5 +1,6 @@
 'use server';
 
+import * as Sentry from '@sentry/nextjs';
 import { headers } from 'next/headers';
 import {
   addMilestoneEvent,
@@ -141,14 +142,18 @@ export async function getUserDashboardData() {
     recentContributions,
     calendarData,
     milestoneData,
-  ] = await Promise.all([
-    loadUserKeyFigures(userId),
-    loadUserCategoryDistribution(userId),
-    loadUserOriginDistribution(userId),
-    loadUserRecentContributions(userId),
-    loadUserCalendarData(userId),
-    loadMilestonesByUser(userId),
-  ]);
+  ] = await Sentry.startSpan(
+    { name: 'getUserDashboardData', op: 'db.query' },
+    () =>
+      Promise.all([
+        loadUserKeyFigures(userId),
+        loadUserCategoryDistribution(userId),
+        loadUserOriginDistribution(userId),
+        loadUserRecentContributions(userId),
+        loadUserCalendarData(userId),
+        loadMilestonesByUser(userId),
+      ]),
+  );
 
   const formattedKeyFigures = [
     {
