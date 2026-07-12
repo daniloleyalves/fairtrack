@@ -1,16 +1,17 @@
-import { UserHubNav } from '@/components/nav/user-hub-nav';
 import { Dock } from '@/components/ui/dock';
 import { DockButton } from '@/components/ui/dock-button';
 import { Separator } from '@/components/ui/separator';
 
-// The onboarding gate lives in `src/proxy.ts`, so this layout stays static
+// The onboarding gate lives in `src/proxy.ts`, so this shell stays static
 // and can prerender its PPR shell. The middleware guarantees any request that
 // reaches here is authenticated and past onboarding, so the dock renders
 // unconditionally.
-export default function UserLayout({
+export function UserHubShell({
   children,
+  nav,
 }: {
   children: React.ReactNode;
+  nav?: React.ReactNode;
 }) {
   return (
     <main className='relative flex-1 overflow-y-auto'>
@@ -18,7 +19,7 @@ export default function UserLayout({
       <span className='absolute top-0 h-80 w-full rounded-b-lg bg-primary shadow-md'></span>
       {/* Content container */}
       <div className='relative z-10 mx-auto max-w-7xl'>
-        <UserHubNav />
+        {nav}
         {children}
       </div>
       <div className='fixed bottom-5 left-1/2 z-50 -translate-x-1/2 md:hidden'>
