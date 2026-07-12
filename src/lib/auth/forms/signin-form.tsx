@@ -175,6 +175,12 @@ export function SignInForm({
                 user: User;
               }>,
             ) => {
+              emailForm.reset();
+              signInForm.reset();
+              setUserChecked(false);
+              setUserIsSecure(null);
+              setCurrentEmail('');
+
               // Accept invitation if present and valid
               if (invitationData?.isValid) {
                 try {
