@@ -6,22 +6,14 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@components/ui/sidebar';
-import { getSession } from '@/server/dto';
-import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
-
-export default async function FairteilerLayout({
+// The onboarding gate lives in `src/proxy.ts` so this layout stays static
+// and can prerender its PPR shell (sidebar, header) without awaiting the
+// session.
+export default function FairteilerLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getSession(await headers());
-
-  // Redirect to onboarding if user hasn't completed it
-  if (session?.user?.isFirstLogin) {
-    redirect('/hub/onboarding');
-  }
-
   return (
     <SidebarProvider>
       <AppSidebar />

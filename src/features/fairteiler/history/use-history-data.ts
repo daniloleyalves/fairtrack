@@ -1,61 +1,52 @@
 'use client';
 
-import useSWRSuspense, { fetcher } from '@/lib/services/swr';
-import { FAIRTEILER_CONTRIBUTIONS_KEY } from '@/lib/config/api-routes';
-import { vContribution } from '@/server/db/db-types';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import useSWR from 'swr';
+import { getContributions } from '@/server/contribution/queries';
+import { contributionKeys } from '@/server/contribution/query-keys';
 
-interface PaginatedResponse {
-  data: vContribution[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    hasMore: boolean;
-  };
-}
+const INITIAL_OPTIONS = { limit: 100 } as const;
+const ALL_OPTIONS = { limit: 100000 } as const;
 
 export function useHistoryData() {
   const [loadingMode, setLoadingMode] = useState<'initial' | 'all'>('initial');
+  const queryClient = useQueryClient();
 
-  // SWR with Suspense for initial 100 items
-  const initialData = useSWRSuspense<PaginatedResponse>(
-    `${FAIRTEILER_CONTRIBUTIONS_KEY}?limit=100`,
-    {
-      fetcher,
-      revalidateIfStale: false,
-      revalidateOnFocus: false,
-    },
-  );
+  const initialQuery = useQuery({
+    ...contributionKeys.list(INITIAL_OPTIONS),
+    queryFn: () => getContributions(INITIAL_OPTIONS),
+  });
 
-  // SWR with Suspense for all data (only when requested)
-  const allData = useSWR<PaginatedResponse>(
-    loadingMode === 'all' && `${FAIRTEILER_CONTRIBUTIONS_KEY}?limit=100000`,
-    fetcher,
-    {
-      revalidateIfStale: false,
-      revalidateOnFocus: false,
-    },
-  );
+  const allQuery = useQuery({
+    ...contributionKeys.list(ALL_OPTIONS),
+    queryFn: () => getContributions(ALL_OPTIONS),
+    enabled: loadingMode === 'all',
+  });
 
-  // Use allData only if it has successfully loaded, otherwise fall back to initialData
-  const currentData =
-    loadingMode === 'all' && allData.data ? allData.data : initialData.data;
+  const current =
+    loadingMode === 'all' && allQuery.data ? allQuery.data : initialQuery.data;
 
   return {
-    contributions: currentData?.data ?? [],
-    totalCount: currentData?.pagination?.total ?? 0,
-    loadedCount: currentData?.data?.length ?? 0,
-    isLoadingAll: loadingMode === 'all' && allData.isLoading,
-    hasLoadedAll: loadingMode === 'all' && !allData.isLoading && !!allData.data,
-    isEmpty: currentData?.data?.length === 0,
+    isPending: initialQuery.isPending,
+    error: initialQuery.error,
+    contributions: current?.data ?? [],
+    totalCount: current?.total ?? 0,
+    loadedCount: current?.data?.length ?? 0,
+    isLoadingAll: loadingMode === 'all' && allQuery.isPending,
+    hasLoadedAll:
+      loadingMode === 'all' && !allQuery.isPending && !!allQuery.data,
+    isEmpty: current?.data?.length === 0,
 
-    // Actions
     loadAll: () => setLoadingMode('all'),
     refresh: () => {
-      initialData.mutate();
-      if (loadingMode === 'all') allData.mutate();
+      void queryClient.invalidateQueries({
+        queryKey: contributionKeys.list(INITIAL_OPTIONS).queryKey,
+      });
+      if (loadingMode === 'all') {
+        void queryClient.invalidateQueries({
+          queryKey: contributionKeys.list(ALL_OPTIONS).queryKey,
+        });
+      }
     },
   };
 }

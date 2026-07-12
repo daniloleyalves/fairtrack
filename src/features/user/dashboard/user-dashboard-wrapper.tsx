@@ -1,9 +1,11 @@
 'use client';
 
-import { USER_DASHBOARD_KEY } from '@/lib/config/api-routes';
-import useSWRSuspense, { fetcher } from '@/lib/services/swr';
+import { useQuery } from '@tanstack/react-query';
+import { getUserDashboardData } from '@/server/user/queries';
+import { userKeys } from '@/server/user/query-keys';
 import { UserDashboard } from './user-dashboard';
-import { MilestoneData } from '../gamification/milestones/milestone-processor';
+import { UserDashboardGridSkeleton } from './user-dashboard-grid-skeleton';
+import { MilestoneData } from '../gamification/milestones/milestone-utils';
 
 export interface UserDashboardData {
   keyFigures: {
@@ -35,14 +37,26 @@ export interface UserDashboardData {
 }
 
 export default function UserDashboardWrapper() {
-  const { data: dashboardData } = useSWRSuspense<UserDashboardData>(
-    USER_DASHBOARD_KEY,
-    {
-      fetcher,
-      revalidateIfStale: true,
-      revalidateOnMount: true,
-    },
-  );
+  const {
+    data: dashboardData,
+    isPending,
+    error,
+  } = useQuery({
+    ...userKeys.dashboard(),
+    queryFn: () => getUserDashboardData(),
+  });
+
+  if (isPending) {
+    return <UserDashboardGridSkeleton />;
+  }
+
+  if (error) {
+    throw error;
+  }
+
+  if (!dashboardData) {
+    throw new Error('Dashboard-Daten nicht gefunden.');
+  }
 
   return <UserDashboard dashboardData={dashboardData} />;
 }

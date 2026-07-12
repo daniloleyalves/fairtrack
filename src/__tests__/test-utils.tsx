@@ -48,8 +48,6 @@ export const createMockContribution = (overrides = {}) => ({
   originId: 'test-origin-id',
   companyId: 'test-company-id',
   company: 'Test Company',
-  cool: false,
-  shelfLife: null,
   allergens: null,
   comment: null,
   ...overrides,

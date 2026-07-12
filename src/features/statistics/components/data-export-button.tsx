@@ -1,7 +1,8 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { exportContributionsAction } from '@/server/actions';
+import { exportContributionsAction } from '@/server/contribution/actions';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 import {
   exportContributionsToExcel,
   generateExportFilename,
@@ -30,45 +31,47 @@ export function ExportButton({ filters, scope, className }: ExportButtonProps) {
           ? { from: filters.dateRange.from, to: filters.dateRange.to }
           : undefined;
 
-      const result = await exportContributionsAction({
+      const data = await invokeAction(exportContributionsAction, {
         dateRange,
         scope,
       });
 
-      if (result && typeof result === 'object' && 'data' in result) {
-        if (!result.data) {
-          const errorMessage =
-            scope === 'fairteiler'
-              ? 'Fehler beim Exportieren der Fairteiler-Daten'
-              : 'Fehler beim Exportieren der Plattform-Daten';
-          toast.error(errorMessage);
-          return;
-        }
-
-        const buffer = await exportContributionsToExcel({
-          data: result.data,
-          fairteilerName:
-            scope === 'fairteiler' ? result.data[0].fairteilerName : undefined,
-        });
-
-        const filename = generateExportFilename(
-          scope === 'fairteiler' ? result.data[0].fairteilerName : undefined,
-        );
-        downloadExcelFile(buffer, filename);
-
-        const successMessage =
+      if (!data?.length) {
+        const errorMessage =
           scope === 'fairteiler'
-            ? 'Fairteiler Excel-Export erfolgreich heruntergeladen!'
-            : 'Plattform Excel-Export erfolgreich heruntergeladen!';
-        toast.success(successMessage);
+            ? 'Keine Fairteiler-Daten zum Exportieren gefunden'
+            : 'Keine Plattform-Daten zum Exportieren gefunden';
+        toast.error(errorMessage);
+        return;
       }
+
+      const fairteilerName =
+        scope === 'fairteiler' ? data[0].fairteilerName : undefined;
+
+      const buffer = await exportContributionsToExcel({
+        data,
+        fairteilerName,
+      });
+
+      const filename = generateExportFilename(fairteilerName);
+      downloadExcelFile(buffer, filename);
+
+      const successMessage =
+        scope === 'fairteiler'
+          ? 'Fairteiler Excel-Export erfolgreich heruntergeladen!'
+          : 'Plattform Excel-Export erfolgreich heruntergeladen!';
+      toast.success(successMessage);
     } catch (error) {
       console.error('Export error:', error);
-      const errorMessage =
+      const fallbackMessage =
         scope === 'fairteiler'
           ? 'Fehler beim Exportieren der Fairteiler-Daten'
           : 'Fehler beim Exportieren der Plattform-Daten';
-      toast.error(errorMessage);
+      toast.error(
+        error instanceof Error && error.message
+          ? error.message
+          : fallbackMessage,
+      );
     } finally {
       setIsExporting(false);
     }

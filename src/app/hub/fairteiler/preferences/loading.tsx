@@ -6,7 +6,10 @@ import {
   CardTitle,
 } from '@components/ui/card';
 import { Separator } from '@components/ui/separator';
-import { Skeleton } from '@components/ui/skeleton';
+import { Settings } from 'lucide-react';
+import { FairteilerDisableSkeleton } from '@/features/fairteiler/preferences/components/fairteiler-disable-wrapper';
+import { CatalogSelectionSkeleton } from '@/features/fairteiler/preferences/components/catalog-selection-skeleton';
+import { TutorialCardSkeleton } from '@/features/fairteiler/tutorial/components/tutorial-card-skeleton';
 
 export default function FairteilerPreferencesLoading() {
   return (
@@ -17,64 +20,41 @@ export default function FairteilerPreferencesLoading() {
         </h2>
         <p
           className='max-w-5xl font-medium text-secondary'
-          aria-description='form to add access view to fairteiler'
+          aria-description='fairteiler preferences and settings'
         >
-          Wähle hier die Herkünfte, Kategorien und Betriebe aus, die für diesen
-          Fairteiler relevant sind. Diese Auswahl steuert die angezeigten
-          Optionen im Retteformular. Neue Einträge können bei Bedarf
-          vorgeschlagen und ergänzt werden.
+          Verwalte die Einstellungen deines Fairteilers. Du kannst die
+          Sichtbarkeit steuern und die verfügbaren Optionen für Herkünfte,
+          Kategorien und Betriebe im Retteformular anpassen. Neue Einträge
+          können bei Bedarf vorgeschlagen und ergänzt werden.
         </p>
       </div>
-      <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'>
-        {Array.from({ length: 3 }).map((_, i) => {
-          return (
-            <Card className='h-max' key={i}>
-              <CardHeader>
-                <CardTitle>
-                  <Skeleton className='h-4 w-48 bg-secondary' />
-                </CardTitle>
-                <CardDescription>
-                  <Skeleton className='mt-1 h-3 w-full bg-secondary' />
-                  <Skeleton className='mt-1 size-3/4 bg-secondary' />
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Skeleton className='h-[70px] w-full bg-secondary' />
-              </CardContent>
-              <Separator />
-              <CardHeader>
-                <CardTitle>
-                  <Skeleton className='h-4 w-40 bg-secondary' />
-                </CardTitle>
-                <CardDescription>
-                  <Skeleton className='mt-1 h-3 w-full bg-secondary' />
-                  <Skeleton className='mt-1 h-3 w-full bg-secondary' />
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className='flex h-50 flex-col gap-2'>
-                  <Skeleton className='h-[50px] w-full bg-secondary' />
-                  <Skeleton className='h-[50px] w-full bg-secondary' />
-                  <Skeleton className='h-[50px] w-full bg-secondary' />
-                </div>
-              </CardContent>
-              <Separator />
-              <CardHeader>
-                <CardTitle>
-                  <Skeleton className='h-4 w-40 bg-secondary' />
-                </CardTitle>
-                <CardDescription>
-                  <Skeleton className='mt-1 h-3 w-full bg-secondary' />
-                  <Skeleton className='mt-1 h-3 w-full bg-secondary' />
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Skeleton className='h-[32px] w-full bg-secondary' />
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+
+      <FairteilerDisableSkeleton />
+      <TutorialCardSkeleton />
+
+      <Card className='h-max'>
+        <CardHeader>
+          <div className='flex flex-col gap-3 xs:flex-row'>
+            <div className='flex size-10 min-w-10 items-center justify-center rounded-lg bg-primary/10'>
+              <Settings className='size-5 text-primary' />
+            </div>
+            <div>
+              <CardTitle>Formular-Einstellungen</CardTitle>
+              <CardDescription>
+                Verwalte die verfügbaren Optionen für Herkünfte, Kategorien und
+                Betriebe im Retteformular
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          <CatalogSelectionSkeleton title='Herkünfte' />
+          <Separator />
+          <CatalogSelectionSkeleton title='Kategorien' />
+          <Separator />
+          <CatalogSelectionSkeleton title='Betriebe' />
+        </CardContent>
+      </Card>
     </div>
   );
 }

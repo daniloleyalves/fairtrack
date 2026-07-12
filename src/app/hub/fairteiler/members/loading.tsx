@@ -1,4 +1,4 @@
-import { Skeleton } from '@components/ui/skeleton';
+import { MembersSkeleton } from '@/features/fairteiler/members/components/members-skeleton';
 
 export default function FairteilerMemberPageLoading() {
   return (
@@ -16,8 +16,7 @@ export default function FairteilerMemberPageLoading() {
           Gastzugänge.
         </p>
       </div>
-      <Skeleton className='h-[250px] w-full' />
-      <Skeleton className='h-[250px] w-full' />
+      <MembersSkeleton />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 // Import commands.js using ES2015 syntax:
 import './commands';
 import 'cypress-mochawesome-reporter/register';
+import 'cypress-real-events';
 
 // Hide fetch/XHR requests from command log to reduce noise
 const app = window.top;

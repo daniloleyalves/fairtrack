@@ -61,6 +61,27 @@ const cypressAuthClient = createAuthClient({
 });
 
 export const databaseTasks = {
+  // Onboarding reference data lives in the `gamification` schema and is not
+  // wiped by cleanDatabase. Ensure at least the standard levels exist so the
+  // onboarding wizard's experience step can be completed in tests.
+  async seedExperienceLevels() {
+    const levels = [
+      { value: 'newcomer', name: 'Neuling', sortIndex: 0, icon: 'star' },
+      {
+        value: 'experienced',
+        name: 'Erfahren',
+        sortIndex: 1,
+        icon: 'graduated',
+      },
+      { value: 'expert', name: 'Profi', sortIndex: 2, icon: 'rocket' },
+    ];
+    const existing = await testDb.select().from(schema.experienceLevels);
+    if (existing.length === 0) {
+      await testDb.insert(schema.experienceLevels).values(levels);
+    }
+    return null;
+  },
+
   async cleanDatabase() {
     try {
       // Clean up in correct order due to foreign keys
@@ -114,11 +135,13 @@ export const databaseTasks = {
         return null;
       }
 
-      await testDb
-        .update(schema.user)
-        .set({ ...result.data.user, role: 'admin' })
-        .where(eq(schema.user.id, result.data.user.id))
-        .returning();
+      if (userData.role) {
+        await testDb
+          .update(schema.user)
+          .set({ role: userData.role })
+          .where(eq(schema.user.id, result.data.user.id))
+          .returning();
+      }
 
       console.log('User created successfully:', result.data.user?.email);
 
@@ -221,6 +244,46 @@ export const databaseTasks = {
       return fairteiler[0];
     } catch (error) {
       console.error('Create test fairteiler failed:', error);
+      throw error;
+    }
+  },
+
+  async createTestContribution({
+    fairteilerId,
+    userId,
+    title = 'Test Lebensmittel',
+    quantity = 5,
+  }: {
+    fairteilerId: string;
+    userId: string;
+    title?: string;
+    quantity?: number;
+  }) {
+    try {
+      const food = await testDb
+        .insert(schema.food)
+        .values({
+          title,
+          originId: '1db6c487-6c91-4d1a-b41a-6628be30c72c',
+          categoryId: '803e0b43-6bd7-4b7d-9a49-8d5316b2cf9c',
+          companyId: '97979131-c498-4722-8527-fb6f21dc7aa8',
+          cool: false,
+        })
+        .returning();
+
+      const checkin = await testDb
+        .insert(schema.checkin)
+        .values({
+          userId,
+          fairteilerId,
+          foodId: food[0].id,
+          quantity,
+        })
+        .returning();
+
+      return checkin[0];
+    } catch (error) {
+      console.error('Create test contribution failed:', error);
       throw error;
     }
   },

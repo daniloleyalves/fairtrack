@@ -30,12 +30,6 @@ export function applyFilters(
     const category = c.categoryName ?? 'Unbekannte Kategorie';
     const origin = c.originName ?? 'Unbekannte Herkunft';
     const company = c.companyName ?? 'Unbekannter Betrieb';
-    const cool =
-      c.foodCool === true
-        ? 'Kühlung erforderlich'
-        : c.foodCool === false
-          ? 'Keine Kühlung'
-          : 'Unbekannt';
     const fairteiler = c.fairteilerName || 'Unbekannter Fairteiler';
 
     // Apply filters
@@ -48,10 +42,6 @@ export function applyFilters(
     }
 
     if (filters.company?.length && !filters.company.includes(company)) {
-      return false;
-    }
-
-    if (filters.cool?.length && !filters.cool.includes(cool)) {
       return false;
     }
 

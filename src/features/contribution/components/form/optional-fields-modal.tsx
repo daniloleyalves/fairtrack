@@ -1,7 +1,6 @@
 'use client';
 
 import { Button } from '@components/ui/button';
-import { Checkbox } from '@components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -26,14 +25,7 @@ import {
 import { ScrollArea } from '@components/ui/scroll-area';
 import { Textarea } from '@components/ui/textarea';
 import { useWindowDimensions } from '@/lib/hooks/use-window-dimensions';
-import {
-  HelpCircle,
-  MessageSquareText,
-  Store,
-  Tag,
-  Thermometer,
-  Wheat,
-} from 'lucide-react';
+import { HelpCircle, MessageSquareText, Store, Tag, Wheat } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { ContributionFormValues } from '@features/contribution/schemas/contribution-schema';
@@ -99,26 +91,6 @@ export function OptionalFieldsModal({
                   </div>
                   <FormControl>
                     <Input {...field} value={field.value ?? ''} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              name={`contributions.${index}.cool`}
-              control={contributionForm.control}
-              render={({ field }) => (
-                <FormItem className='flex w-full flex-col justify-center gap-2'>
-                  <div className='flex items-center gap-2'>
-                    <Thermometer className='size-3' />
-                    <FormLabel>In den Kühlschrank?</FormLabel>
-                  </div>
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value ?? false}
-                      onCheckedChange={(checked) => field.onChange(checked)}
-                      size='36px'
-                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

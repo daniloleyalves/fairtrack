@@ -1,20 +1,11 @@
 'use client';
 
-import { preload } from 'swr';
-import {
-  CATEGORIES_BY_FAIRTEILER_KEY,
-  COMPANIES_BY_FAIRTEILER_KEY,
-  FAIRTEILER_DASHBOARD_KEY,
-  ORIGINS_BY_FAIRTEILER_KEY,
-} from '@/lib/config/api-routes';
-import useSWRSuspense, { fetcher } from '@/lib/services/swr';
+import { useQuery } from '@tanstack/react-query';
+import { getFairteilerDashboardData } from '@/server/fairteiler/queries';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { FairteilerDashboard } from './fairteiler-dashboard';
+import { FairteilerDashboardGridSkeleton } from './fairteiler-dashboard-grid-skeleton';
 
-preload(ORIGINS_BY_FAIRTEILER_KEY, fetcher);
-preload(CATEGORIES_BY_FAIRTEILER_KEY, fetcher);
-preload(COMPANIES_BY_FAIRTEILER_KEY, fetcher);
-
-// --- Type Definition for our API data ---
 export interface DashboardData {
   keyFigures: {
     value: number;
@@ -33,7 +24,7 @@ export interface DashboardData {
   leaderboardEntries: {
     id: string;
     name: string;
-    email: string;
+    email: string | null;
     image: string | null;
     totalQuantity: number;
   }[];
@@ -51,11 +42,22 @@ export interface DashboardData {
 }
 
 export default function FairteilerDashboardWrapper() {
-  const { data } = useSWRSuspense<DashboardData>(FAIRTEILER_DASHBOARD_KEY, {
-    fetcher,
-    revalidateIfStale: true,
-    revalidateOnMount: true,
+  const { data, isPending, error } = useQuery({
+    ...fairteilerKeys.dashboard(),
+    queryFn: () => getFairteilerDashboardData(),
   });
+
+  if (isPending) {
+    return <FairteilerDashboardGridSkeleton />;
+  }
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    throw new Error('Dashboard-Daten nicht gefunden.');
+  }
 
   return <FairteilerDashboard data={data} />;
 }

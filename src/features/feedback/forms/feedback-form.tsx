@@ -24,12 +24,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { handleAsyncAction } from '@/lib/client-error-handling';
-import { submitFeedbackAction } from '@/server/actions';
+import { useFormAction } from '@/lib/hooks/use-form-action';
+import { submitFeedbackAction } from '@/server/user/actions';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, MessageCircleHeart, Send } from 'lucide-react';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { FeedbackFormData, feedbackSchema } from '../schemas/feedack-schema';
 
@@ -41,7 +41,6 @@ const categoryLabels = {
 };
 
 export function FeedbackForm() {
-  const [isSubmitting, startTransition] = useTransition();
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const form = useForm<FeedbackFormData>({
@@ -52,16 +51,15 @@ export function FeedbackForm() {
     },
   });
 
+  const submitFeedback = useFormAction(submitFeedbackAction, form, {
+    onSuccess: () => {
+      setIsSubmitted(true);
+    },
+  });
+  const isSubmitting = submitFeedback.isPending;
+
   const onSubmit = (data: FeedbackFormData) => {
-    startTransition(() => {
-      handleAsyncAction(() => submitFeedbackAction(data), form, {
-        showToast: true,
-        setFormError: true,
-        onSuccess: () => {
-          setIsSubmitted(true);
-        },
-      });
-    });
+    submitFeedback.execute(data);
   };
 
   if (isSubmitted) {

@@ -1,13 +1,15 @@
 'use client';
 
-import { BlurFade } from '@components/magicui/blur-fade';
 import { Card, CardContent } from '@/components/ui/card';
 import { UserHistoryTable } from './user-history-table';
 import { Button } from '@/components/ui/button';
 import { useUserHistoryData } from '../use-user-history-data';
+import { UserHistoryTableSkeleton } from './user-history-table-skeleton';
 
 export function UserHistoryWrapper() {
   const {
+    isPending,
+    error,
     contributions,
     isEmpty,
     totalCount,
@@ -17,11 +19,19 @@ export function UserHistoryWrapper() {
     isLoadingAll,
   } = useUserHistoryData();
 
+  if (isPending) {
+    return <UserHistoryTableSkeleton />;
+  }
+
+  if (error) {
+    throw error;
+  }
+
   if (isEmpty) {
     return (
-      <div className='py-8 text-center'>
+      <Card className='py-8 text-center'>
         <p className='text-muted-foreground'>Keine Einträge gefunden</p>
-      </div>
+      </Card>
     );
   }
 
@@ -50,7 +60,7 @@ export function UserHistoryWrapper() {
     </div>
   );
   return (
-    <BlurFade duration={0.2}>
+    <div>
       <Card>
         <CardContent>
           <UserHistoryTable
@@ -59,6 +69,6 @@ export function UserHistoryWrapper() {
           />
         </CardContent>
       </Card>
-    </BlurFade>
+    </div>
   );
 }

@@ -14,7 +14,10 @@ export function proxy(request: NextRequest) {
       // Decode base64 string
       const decoded = Buffer.from(sessionDataToken, 'base64').toString('utf-8');
       decodedSession = JSON.parse(decoded) as {
-        session: { session: Session; user: User };
+        session: {
+          session: Session;
+          user: User & { isFirstLogin?: boolean };
+        };
       };
     } catch (error) {
       console.error('Failed to decode session:', error);
@@ -28,11 +31,24 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(signInUrl);
   }
 
+  const pathname = request.nextUrl.pathname;
+
+  // Onboarding gate: first-login users must complete onboarding before
+  // accessing any other hub route. Handled here (not in the hub layouts) so
+  // those layouts stay static and can prerender their PPR shell.
+  // `completeOnboardingAction` refreshes the session cookie, so once
+  // onboarding is done `isFirstLogin` flips to false on the next request.
+  if (
+    decodedSession?.session?.user?.isFirstLogin === true &&
+    pathname !== '/hub/onboarding'
+  ) {
+    return NextResponse.redirect(new URL('/hub/onboarding', request.url));
+  }
+
   // Get user email for role-based restrictions
   const userEmail = decodedSession?.session?.user?.email?.toLowerCase() ?? '';
   const isGuest = userEmail.includes('guest');
   const isEmployee = userEmail.includes('employee');
-  const pathname = request.nextUrl.pathname;
 
   // Guest restrictions
   if (isGuest) {

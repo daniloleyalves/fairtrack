@@ -25,7 +25,11 @@ import { getErrorMessage } from '../auth-helpers';
 import { toast } from 'sonner';
 import { handleClientOperation, noop } from '@/lib/client-error-handling';
 import { SignUpFormValues, signUpSchema } from '../schemas';
-import { checkInvitationAndUserAction } from '../auth-actions';
+import {
+  checkInvitationAndUserAction,
+  checkUserPasswordStatusAction,
+} from '../auth-actions';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 
 export function SignUpForm({
   className,
@@ -66,22 +70,20 @@ export function SignUpForm({
     if (invitationId) {
       handleClientOperation(
         async () => {
-          const result = await checkInvitationAndUserAction({ invitationId });
+          const data = await invokeAction(checkInvitationAndUserAction, {
+            invitationId,
+          });
 
-          if (result.success && result.data) {
-            // If user already exists, redirect to sign-in with invitationId
-            if (result.data.userExists) {
-              router.push(`/sign-in?invitationId=${invitationId}`);
-              return;
-            }
-
-            setInvitationData(result.data);
-
-            // Pre-fill email for new user signup
-            form.setValue('email', result.data.invitation.email);
-          } else if (!result.success) {
-            throw new Error(result.error || 'Failed to check invitation');
+          // If user already exists, redirect to sign-in with invitationId
+          if (data.userExists) {
+            router.push(`/sign-in?invitationId=${invitationId}`);
+            return;
           }
+
+          setInvitationData(data);
+
+          // Pre-fill email for new user signup
+          form.setValue('email', data.invitation.email);
         },
         noop,
         (error) => {
@@ -97,7 +99,23 @@ export function SignUpForm({
   async function onSubmit(values: z.infer<typeof signUpSchema>) {
     // Clear all existing errors before a new submission
     form.clearErrors(); // Clears all field and root errors
+
+    // Pre-check: better-auth 1.6+ returns a synthetic success on duplicate email
+    // when autoSignIn is false (anti-enumeration). Surface the duplicate here so
+    // the user sees a clear error instead of being silently redirected to sign-in.
+    setIsPending(true);
     try {
+      const existing = await invokeAction(checkUserPasswordStatusAction, {
+        email: values.email,
+      });
+      if (existing.userExists) {
+        form.setError('root.serverError', {
+          message: getErrorMessage('USER_ALREADY_EXISTS', 'de'),
+        });
+        setIsPending(false);
+        return;
+      }
+
       await authClient.signUp.email(
         {
           firstName: values.firstName,
@@ -178,6 +196,7 @@ export function SignUpForm({
       );
     } catch (error: unknown) {
       console.error('Server Action: Error signing in.', error);
+      setIsPending(false);
     }
   }
 

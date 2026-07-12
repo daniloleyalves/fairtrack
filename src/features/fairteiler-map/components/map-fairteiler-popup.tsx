@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Fairteiler } from '@/server/db/db-types';
 import { ArrowRight, Globe, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Popup } from 'react-map-gl/mapbox';
@@ -29,11 +30,15 @@ export function MapFairteilerPopup({
     >
       <div className='flex flex-col items-center gap-4 md:flex-row'>
         {activeFairteiler.thumbnail && (
-          <img
-            src={activeFairteiler.thumbnail}
-            alt='Raupe Immersatt'
-            className='h-[180px] w-full rounded-xl bg-secondary object-cover md:w-[250px]'
-          />
+          <div className='relative h-[180px] w-full overflow-hidden rounded-xl bg-secondary md:w-[250px]'>
+            <Image
+              src={activeFairteiler.thumbnail}
+              alt={activeFairteiler.name}
+              fill
+              sizes='(max-width: 768px) 100vw, 250px'
+              className='object-cover'
+            />
+          </div>
         )}
         <div className='flex flex-col justify-between gap-4 md:h-[180px]'>
           <div className='flex flex-col items-center space-y-2 md:items-start'>

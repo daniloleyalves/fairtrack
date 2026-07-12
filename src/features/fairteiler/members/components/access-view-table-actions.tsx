@@ -10,31 +10,26 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@ui/tooltip';
-import { useTransition } from 'react';
-import { handleAsyncAction } from '@/lib/client-error-handling';
-import { ACTIVE_FAIRTEILER_KEY } from '@/lib/config/api-routes';
-import { useSWRConfig } from 'swr';
+import { useFormAction } from '@/lib/hooks/use-form-action';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function AccessViewTableActions({ member }: { member: Member }) {
-  const { mutate } = useSWRConfig();
-  const [isPending, startTransition] = useTransition();
+  const queryClient = useQueryClient();
+  const disableAccessView = useFormAction(disableAccessViewAction, undefined, {
+    successMessage: 'Zugang erfolgreich deaktiviert.',
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: fairteilerKeys.all().queryKey,
+      });
+    },
+  });
+  const isPending = disableAccessView.isPending;
 
   const handleDisableMember = () => {
-    startTransition(() => {
-      const actionArgument = {
-        memberId: member.id,
-        userId: member.user.id,
-      };
-      handleAsyncAction(
-        () => disableAccessViewAction(actionArgument),
-        undefined,
-        {
-          showToast: true,
-          onSuccess: () => {
-            mutate(ACTIVE_FAIRTEILER_KEY);
-          },
-        },
-      );
+    disableAccessView.execute({
+      memberId: member.id,
+      userId: member.user.id,
     });
   };
 

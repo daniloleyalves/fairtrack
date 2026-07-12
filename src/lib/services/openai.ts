@@ -45,17 +45,6 @@ export const userFeedbackDataSchema = z.object({
 export type UserFeedbackDataSchema = z.infer<typeof userFeedbackDataSchema>;
 export type UserFeedbackData = z.infer<typeof userFeedbackDataSchema>;
 
-// Cust om error classes
-export class OpenAIError extends Error {
-  constructor(
-    message: string,
-    public cause?: unknown,
-  ) {
-    super(message);
-    this.name = 'OpenAIError';
-  }
-}
-
 export class RateLimitError extends Error {
   constructor(message: string) {
     super(message);
@@ -99,52 +88,6 @@ function checkRateLimit(userId: string): void {
   }
 
   userLimit.count++;
-}
-
-/**
- * Generates personalized feedback for user contributions
- * Uses OpenAI to create encouraging, context-aware messages in German
- */
-export async function generatePersonalizedFeedback(
-  userData: UserFeedbackData,
-  userId?: string,
-): Promise<string> {
-  if (!openai) {
-    return 'OpenAI client not initialized';
-  }
-
-  if (userId) {
-    checkRateLimit(userId);
-  }
-
-  const prompt = buildPrompt(userData);
-
-  try {
-    const completion = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL ?? 'gpt-4.1-mini-2025-04-14',
-      messages: [
-        {
-          role: 'system',
-          content: getSystemPrompt(),
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-    });
-
-    const feedback = completion.choices[0]?.message?.content?.trim();
-
-    if (!feedback) {
-      return getFallbackMessage();
-    }
-
-    return feedback;
-  } catch (error) {
-    console.error('OpenAI API error:', error);
-    throw handleOpenAIError(error);
-  }
 }
 
 /**
@@ -285,38 +228,4 @@ function getSystemPrompt(): string {
  */
 function getFallbackMessage(): string {
   return 'Super, dass du dabei bist! 🌱 Jeder Beitrag zählt! 💚';
-}
-
-/**
- * Handles OpenAI API errors and converts them to appropriate error types
- */
-function handleOpenAIError(error: unknown): Error {
-  if (!error || typeof error !== 'object') {
-    return new OpenAIError('Unbekannter Fehler beim Generieren des Feedbacks');
-  }
-
-  if (!('status' in error)) {
-    return new OpenAIError('Fehler beim Generieren des Feedbacks', error);
-  }
-
-  const apiError = error as { status: number; message?: string };
-
-  switch (apiError.status) {
-    case 429:
-      return new RateLimitError(
-        'OpenAI API-Limit erreicht. Bitte versuche es später nochmal. ⏱️',
-      );
-    case 401:
-      return new OpenAIError('OpenAI API-Authentifizierung fehlgeschlagen. 🔐');
-    case 500:
-    case 502:
-    case 503:
-      return new OpenAIError(
-        'OpenAI Service ist gerade nicht verfügbar. Bitte versuche es gleich nochmal. 🔧',
-      );
-    default:
-      return new OpenAIError(
-        `OpenAI API-Fehler (Status ${apiError.status}). 😕`,
-      );
-  }
 }

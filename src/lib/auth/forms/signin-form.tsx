@@ -18,17 +18,16 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import * as Sentry from '@sentry/nextjs';
 import { authClient } from '../auth-client';
 import { getErrorMessage } from '../auth-helpers';
 import { handleClientOperation, noop } from '@/lib/client-error-handling';
 import { signInSchema, emailOnlySchema } from '../schemas';
 import {
   checkInvitationAndUserAction,
-  checkUserSecureStatusAction,
+  checkUserPasswordStatusAction,
 } from '../auth-actions';
-import { MemberRolesEnum } from '../auth-permissions';
-import { User } from '@/server/db/db-types';
-import { SuccessContext } from 'better-auth/react';
+import { invokeAction } from '@/lib/hooks/use-form-action';
 import { SecurityModal } from '../components/security-modal';
 
 export function SignInForm({
@@ -38,7 +37,7 @@ export function SignInForm({
   const [isPending, setIsPending] = useState(false);
   const [isCheckingUser, setIsCheckingUser] = useState(false);
   const [userChecked, setUserChecked] = useState(false);
-  const [userIsSecure, setUserIsSecure] = useState<boolean | null>(null);
+  const [userHasPassword, setUserHasPassword] = useState<boolean | null>(null);
   const [showSecurityModal, setShowSecurityModal] = useState(false);
   const [currentEmail, setCurrentEmail] = useState('');
   const [invitationData, setInvitationData] = useState<{
@@ -77,27 +76,24 @@ export function SignInForm({
     if (invitationId) {
       handleClientOperation(
         async () => {
-          const result = await checkInvitationAndUserAction({ invitationId });
+          const data = await invokeAction(checkInvitationAndUserAction, {
+            invitationId,
+          });
+          setInvitationData(data);
 
-          if (result.success && result.data) {
-            setInvitationData(result.data);
-
-            // If user doesn't exist, redirect to sign-up with invitationId
-            if (!result.data.userExists) {
-              router.push(`/sign-up?invitationId=${invitationId}`);
-              return;
-            }
-
-            // Pre-fill email if user exists
-            emailForm.setValue('email', result.data.invitation.email, {
-              shouldDirty: true,
-            });
-            signInForm.setValue('email', result.data.invitation.email, {
-              shouldDirty: true,
-            });
-          } else if (!result.success) {
-            throw new Error(result.error || 'Failed to check invitation');
+          // If user doesn't exist, redirect to sign-up with invitationId
+          if (!data.userExists) {
+            router.push(`/sign-up?invitationId=${invitationId}`);
+            return;
           }
+
+          // Pre-fill email if user exists
+          emailForm.setValue('email', data.invitation.email, {
+            shouldDirty: true,
+          });
+          signInForm.setValue('email', data.invitation.email, {
+            shouldDirty: true,
+          });
         },
         noop,
         (error) => {
@@ -112,7 +108,7 @@ export function SignInForm({
 
   function handleBackToEmail() {
     setUserChecked(false);
-    setUserIsSecure(null);
+    setUserHasPassword(null);
     signInForm.reset();
   }
 
@@ -122,34 +118,28 @@ export function SignInForm({
 
     await handleClientOperation(
       async () => {
-        const result = await checkUserSecureStatusAction({
+        const data = await invokeAction(checkUserPasswordStatusAction, {
           email: values.email,
         });
 
-        if (result.success && result.data) {
-          if (!result.data.userExists) {
-            emailForm.setError('email', {
-              message: 'Kein Konto mit dieser E-Mail-Adresse gefunden.',
-            });
-            return;
-          }
+        if (!data.userExists) {
+          emailForm.setError('email', {
+            message: 'Kein Konto mit dieser E-Mail-Adresse gefunden.',
+          });
+          return;
+        }
 
-          setUserChecked(true);
-          setUserIsSecure(result.data.isSecure ?? false);
+        setUserChecked(true);
+        setUserHasPassword(data.hasPassword ?? false);
 
-          if (result.data.isSecure) {
-            // User is secure, show password field
-            signInForm.setValue('email', values.email);
-            // Focus password field after a short delay to ensure it's rendered
-            setTimeout(() => {
-              passwordInputRef.current?.focus();
-            }, 100);
-          } else {
-            // User is not secure, show modal
-            setShowSecurityModal(true);
-          }
+        if (data.hasPassword) {
+          signInForm.setValue('email', values.email);
+          // Focus password field after a short delay to ensure it's rendered
+          setTimeout(() => {
+            passwordInputRef.current?.focus();
+          }, 100);
         } else {
-          throw new Error('Failed to check user');
+          setShowSecurityModal(true);
         }
       },
       setIsCheckingUser,
@@ -174,28 +164,23 @@ export function SignInForm({
             password: values.password,
           },
           {
-            onSuccess: async (
-              res: SuccessContext<{
-                redirect: boolean;
-                token: string;
-                user: User;
-              }>,
-            ) => {
+            onSuccess: async () => {
+              emailForm.reset();
+              signInForm.reset();
+              setUserChecked(false);
+              setUserHasPassword(null);
+              setCurrentEmail('');
+
               // Accept invitation if present and valid
               if (invitationData?.isValid) {
                 try {
                   await authClient.organization.acceptInvitation({
                     invitationId: invitationData.invitation.id,
                   });
-                  if (
-                    invitationData.invitation.role === MemberRolesEnum.OWNER
-                  ) {
-                    await authClient.admin.setRole({
-                      userId: res.data.user.id,
-                      role: 'admin',
-                    });
-                  }
                 } catch (error) {
+                  Sentry.captureException(error, {
+                    tags: { flow: 'sign-in', step: 'accept-invitation' },
+                  });
                   console.error('Error accepting invitation:', error);
                 }
               }
@@ -217,6 +202,9 @@ export function SignInForm({
                     : '/hub/user/dashboard',
                 );
               } catch (error) {
+                Sentry.captureException(error, {
+                  tags: { flow: 'sign-in', step: 'session-check' },
+                });
                 console.error('Error checking session:', error);
                 router.push('/hub/user/dashboard');
               }
@@ -233,6 +221,9 @@ export function SignInForm({
       },
       setIsPending,
       (error) => {
+        Sentry.captureException(error, {
+          tags: { flow: 'sign-in', step: 'submit' },
+        });
         console.error('Error signing in:', error);
         signInForm.setError('root.serverError', {
           message: 'Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.',
@@ -251,7 +242,7 @@ export function SignInForm({
         </div>
       )}
 
-      {!userChecked || !userIsSecure ? (
+      {!userChecked || !userHasPassword ? (
         <Form {...emailForm}>
           <form
             onSubmit={emailForm.handleSubmit(onEmailSubmit)}

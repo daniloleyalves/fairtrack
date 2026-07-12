@@ -43,7 +43,7 @@ export default function ContributionTable() {
   return (
     <ContributionTableProvider isFastView={isFormTableViewFast}>
       <Card>
-        <CardContent className='p-4 md:p-6'>
+        <CardContent>
           <div className='rounded-md border'>
             <Table>
               <TableHeader>
@@ -114,9 +114,6 @@ function ContributionTableHead() {
         Betrieb
       </TableHead>
       <TableHead>Menge (kg)</TableHead>
-      <TableHead className={cn(!showAllColumns && 'hidden', 'sm:table-cell')}>
-        Haltbarkeit
-      </TableHead>
       <TableHead className='w-[48px]'></TableHead>
     </TableRow>
   );
@@ -220,13 +217,13 @@ function ContributionRowSkeleton() {
     <>
       <TableRow>
         <TableCell className='py-10 text-center text-foreground' colSpan={6}>
-          <Skeleton className='mx-auto h-2 w-1/4 bg-secondary' />
-          <Skeleton className='mx-auto mt-3 h-6 w-2 bg-secondary' />
+          <Skeleton variant='onCard' className='mx-auto h-2 w-1/4' />
+          <Skeleton variant='onCard' className='mx-auto mt-3 h-6 w-2' />
         </TableCell>
       </TableRow>
       <TableRow>
         <TableCell className='py-4' colSpan={6}>
-          <Skeleton className='mx-auto size-12 rounded-full bg-secondary' />
+          <Skeleton variant='onCard' className='mx-auto size-12 rounded-full' />
         </TableCell>
       </TableRow>
     </>

@@ -104,11 +104,16 @@ export const checkAccess = (
   }
 
   return authClient.organization.checkRolePermission({
-    permission: {
+    permissions: {
       [reqPermissions.section]: reqPermissions.permissions,
     },
     role: role ?? 'disabled',
   });
+};
+
+export const isGuestOrEmployeeEmail = (email: string): boolean => {
+  const normalized = email.toLowerCase();
+  return normalized.includes('guest') || normalized.includes('employee');
 };
 
 export const ANONYMOUS_USER_NAME = 'Anonyme Person';

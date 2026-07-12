@@ -1,40 +1,53 @@
 'use client';
 
-import useSWRSuspense, { fetcher } from '@/lib/services/swr';
+import { useQuery } from '@tanstack/react-query';
+import { getContributions } from '@/server/contribution/queries';
+import { contributionKeys } from '@/server/contribution/query-keys';
+import { getFairteilers } from '@/server/fairteiler/queries';
+import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { PlatformReportingDashboard } from './platform-reporting-dashboard';
-import { Fairteiler, vContribution } from '@/server/db/db-types';
-import {
-  PLATFORM_CONTRIBUTIONS_KEY,
-  PLATFORM_FAIRTEILERS_KEY,
-} from '@/lib/config/api-routes';
+import { PlatformReportingGridSkeleton } from './platform-reporting-grid-skeleton';
 
-export default function PlatformReportingWrapper() {
-  const { data } = useSWRSuspense<{
-    data: vContribution[];
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      hasMore: boolean;
-    };
-  }>(`${PLATFORM_CONTRIBUTIONS_KEY}?limit=100000`, {
-    fetcher,
-    revalidateIfStale: false,
-    revalidateOnFocus: false,
-    revalidateOnMount: false,
+const PLATFORM_REPORTING_QUERY_OPTIONS = {
+  platformWide: true,
+  limit: 100000,
+} as const;
+
+export default function PlatformReportingWrapper({
+  canExport,
+}: {
+  canExport: boolean;
+}) {
+  const contributionsQuery = useQuery({
+    ...contributionKeys.list(PLATFORM_REPORTING_QUERY_OPTIONS),
+    queryFn: () => getContributions(PLATFORM_REPORTING_QUERY_OPTIONS),
   });
 
-  const { data: fairteilers } = useSWRSuspense<Fairteiler[]>(
-    PLATFORM_FAIRTEILERS_KEY,
-    {
-      fetcher,
-      revalidateIfStale: false,
-      revalidateOnFocus: false,
-      revalidateOnMount: false,
-    },
-  );
+  const fairteilersQuery = useQuery({
+    ...fairteilerKeys.list(),
+    queryFn: () => getFairteilers(),
+  });
+
+  if (contributionsQuery.isPending || fairteilersQuery.isPending) {
+    return <PlatformReportingGridSkeleton />;
+  }
+
+  if (contributionsQuery.error) {
+    throw contributionsQuery.error;
+  }
+  if (fairteilersQuery.error) {
+    throw fairteilersQuery.error;
+  }
+
+  if (!contributionsQuery.data || !fairteilersQuery.data) {
+    throw new Error('Berichtsdaten nicht gefunden.');
+  }
 
   return (
-    <PlatformReportingDashboard data={data.data} fairteilers={fairteilers} />
+    <PlatformReportingDashboard
+      data={contributionsQuery.data.data}
+      fairteilers={fairteilersQuery.data}
+      canExport={canExport}
+    />
   );
 }

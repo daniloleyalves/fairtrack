@@ -38,6 +38,7 @@ import { HtmlContentRenderer } from './html-content-renderer';
 import { ConfirmModal } from '@/components/confirm-modal';
 import { TutorialStepFormData } from '../schemas/fairteiler-tutorial-schema';
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface FairteilerTutorialStepsCardProps {
   steps: FairteilerTutorialStep[] | undefined;
@@ -84,7 +85,6 @@ export function FairteilerTutorialStepsCard({
     }
     try {
       await removeStep({ id: stepId });
-      // Adjust current step index if needed
       if (state.currentStepIndex >= steps.length - 1) {
         setCurrentStep(Math.max(0, steps.length - 2));
       }
@@ -103,14 +103,7 @@ export function FairteilerTutorialStepsCard({
               Schritt {state.currentStepIndex + 1} von {steps.length}
             </Badge>
             {currentStep?.media && (
-              <div
-                className={cn(
-                  isVideoFile(currentStep.media)
-                    ? 'ascpect-video'
-                    : 'aspect-auto',
-                  'w-full overflow-hidden rounded-lg bg-muted',
-                )}
-              >
+              <div className='relative aspect-video w-full overflow-hidden rounded-lg bg-muted'>
                 {isVideoFile(currentStep.media) ? (
                   <video
                     src={currentStep.media}
@@ -121,10 +114,12 @@ export function FairteilerTutorialStepsCard({
                     Your browser does not support the video tag.
                   </video>
                 ) : (
-                  <img
+                  <Image
                     src={currentStep.media}
                     alt={currentStep.title}
-                    className='mx-auto object-cover'
+                    fill
+                    sizes='(max-width: 768px) 100vw, 800px'
+                    className='object-cover'
                   />
                 )}
               </div>

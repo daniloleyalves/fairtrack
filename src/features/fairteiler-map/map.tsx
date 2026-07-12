@@ -25,6 +25,7 @@ import { FairteilerPanel } from './components/map-fairteiler-panel';
 import { Fairteiler } from '@/server/db/db-types';
 import { MapFairteilerPopup } from './components/map-fairteiler-popup';
 import { useIsMobile } from '@/lib/hooks/use-devices';
+import { useMapRepaintOnReveal } from '@/lib/hooks/use-map-repaint-on-reveal';
 
 interface UserLocationState {
   coordinates: { latitude: number; longitude: number } | null;
@@ -68,6 +69,7 @@ export function FairteilerMap({
     ) ?? markers[0]; // Fallback to first marker if default not found
 
   const mapRef = useRef<MapRef>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const geolocateControlRef = useRef<GeolocateControlInstance>(null);
   const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const retryTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -105,29 +107,7 @@ export function FairteilerMap({
     bearing: 0,
   });
 
-  // Validate mapbox token
-  if (!mapboxToken) {
-    return (
-      <Alert className='mb-4' variant='destructive'>
-        <AlertCircle className='size-4' />
-        <AlertDescription>
-          Mapbox-Token fehlt. Bitte konfigurieren Sie die Umgebungsvariable.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  // Check if we have valid fairteilers
-  if (!initFairteiler || markers.length === 0) {
-    return (
-      <Alert className='mb-4' variant='destructive'>
-        <AlertCircle className='size-4' />
-        <AlertDescription>
-          Keine Fairteiler mit gültigen Koordinaten gefunden.
-        </AlertDescription>
-      </Alert>
-    );
-  }
+  useMapRepaintOnReveal(mapRef, wrapperRef);
 
   const isUserNearFairteiler =
     userLocationState.coordinates &&
@@ -361,8 +341,35 @@ export function FairteilerMap({
     };
   }, []);
 
+  // Validate mapbox token
+  if (!mapboxToken) {
+    return (
+      <Alert className='mb-4' variant='destructive'>
+        <AlertCircle className='size-4' />
+        <AlertDescription>
+          Mapbox-Token fehlt. Bitte konfigurieren Sie die Umgebungsvariable.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  // Check if we have valid fairteilers
+  if (!initFairteiler || markers.length === 0) {
+    return (
+      <Alert className='mb-4' variant='destructive'>
+        <AlertCircle className='size-4' />
+        <AlertDescription>
+          Keine Fairteiler mit gültigen Koordinaten gefunden.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
-    <div className='relative h-screen w-full bg-white md:h-[calc(100vh-100px)] md:rounded-lg'>
+    <div
+      ref={wrapperRef}
+      className='relative h-screen w-full bg-white md:h-[calc(100vh-100px)] md:rounded-lg'
+    >
       {/* Location Error Alert */}
       {userLocationState.error && !userLocationState.permissionDenied && (
         <div className='absolute top-16 right-12 left-2 z-10 md:top-2 md:left-auto md:w-96'>
@@ -422,6 +429,7 @@ export function FairteilerMap({
 
       <Map
         ref={mapRef}
+        reuseMaps
         style={{
           borderRadius: isMobile ? '0px' : '10px',
           boxShadow:

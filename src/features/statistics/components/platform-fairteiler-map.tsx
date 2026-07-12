@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DownloadButton } from './chart-download-button';
 import { useClientEnv } from '@/lib/hooks/use-client-env';
+import { useMapRepaintOnReveal } from '@/lib/hooks/use-map-repaint-on-reveal';
 import { Fairteiler } from '@/server/db/db-types';
 import { MapFairteilerPopup } from '@/features/fairteiler-map/components/map-fairteiler-popup';
 import { FairteilerPanel } from '@/features/fairteiler-map/components/map-fairteiler-panel';
@@ -23,7 +24,7 @@ export function PlatformFairteilerMap({
 }: {
   fairteilers: Fairteiler[];
 }) {
-  const { env, isLoading: envLoading } = useClientEnv();
+  const { env, isLoading: envLoading, error: envError } = useClientEnv();
 
   const cardRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapRef>(null);
@@ -51,6 +52,8 @@ export function PlatformFairteilerMap({
     pitch: 0,
     bearing: 0,
   });
+
+  useMapRepaintOnReveal(mapRef, cardRef);
 
   // Handle fairteiler selection from panel with smooth animation
   const handleFairteilerClick = useCallback(
@@ -131,6 +134,28 @@ export function PlatformFairteilerMap({
     );
   }
 
+  if (envError) {
+    return (
+      <Card ref={cardRef}>
+        <CardHeader>
+          <CardTitle className='flex items-center justify-between'>
+            <span>Fairteiler Karte</span>
+            <DownloadButton elementRef={cardRef} filename='fairteiler-map' />
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert variant='destructive'>
+            <AlertCircle className='size-4' />
+            <AlertDescription>
+              Die Karte konnte nicht geladen werden. Bitte versuche es später
+              erneut.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!env?.MAPBOX_TOKEN) {
     return (
       <Card ref={cardRef}>
@@ -191,6 +216,7 @@ export function PlatformFairteilerMap({
           />
           <Map
             ref={mapRef}
+            reuseMaps
             mapboxAccessToken={env.MAPBOX_TOKEN}
             attributionControl={false}
             mapStyle='mapbox://styles/dayno/cmfljv0c3008m01sb743xhwi5'

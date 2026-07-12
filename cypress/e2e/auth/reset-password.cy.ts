@@ -108,10 +108,19 @@ describe('Password Reset E2E', () => {
         cy.contains('Passwort zurücksetzen').should('be.visible');
         cy.contains('Wähle ein neues Passwort').should('be.visible');
 
-        // Fill new password
+        // Fill new password. realType (CDP keyboard events) instead of
+        // cy.type — sidesteps the "subject contained 2 elements" race
+        // under Next 16 cacheComponents.
         const newPassword = 'NewSecurePass123';
-        cy.get('input[name="password"]').type(newPassword);
-        cy.get('input[name="passwordConfirm"]').type(newPassword);
+        cy.get('input[name="password"]').realClick().realType(newPassword);
+        cy.get('input[name="passwordConfirm"]')
+          .realClick()
+          .realType(newPassword);
+        cy.get('input[name="password"]').should('have.value', newPassword);
+        cy.get('input[name="passwordConfirm"]').should(
+          'have.value',
+          newPassword,
+        );
 
         // Submit form
         cy.get('button[type="submit"]').click();
@@ -123,6 +132,11 @@ describe('Password Reset E2E', () => {
 
         // Should redirect to login page with success message
         cy.url({ timeout: 10000 }).should('include', '/sign-in');
+
+        // Fresh load: router.push under Next 16 cacheComponents streams
+        // the new page in chunks that race cy.type's subject-stability
+        // check in the next fillTwoStepLoginForm step.
+        cy.visit('/sign-in');
 
         // Should be able to login with new password
         cy.fillTwoStepLoginForm({

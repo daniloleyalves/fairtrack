@@ -4,14 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { ContributionForm } from './form/contribution-form';
 import { AlertCircle, HelpCircle } from 'lucide-react';
-import { BlurFade } from '@/components/magicui/blur-fade';
 import ContributionTable from './contribution-table';
 import { ContributionInfos } from './contribution-infos';
 import { usePathname } from 'next/navigation';
-import {
-  FAIRTEILER_DASHBOARD_KEY,
-  USER_DASHBOARD_KEY,
-} from '@/lib/config/api-routes';
 import { useContribution } from '../context/contribution-context';
 import { useIsMobile } from '@/lib/hooks/use-devices';
 import {
@@ -43,7 +38,7 @@ export function ContributionContent() {
   const fairteilerWithMembers = fairteiler as FairteilerWithMembers;
 
   // Get current user's member record
-  const currentMemberRecord = fairteilerWithMembers?.members.find(
+  const currentMemberRecord = fairteilerWithMembers?.members?.find(
     (member) => member.user.id === user?.id,
   );
   const isOwner = currentMemberRecord?.role === MemberRolesEnum.OWNER;
@@ -69,7 +64,6 @@ export function ContributionContent() {
         fairteilerId: fairteiler.id,
         successRedirect: '/hub/user/contribution/success',
         revalidatePaths: ['/hub/user/dashboard'],
-        cacheKeys: [USER_DASHBOARD_KEY],
         context: 'user' as const,
         submitAsAccessViewId: isOwner ? selectedAccessViewId : undefined,
       };
@@ -78,7 +72,6 @@ export function ContributionContent() {
         fairteilerId: fairteiler.id,
         successRedirect: '/hub/fairteiler/contribution/success',
         revalidatePaths: ['/hub/fairteiler/dashboard'],
-        cacheKeys: [FAIRTEILER_DASHBOARD_KEY, USER_DASHBOARD_KEY],
         context: 'fairteiler' as const,
         submitAsAccessViewId: isOwner ? selectedAccessViewId : undefined,
       };
@@ -134,9 +127,9 @@ export function ContributionContent() {
           </div>
         </div>
         <ContributionForm config={defaultConfig()}>
-          <BlurFade duration={0.2}>
+          <div>
             <ContributionTable />
-          </BlurFade>
+          </div>
         </ContributionForm>
       </div>
       <ContributionInstructions

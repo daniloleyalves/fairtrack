@@ -1,13 +1,15 @@
 'use client';
 
-import { BlurFade } from '@components/magicui/blur-fade';
 import { Card, CardContent } from '@/components/ui/card';
 import { HistoryTable } from './history-table';
 import { Button } from '@/components/ui/button';
 import { useHistoryData } from '../use-history-data';
+import { FairteilerHistorySkeleton } from './history-table-skeleton';
 
 export function FairteilerHistoryWrapper() {
   const {
+    isPending,
+    error,
     contributions,
     isEmpty,
     totalCount,
@@ -17,11 +19,19 @@ export function FairteilerHistoryWrapper() {
     isLoadingAll,
   } = useHistoryData();
 
+  if (isPending) {
+    return <FairteilerHistorySkeleton />;
+  }
+
+  if (error) {
+    throw error;
+  }
+
   if (isEmpty) {
     return (
-      <div className='py-8 text-center'>
+      <Card className='py-8 text-center'>
         <p className='text-muted-foreground'>Keine Einträge gefunden</p>
-      </div>
+      </Card>
     );
   }
 
@@ -50,7 +60,7 @@ export function FairteilerHistoryWrapper() {
     </div>
   );
   return (
-    <BlurFade duration={0.2}>
+    <div>
       <Card>
         <CardContent>
           <HistoryTable
@@ -59,6 +69,6 @@ export function FairteilerHistoryWrapper() {
           />
         </CardContent>
       </Card>
-    </BlurFade>
+    </div>
   );
 }

@@ -18,7 +18,7 @@ interface FoodsaverLeaderboardProps {
 interface LeaderboardEntry {
   id: string;
   name: string;
-  email: string;
+  email: string | null;
   totalQuantity: number;
 }
 

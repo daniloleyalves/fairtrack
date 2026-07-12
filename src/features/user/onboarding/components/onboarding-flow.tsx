@@ -1,6 +1,6 @@
 'use client';
 
-import { startTransition, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -27,9 +27,9 @@ import {
 import { ExperienceLevel } from '@/server/db/db-types';
 import { Award, Sparkles, Flame, Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { handleAsyncAction } from '@/lib/client-error-handling';
-import { completeOnboardingAction } from '@/server/actions';
-import { OnboardingData } from '@/server/dto';
+import { useFormAction } from '@/lib/hooks/use-form-action';
+import { completeOnboardingAction } from '@/server/user/actions';
+import { OnboardingData } from '@/server/user/types';
 import { useRouter } from 'next/navigation';
 
 export function OnboardingFlow({
@@ -40,6 +40,18 @@ export function OnboardingFlow({
   const useOnboardingFlow = createOnboardingFlow(initialData);
   const stepFlow = useOnboardingFlow();
   const router = useRouter();
+  const completeOnboarding = useFormAction(
+    completeOnboardingAction,
+    undefined,
+    {
+      successMessage: 'Onboarding erfolgreich!',
+      onSuccess: (data) => {
+        if (data?.redirectTo) {
+          router.push(data.redirectTo);
+        }
+      },
+    },
+  );
 
   const handleStepDataChange = (stepId: string, data: OnboardingStepData) => {
     stepFlow.setStepData(stepId, data);
@@ -76,20 +88,7 @@ export function OnboardingFlow({
         Object.assign(allStepData, data);
       }
     });
-    startTransition(() => {
-      handleAsyncAction(
-        () => completeOnboardingAction(allStepData),
-        undefined,
-        {
-          showToast: true,
-          onSuccess: (result) => {
-            if (result.data?.redirectTo) {
-              router.push(result.data?.redirectTo);
-            }
-          },
-        },
-      );
-    });
+    completeOnboarding.execute(allStepData);
   };
 
   if (stepFlow.isLoading) {

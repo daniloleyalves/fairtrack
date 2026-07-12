@@ -17,7 +17,7 @@ export interface SeedData {
     firstName: string;
     lastName: string;
     phone?: string;
-    foodsharingId?: string;
+    foodsharingId?: number;
     secure: boolean;
     isFirstLogin: boolean;
   }[];

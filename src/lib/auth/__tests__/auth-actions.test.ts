@@ -10,12 +10,18 @@ import {
   disableAccessViewAction,
 } from '../auth-actions';
 import { auth, checkPermissionOnServer } from '../auth';
-import { getActiveFairteiler } from '@server/dto';
-import { checkInvitationAndUser, updateFairteiler } from '@server/dal';
+import { getActiveFairteiler } from '@server/fairteiler/queries';
+import { checkInvitationAndUser } from '@server/contribution/dal';
+import { updateFairteiler, loadMemberById } from '@server/fairteiler/dal';
 import { put, del } from '@vercel/blob';
 import { headers } from 'next/headers';
 import { MemberRolesEnum } from '../auth-permissions';
 import { NotFoundError } from '@/server/error-handling';
+import {
+  banUserAndRevokeSessions,
+  loadAuthenticatedSession,
+} from '@server/user/dal';
+import { mockSession } from '@/__tests__/mocks/server-only';
 
 // Mock all external dependencies
 vi.mock('../auth', () => ({
@@ -35,13 +41,24 @@ vi.mock('../auth', () => ({
   checkPermissionOnServer: vi.fn(),
 }));
 
-vi.mock('@server/dto', () => ({
+vi.mock('@server/fairteiler/queries', () => ({
   getActiveFairteiler: vi.fn(),
 }));
 
-vi.mock('@server/dal', () => ({
-  updateFairteiler: vi.fn(),
+vi.mock('@server/contribution/dal', () => ({
   checkInvitationAndUser: vi.fn(),
+}));
+
+vi.mock('@server/fairteiler/dal', () => ({
+  updateFairteiler: vi.fn(),
+  toggleFairteilerVisibility: vi.fn(),
+  loadMemberById: vi.fn(),
+}));
+
+vi.mock('@server/user/dal', () => ({
+  banUserAndRevokeSessions: vi.fn(),
+  loadAuthenticatedSession: vi.fn(),
+  loadUserByEmail: vi.fn(),
   validateResetPasswordToken: vi.fn(),
 }));
 
@@ -143,6 +160,7 @@ describe('Authentication Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(headers).mockResolvedValue(mockHeaders);
+    vi.mocked(loadAuthenticatedSession).mockResolvedValue(mockSession);
   });
 
   afterEach(() => {
@@ -158,23 +176,18 @@ describe('Authentication Actions', () => {
       const result = await signOutAction({});
 
       expect(auth.api.signOut).toHaveBeenCalledWith({ headers: mockHeaders });
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.message).toBe('Erfolgreich abgemeldet.');
-        expect(result.data?.redirectTo).toBe('/sign-in');
-      }
+      expect(result?.data).toEqual({
+        redirectTo: '/sign-in',
+        shouldRefresh: true,
+      });
     });
 
-    it('should handle sign out errors gracefully', async () => {
+    it('should surface sign out errors as serverError', async () => {
       const mockError = new Error('Sign out failed');
       vi.mocked(auth.api.signOut).mockRejectedValue(mockError);
 
       const result = await signOutAction({});
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Sign out failed');
-      }
+      expect(result?.serverError).toBe('Sign out failed');
     });
 
     it('should call signOut with correct headers', async () => {
@@ -184,10 +197,9 @@ describe('Authentication Actions', () => {
         success: true,
       } as MockSignOutResult);
 
-      const result = await signOutAction({});
+      await signOutAction({});
 
       expect(auth.api.signOut).toHaveBeenCalledWith({ headers: customHeaders });
-      expect(result.success).toBe(true);
     });
   });
 
@@ -202,28 +214,23 @@ describe('Authentication Actions', () => {
     });
 
     it('should successfully update fairteiler profile with valid data', async () => {
-      const formData = new FormData();
-      formData.append('name', 'Updated Fairteiler');
-      formData.append('address', 'Updated Address');
-      formData.append('geoLat', '13.0000');
-      formData.append('geoLng', '9.101010');
-      formData.append('geoLink', 'https://maps.google.com/updated');
-      formData.append('website', 'https://updated-website.com');
-      formData.append('thumbnail', 'some string');
+      const result = await updateFairteilerAction({
+        name: 'Updated Fairteiler',
+        address: 'Updated Address',
+        geoLat: '13.0000',
+        geoLng: '9.101010',
+        geoLink: 'https://maps.google.com/updated',
+        website: 'https://updated-website.com',
+        thumbnail: 'some string',
+      });
 
-      const result = await updateFairteilerAction(formData);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.message).toBe('Profil erfolgreich aktualisiert!');
-        expect(result.data?.name).toBe('Updated Fairteiler');
-        expect(result.data?.address).toBe('Updated Address');
-        expect(result.data?.geoLink).toBe('https://maps.google.com/updated');
-        expect(result.data?.website).toBe('https://updated-website.com');
-        expect(result.data?.thumbnail).toBe(
-          'https://example.com/old-thumbnail.jpg',
-        );
-      }
+      expect(result?.data?.name).toBe('Updated Fairteiler');
+      expect(result?.data?.address).toBe('Updated Address');
+      expect(result?.data?.geoLink).toBe('https://maps.google.com/updated');
+      expect(result?.data?.website).toBe('https://updated-website.com');
+      expect(result?.data?.thumbnail).toBe(
+        'https://example.com/old-thumbnail.jpg',
+      );
       expect(updateFairteiler).toHaveBeenCalledWith(
         mockFairteiler.id,
         expect.objectContaining({
@@ -249,48 +256,40 @@ describe('Authentication Actions', () => {
       vi.mocked(put).mockResolvedValue(mockBlobResult);
       vi.mocked(del).mockResolvedValue(undefined);
 
-      const formData = new FormData();
-      formData.append('name', 'Test Fairteiler');
-      formData.append('address', 'some string');
-      formData.append('geoLink', 'some string');
-      formData.append('geoLat', 'some string');
-      formData.append('geoLng', 'some string');
-      formData.append('website', 'some string');
-      formData.append('thumbnail', mockFile);
+      const result = await updateFairteilerAction({
+        name: 'Test Fairteiler',
+        address: 'some string',
+        geoLink: 'some string',
+        geoLat: 'some string',
+        geoLng: 'some string',
+        website: 'some string',
+        thumbnail: mockFile,
+      });
 
-      const result = await updateFairteilerAction(formData);
-
-      expect(result.success).toBe(true);
+      expect(result?.data).toBeDefined();
       expect(put).toHaveBeenCalledWith(
         'fairteiler_thumbnails/new-thumbnail.jpg',
         mockFile,
         { access: 'public', allowOverwrite: true },
       );
       expect(del).toHaveBeenCalledWith('https://example.com/old-thumbnail.jpg');
-      if (result.success) {
-        expect(result.data?.thumbnail).toBe(
-          'https://blob.vercel-storage.com/new-thumbnail.jpg',
-        );
-      }
+      expect(result?.data?.thumbnail).toBe(
+        'https://blob.vercel-storage.com/new-thumbnail.jpg',
+      );
     });
 
     it('should validate required name field', async () => {
-      const formData = new FormData();
-      formData.append('name', ''); // Empty name
-      formData.append('address', 'some string');
-      formData.append('geoLink', 'some string');
-      formData.append('geoLat', 'some string');
-      formData.append('geoLng', 'some string');
-      formData.append('website', 'some string');
-      formData.append('thumbnail', 'some string');
+      const result = await updateFairteilerAction({
+        name: '', // Empty name
+        address: 'some string',
+        geoLink: 'some string',
+        geoLat: 'some string',
+        geoLng: 'some string',
+        website: 'some string',
+        thumbnail: 'some string',
+      });
 
-      const result = await updateFairteilerAction(formData);
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Ungültige Eingabedaten.');
-        expect(result.issues).toBeDefined();
-      }
+      expect(result?.validationErrors).toBeDefined();
     });
 
     it('should handle authentication failure', async () => {
@@ -302,23 +301,17 @@ describe('Authentication Actions', () => {
         new NotFoundError('active fairteiler'),
       );
 
-      const formData = new FormData();
-      formData.append('name', 'Test Fairteiler');
-      formData.append('address', 'some string');
-      formData.append('geoLink', 'some string');
-      formData.append('geoLat', 'some string');
-      formData.append('geoLng', 'some string');
-      formData.append('website', 'some string');
-      formData.append('thumbnail', 'some string');
+      const result = await updateFairteilerAction({
+        name: 'Test Fairteiler',
+        address: 'some string',
+        geoLink: 'some string',
+        geoLat: 'some string',
+        geoLng: 'some string',
+        website: 'some string',
+        thumbnail: 'some string',
+      });
 
-      const result = await updateFairteilerAction(formData);
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toContain(
-          'Update fehlgeschlagen: active fairteiler not found',
-        );
-      }
+      expect(result?.serverError).toBeDefined();
     });
   });
 
@@ -332,54 +325,37 @@ describe('Authentication Actions', () => {
         invitationId: 'invitation-123',
       });
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.message).toBe(
-          'Invitation details retrieved successfully',
-        );
-        expect(result.data).toEqual(mockInvitationResultWithUserExists);
-      }
+      expect(result?.data).toEqual(mockInvitationResultWithUserExists);
     });
 
-    it('should handle non-existent invitation', async () => {
+    it('should surface non-existent invitation as serverError', async () => {
       vi.mocked(checkInvitationAndUser).mockRejectedValue(
         new NotFoundError('Invitation data'),
       );
 
-      await expect(
-        checkInvitationAndUserAction({ invitationId: 'non-existent' }),
-      ).rejects.toBeInstanceOf(NotFoundError);
+      const result = await checkInvitationAndUserAction({
+        invitationId: 'non-existent',
+      });
+      expect(result?.serverError).toBe('Invitation data not found');
     });
 
-    it('should handle database errors gracefully', async () => {
+    it('should surface database errors as serverError', async () => {
       const dbError = new Error('Database connection failed');
       vi.mocked(checkInvitationAndUser).mockRejectedValue(dbError);
 
       const result = await checkInvitationAndUserAction({
         invitationId: 'valid-id',
       });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Database connection failed');
-      }
+      expect(result?.serverError).toBe('Database connection failed');
     });
 
-    it('should validate invitation ID format', async () => {
+    it('should surface validation errors for empty invitation ID', async () => {
       vi.mocked(checkInvitationAndUser).mockResolvedValue(
         mockInvitationResultWithoutUserExists,
       );
 
-      const result = await checkInvitationAndUserAction({
-        invitationId: '',
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe(
-          'Ungültige Eingabe. Bitte überprüfen Sie Ihre Angaben.',
-        );
-      }
+      const result = await checkInvitationAndUserAction({ invitationId: '' });
+      expect(result?.validationErrors).toBeDefined();
     });
 
     it('should handle expired invitations', async () => {
@@ -395,10 +371,7 @@ describe('Authentication Actions', () => {
         invitationId: 'expired-invitation',
       });
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data?.isValid).toBe(false);
-      }
+      expect(result?.data?.isValid).toBe(false);
     });
 
     it('should handle invitations for non-existent users', async () => {
@@ -414,10 +387,7 @@ describe('Authentication Actions', () => {
         invitationId: 'new-user-invitation',
       });
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data?.userExists).toBe(false);
-      }
+      expect(result?.data?.userExists).toBe(false);
     });
   });
 
@@ -470,14 +440,10 @@ describe('Authentication Actions', () => {
         role: MemberRolesEnum.EMPLOYEE,
       });
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.message).toBe('Zugangsprofil erfolgreich erstellt!');
-        expect(result.data?.email).toBe('employee-2@test-fairteiler.local');
-        expect(result.data?.password).toBeDefined();
-        expect(typeof result.data?.password).toBe('string');
-        expect(result.data?.password.length).toBeGreaterThan(0);
-      }
+      expect(result?.data?.email).toBe('employee-2@test-fairteiler.local');
+      expect(result?.data?.password).toBeDefined();
+      expect(typeof result?.data?.password).toBe('string');
+      expect(result?.data?.password.length).toBeGreaterThan(0);
 
       expect(auth.api.signUpEmail).toHaveBeenCalledWith({
         body: {
@@ -506,10 +472,7 @@ describe('Authentication Actions', () => {
         role: MemberRolesEnum.GUEST,
       });
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data?.email).toBe('guest-1@test-fairteiler.local');
-      }
+      expect(result?.data?.email).toBe('guest-1@test-fairteiler.local');
 
       expect(auth.api.signUpEmail).toHaveBeenCalledWith({
         body: expect.objectContaining({
@@ -519,20 +482,19 @@ describe('Authentication Actions', () => {
       });
     });
 
-    it('should handle fairteiler not found error', async () => {
+    it('should surface fairteiler not found as serverError', async () => {
       vi.mocked(getActiveFairteiler).mockRejectedValue(
         new NotFoundError('active fairteiler'),
       );
 
-      await expect(
-        addAccessViewAction({
-          name: 'Test Employee',
-          role: MemberRolesEnum.EMPLOYEE,
-        }),
-      ).rejects.toBeInstanceOf(NotFoundError);
+      const result = await addAccessViewAction({
+        name: 'Test Employee',
+        role: MemberRolesEnum.EMPLOYEE,
+      });
+      expect(result?.serverError).toBe('active fairteiler not found');
     });
 
-    it('should handle user creation failure', async () => {
+    it('should surface user creation failure as serverError', async () => {
       const signUpError = new Error('Email already exists');
       vi.mocked(auth.api.signUpEmail).mockRejectedValue(signUpError);
 
@@ -540,11 +502,7 @@ describe('Authentication Actions', () => {
         name: 'Test Employee',
         role: MemberRolesEnum.EMPLOYEE,
       });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Email already exists');
-      }
+      expect(result?.serverError).toBe('Email already exists');
     });
 
     it('should cleanup user when addMember fails', async () => {
@@ -556,11 +514,7 @@ describe('Authentication Actions', () => {
         name: 'Test Employee',
         role: MemberRolesEnum.EMPLOYEE,
       });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Failed to add member');
-      }
+      expect(result?.serverError).toBe('Failed to add member');
 
       expect(auth.api.removeUser).toHaveBeenCalledWith({
         body: { userId: mockNewUser.id },
@@ -613,25 +567,15 @@ describe('Authentication Actions', () => {
         role: MemberRolesEnum.EMPLOYEE,
       });
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data?.email).toBe('employee-4@test-fairteiler.local');
-      }
+      expect(result?.data?.email).toBe('employee-4@test-fairteiler.local');
     });
 
-    it('should handle validation errors', async () => {
+    it('should surface validation errors', async () => {
       const result = await addAccessViewAction({
         name: '',
         role: 'invalid-role' as MemberRolesEnum.EMPLOYEE,
       });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe(
-          'Ungültige Eingabe. Bitte überprüfen Sie Ihre Angaben.',
-        );
-        expect(result.issues).toBeDefined();
-      }
+      expect(result?.validationErrors).toBeDefined();
     });
   });
 
@@ -654,17 +598,10 @@ describe('Authentication Actions', () => {
     });
 
     it('should successfully remove member', async () => {
-      const result = await removeMemberAction({
+      await removeMemberAction({
         organizationId: 'fairteiler-123',
         email: 'member@example.com',
       });
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.message).toBe(
-          'Mitglied member@example.com wurde erfolgreich entfernt.',
-        );
-      }
 
       expect(auth.api.removeMember).toHaveBeenCalledWith({
         headers: mockHeaders,
@@ -675,7 +612,7 @@ describe('Authentication Actions', () => {
       });
     });
 
-    it('should handle removal errors', async () => {
+    it('should surface removal errors as serverError', async () => {
       const removalError = new Error('Member not found');
       vi.mocked(auth.api.removeMember).mockRejectedValue(removalError);
 
@@ -683,26 +620,15 @@ describe('Authentication Actions', () => {
         organizationId: 'fairteiler-123',
         email: 'nonexistent@example.com',
       });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Member not found');
-      }
+      expect(result?.serverError).toBe('Member not found');
     });
 
-    it('should validate input parameters', async () => {
+    it('should surface validation errors for invalid input parameters', async () => {
       const result = await removeMemberAction({
         organizationId: '',
         email: 'invalid-email',
       });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe(
-          'Ungültige Eingabe. Bitte überprüfen Sie Ihre Angaben.',
-        );
-        expect(result.issues).toBeDefined();
-      }
+      expect(result?.validationErrors).toBeDefined();
     });
   });
 
@@ -720,33 +646,13 @@ describe('Authentication Actions', () => {
           name: 'Test User',
         },
       });
-      vi.mocked(auth.api.setRole).mockResolvedValue({
-        user: {
-          id: 'user-123',
-          role: 'admin',
-          email: 'test@example.com',
-          emailVerified: true,
-          name: 'Test User',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          banned: false,
-          banReason: null,
-          banExpires: null,
-        },
-      });
     });
 
     it('should successfully update member role', async () => {
-      const result = await updateMemberRoleAction({
+      await updateMemberRoleAction({
         memberId: 'member-123',
-        userId: 'user-123',
         role: MemberRolesEnum.MEMBER,
       });
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.message).toBe('Rolle erfolgreich aktualisiert.');
-      }
 
       expect(auth.api.updateMemberRole).toHaveBeenCalledWith({
         headers: mockHeaders,
@@ -759,14 +665,11 @@ describe('Authentication Actions', () => {
       expect(auth.api.setRole).not.toHaveBeenCalled();
     });
 
-    it('should promote user to admin when role is owner', async () => {
-      const result = await updateMemberRoleAction({
+    it('should promote to owner without granting a platform role', async () => {
+      await updateMemberRoleAction({
         memberId: 'member-123',
-        userId: 'user-123',
         role: MemberRolesEnum.OWNER,
       });
-
-      expect(result.success).toBe(true);
 
       expect(auth.api.updateMemberRole).toHaveBeenCalledWith({
         headers: mockHeaders,
@@ -776,61 +679,26 @@ describe('Authentication Actions', () => {
         },
       });
 
-      expect(auth.api.setRole).toHaveBeenCalledWith({
-        headers: mockHeaders,
-        body: {
-          role: 'admin',
-          userId: 'user-123',
-        },
-      });
+      expect(auth.api.setRole).not.toHaveBeenCalled();
     });
 
-    it('should handle role update errors', async () => {
+    it('should surface role update errors as serverError', async () => {
       const updateError = new Error('Insufficient permissions');
       vi.mocked(auth.api.updateMemberRole).mockRejectedValue(updateError);
 
       const result = await updateMemberRoleAction({
         memberId: 'member-123',
-        userId: 'user-123',
         role: MemberRolesEnum.MEMBER,
       });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Insufficient permissions');
-      }
+      expect(result?.serverError).toBe('Insufficient permissions');
     });
 
-    it('should handle admin promotion errors', async () => {
-      const adminError = new Error('Failed to set admin role');
-      vi.mocked(auth.api.setRole).mockRejectedValue(adminError);
-
-      const result = await updateMemberRoleAction({
-        memberId: 'member-123',
-        userId: 'user-123',
-        role: MemberRolesEnum.OWNER,
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Failed to set admin role');
-      }
-    });
-
-    it('should validate input parameters', async () => {
+    it('should surface validation errors for invalid input parameters', async () => {
       const result = await updateMemberRoleAction({
         memberId: '',
-        userId: '',
         role: 'invalid-role' as MemberRolesEnum.MEMBER,
       });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe(
-          'Ungültige Eingabe. Bitte überprüfen Sie Ihre Angaben.',
-        );
-        expect(result.issues).toBeDefined();
-      }
+      expect(result?.validationErrors).toBeDefined();
     });
   });
 
@@ -849,17 +717,10 @@ describe('Authentication Actions', () => {
     });
 
     it('should successfully send invitation', async () => {
-      const result = await inviteMemberAction({
+      await inviteMemberAction({
         email: 'newmember@example.com',
         role: MemberRolesEnum.MEMBER,
       });
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.message).toBe(
-          'Einladung erfolgreich an newmember@example.com gesendet!',
-        );
-      }
 
       expect(auth.api.createInvitation).toHaveBeenCalledWith({
         headers: mockHeaders,
@@ -871,7 +732,7 @@ describe('Authentication Actions', () => {
       });
     });
 
-    it('should handle invitation creation errors', async () => {
+    it('should surface invitation creation errors as serverError', async () => {
       const invitationError = new Error('Email already invited');
       vi.mocked(auth.api.createInvitation).mockRejectedValue(invitationError);
 
@@ -879,41 +740,23 @@ describe('Authentication Actions', () => {
         email: 'existing@example.com',
         role: MemberRolesEnum.MEMBER,
       });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Email already invited');
-      }
+      expect(result?.serverError).toBe('Email already invited');
     });
 
-    it('should validate email format', async () => {
+    it('should surface validation errors for invalid email format', async () => {
       const result = await inviteMemberAction({
         email: 'invalid-email',
         role: MemberRolesEnum.MEMBER,
       });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe(
-          'Ungültige Eingabe. Bitte überprüfen Sie Ihre Angaben.',
-        );
-        expect(result.issues).toBeDefined();
-      }
+      expect(result?.validationErrors).toBeDefined();
     });
 
-    it('should validate role', async () => {
+    it('should surface validation errors for invalid role', async () => {
       const result = await inviteMemberAction({
         email: 'valid@example.com',
         role: 'invalid-role' as MemberRolesEnum.MEMBER,
       });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe(
-          'Ungültige Eingabe. Bitte überprüfen Sie Ihre Angaben.',
-        );
-        expect(result.issues).toBeDefined();
-      }
+      expect(result?.validationErrors).toBeDefined();
     });
 
     it('should send invitation for different roles', async () => {
@@ -924,12 +767,11 @@ describe('Authentication Actions', () => {
       ] as const;
 
       for (const role of roles) {
-        const result = await inviteMemberAction({
+        await inviteMemberAction({
           email: `${role}@example.com`,
           role,
         });
 
-        expect(result.success).toBe(true);
         expect(auth.api.createInvitation).toHaveBeenCalledWith({
           headers: mockHeaders,
           body: {
@@ -944,17 +786,18 @@ describe('Authentication Actions', () => {
 
   describe('disableAccessViewAction', () => {
     beforeEach(() => {
-      vi.mocked(auth.api.banUser).mockResolvedValue({
-        user: {
-          id: 'user-123',
-          name: 'Test User',
-          email: 'test@example.com',
-          emailVerified: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          banned: true,
-        },
+      vi.mocked(checkPermissionOnServer).mockResolvedValue({
+        success: true,
+        error: null,
       });
+      vi.mocked(loadMemberById).mockResolvedValue({
+        id: 'member-123',
+        userId: 'user-123',
+        organizationId: 'fairteiler-123',
+        role: MemberRolesEnum.EMPLOYEE,
+        createdAt: new Date(),
+      });
+      vi.mocked(banUserAndRevokeSessions).mockResolvedValue(undefined);
       vi.mocked(auth.api.updateMemberRole).mockResolvedValue({
         id: 'member-123',
         organizationId: 'fairteiler-123',
@@ -969,26 +812,26 @@ describe('Authentication Actions', () => {
       });
     });
 
-    it('should successfully disable access view', async () => {
+    it('should successfully disable access view as fairteiler owner', async () => {
       const result = await disableAccessViewAction({
         userId: 'user-123',
         memberId: 'member-123',
       });
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.message).toBe('Zugang erfolgreich deaktiviert.');
-        expect(result.data).toBeDefined();
-      }
+      expect(result).toBeDefined();
+      expect(result?.serverError).toBeUndefined();
 
-      expect(auth.api.banUser).toHaveBeenCalledWith({
-        headers: mockHeaders,
-        body: {
-          userId: 'user-123',
-          banReason: 'DISABLED ACCESS VIEW',
-        },
+      expect(checkPermissionOnServer).toHaveBeenCalledWith(mockHeaders, {
+        user: ['ban'],
       });
-
+      expect(loadMemberById).toHaveBeenCalledWith(
+        'member-123',
+        'fairteiler-123',
+      );
+      expect(banUserAndRevokeSessions).toHaveBeenCalledWith(
+        'user-123',
+        'DISABLED ACCESS VIEW',
+      );
       expect(auth.api.updateMemberRole).toHaveBeenCalledWith({
         headers: mockHeaders,
         body: {
@@ -998,64 +841,95 @@ describe('Authentication Actions', () => {
       });
     });
 
-    it('should handle ban user errors', async () => {
-      const banError = new Error('User not found');
-      vi.mocked(auth.api.banUser).mockRejectedValue(banError);
-
-      const result = await disableAccessViewAction({
-        userId: 'nonexistent-user',
-        memberId: 'member-123',
+    it('should reject callers without the user ban permission', async () => {
+      vi.mocked(checkPermissionOnServer).mockResolvedValue({
+        success: false,
+        error: null,
       });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('User not found');
-      }
-    });
-
-    it('should handle role update errors', async () => {
-      const roleError = new Error('Failed to update role');
-      vi.mocked(auth.api.updateMemberRole).mockRejectedValue(roleError);
 
       const result = await disableAccessViewAction({
         userId: 'user-123',
         memberId: 'member-123',
       });
 
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Failed to update role');
-      }
-    });
-
-    it('should validate input parameters', async () => {
-      const banError = new Error('User ID required');
-      vi.mocked(auth.api.banUser).mockRejectedValue(banError);
-
-      const result = await disableAccessViewAction({
-        userId: '',
-        memberId: '',
-      });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('User ID required');
-      }
-    });
-
-    it('should continue with role update even if ban fails', async () => {
-      const banError = new Error('Ban failed');
-      vi.mocked(auth.api.banUser).mockRejectedValue(banError);
-
-      const result = await disableAccessViewAction({
-        userId: 'user-123',
-        memberId: 'member-123',
-      });
-
-      expect(result.success).toBe(false);
-      expect(auth.api.banUser).toHaveBeenCalled();
-      // Role update should not be called if ban fails
+      expect(result?.serverError).toBe(
+        'Permission denied: Du bist nicht befugt User zu aktualisieren',
+      );
+      expect(banUserAndRevokeSessions).not.toHaveBeenCalled();
       expect(auth.api.updateMemberRole).not.toHaveBeenCalled();
+    });
+
+    it('should reject members that do not belong to the active fairteiler', async () => {
+      vi.mocked(loadMemberById).mockResolvedValue(undefined);
+
+      const result = await disableAccessViewAction({
+        userId: 'user-123',
+        memberId: 'member-123',
+      });
+
+      expect(result?.serverError).toBe(
+        'Permission denied: Das ausgewählte Zugangsprofil gehört nicht zu diesem Fairteiler.',
+      );
+      expect(banUserAndRevokeSessions).not.toHaveBeenCalled();
+    });
+
+    it('should reject when the userId does not match the member record', async () => {
+      const result = await disableAccessViewAction({
+        userId: 'other-user',
+        memberId: 'member-123',
+      });
+
+      expect(result?.serverError).toBe(
+        'Permission denied: Das ausgewählte Zugangsprofil gehört nicht zu diesem Fairteiler.',
+      );
+      expect(banUserAndRevokeSessions).not.toHaveBeenCalled();
+    });
+
+    it('should reject regular team members that are not access views', async () => {
+      vi.mocked(loadMemberById).mockResolvedValue({
+        id: 'member-123',
+        userId: 'user-123',
+        organizationId: 'fairteiler-123',
+        role: MemberRolesEnum.MEMBER,
+        createdAt: new Date(),
+      });
+
+      const result = await disableAccessViewAction({
+        userId: 'user-123',
+        memberId: 'member-123',
+      });
+
+      expect(result?.serverError).toBe(
+        'Permission denied: Das ausgewählte Zugangsprofil gehört nicht zu diesem Fairteiler.',
+      );
+      expect(banUserAndRevokeSessions).not.toHaveBeenCalled();
+    });
+
+    it('should surface ban errors as serverError and skip the role update', async () => {
+      vi.mocked(banUserAndRevokeSessions).mockRejectedValue(
+        new Error('Ban failed'),
+      );
+
+      const result = await disableAccessViewAction({
+        userId: 'user-123',
+        memberId: 'member-123',
+      });
+
+      expect(result?.serverError).toBe('Ban failed');
+      expect(auth.api.updateMemberRole).not.toHaveBeenCalled();
+    });
+
+    it('should surface role update errors as serverError', async () => {
+      vi.mocked(auth.api.updateMemberRole).mockRejectedValue(
+        new Error('Failed to update role'),
+      );
+
+      const result = await disableAccessViewAction({
+        userId: 'user-123',
+        memberId: 'member-123',
+      });
+
+      expect(result?.serverError).toBe('Failed to update role');
     });
   });
 
@@ -1091,22 +965,18 @@ describe('Authentication Actions', () => {
         vi.mocked(getActiveFairteiler).mockResolvedValue(mockFairteiler);
         vi.mocked(updateFairteiler).mockResolvedValue([]);
 
-        const formData = new FormData();
-        formData.append('name', 'Test Fairteiler');
-        formData.append('address', 'some string');
-        formData.append('geoLink', 'some string');
-        formData.append('geoLat', 'some string');
-        formData.append('geoLng', 'some string');
-        formData.append('website', 'some string');
-        formData.append('thumbnail', largeFile);
-
-        const result = await updateFairteilerAction(formData);
+        const result = await updateFairteilerAction({
+          name: 'Test Fairteiler',
+          address: 'some string',
+          geoLink: 'some string',
+          geoLat: 'some string',
+          geoLng: 'some string',
+          website: 'some string',
+          thumbnail: largeFile,
+        });
 
         // The large file might cause validation issues, so let's expect it to fail
-        expect(result.success).toBe(false);
-        if (!result.success) {
-          expect(result.error).toBeDefined();
-        }
+        expect(result?.serverError ?? result?.validationErrors).toBeDefined();
       });
 
       it('should handle blob storage failures', async () => {
@@ -1117,21 +987,17 @@ describe('Authentication Actions', () => {
         vi.mocked(put).mockRejectedValue(storageError);
         vi.mocked(getActiveFairteiler).mockResolvedValue(mockFairteiler);
 
-        const formData = new FormData();
-        formData.append('name', 'Test Fairteiler');
-        formData.append('address', 'some string');
-        formData.append('geoLink', 'some string');
-        formData.append('geoLat', 'some string');
-        formData.append('geoLng', 'some string');
-        formData.append('website', 'some string');
-        formData.append('thumbnail', mockFile);
+        const result = await updateFairteilerAction({
+          name: 'Test Fairteiler',
+          address: 'some string',
+          geoLink: 'some string',
+          geoLat: 'some string',
+          geoLng: 'some string',
+          website: 'some string',
+          thumbnail: mockFile,
+        });
 
-        const result = await updateFairteilerAction(formData);
-
-        expect(result.success).toBe(false);
-        if (!result.success) {
-          expect(result.error).toContain('Blob storage unavailable');
-        }
+        expect(result?.serverError).toContain('Blob storage unavailable');
       });
 
       it('should handle deletion of old thumbnail failures gracefully', async () => {
@@ -1150,19 +1016,18 @@ describe('Authentication Actions', () => {
         vi.mocked(getActiveFairteiler).mockResolvedValue(mockFairteiler);
         vi.mocked(updateFairteiler).mockResolvedValue([]);
 
-        const formData = new FormData();
-        formData.append('name', 'Test Fairteiler');
-        formData.append('address', 'some string');
-        formData.append('geoLink', 'some string');
-        formData.append('geoLat', 'some string');
-        formData.append('geoLng', 'some string');
-        formData.append('website', 'some string');
-        formData.append('thumbnail', mockFile);
-
-        const result = await updateFairteilerAction(formData);
+        const result = await updateFairteilerAction({
+          name: 'Test Fairteiler',
+          address: 'some string',
+          geoLink: 'some string',
+          geoLat: 'some string',
+          geoLng: 'some string',
+          website: 'some string',
+          thumbnail: mockFile,
+        });
 
         // Should still succeed even if old thumbnail deletion fails
-        expect(result.success).toBe(true);
+        expect(result?.data).toBeDefined();
       });
     });
 
@@ -1211,7 +1076,7 @@ describe('Authentication Actions', () => {
         const results = await Promise.all(promises);
 
         results.forEach((result) => {
-          expect(result.success).toBe(true);
+          expect(result?.data?.email).toBeDefined();
         });
       });
 
@@ -1232,30 +1097,28 @@ describe('Authentication Actions', () => {
         const promises = Array.from({ length: 3 }, (_, i) =>
           updateMemberRoleAction({
             memberId: `member-${i}`,
-            userId: `user-${i}`,
             role: MemberRolesEnum.MEMBER,
           }),
         );
 
         const results = await Promise.all(promises);
 
+        // updateMemberRoleAction returns void; each call should resolve
+        // with an envelope whose data is undefined.
         results.forEach((result) => {
-          expect(result.success).toBe(true);
+          expect(result?.data).toBeUndefined();
+          expect(result?.serverError).toBeUndefined();
         });
       });
     });
 
     describe('Network and Timeout Scenarios', () => {
-      it('should handle network timeouts in auth operations', async () => {
+      it('should surface network timeouts as serverError', async () => {
         const timeoutError = new Error('Network timeout');
         vi.mocked(auth.api.signOut).mockRejectedValue(timeoutError);
 
         const result = await signOutAction({});
-
-        expect(result.success).toBe(false);
-        if (!result.success) {
-          expect(result.error).toBe('Network timeout');
-        }
+        expect(result?.serverError).toBe('Network timeout');
       });
 
       it('should handle slow database responses', async () => {
@@ -1273,25 +1136,23 @@ describe('Authentication Actions', () => {
           invitationId: 'slow-response',
         });
 
-        expect(result.success).toBe(true);
+        expect(result?.data).toEqual(mockInvitationResultWithUserExists);
       });
     });
 
     describe('Data Integrity and Validation', () => {
       it('should handle malformed form data', async () => {
-        const formData = new FormData();
-        formData.append('name', '');
-        formData.append('address', '');
-        formData.append('geoLink', '');
-        formData.append('website', '');
-        formData.append('thumbnail', '');
+        const result = await updateFairteilerAction({
+          name: '',
+          address: '',
+          geoLink: '',
+          geoLat: '',
+          geoLng: '',
+          website: '',
+          thumbnail: '',
+        });
 
-        const result = await updateFairteilerAction(formData);
-
-        expect(result.success).toBe(false);
-        if (!result.success) {
-          expect(result.error).toContain('Ungültige Eingabedaten.');
-        }
+        expect(result?.validationErrors).toBeDefined();
       });
 
       it('should handle special characters in input', async () => {
@@ -1300,21 +1161,17 @@ describe('Authentication Actions', () => {
         vi.mocked(getActiveFairteiler).mockResolvedValue(mockFairteiler);
         vi.mocked(updateFairteiler).mockResolvedValue([]);
 
-        const formData = new FormData();
-        formData.append('name', specialCharsName);
-        formData.append('address', 'some string');
-        formData.append('geoLink', 'some string');
-        formData.append('geoLat', 'some string');
-        formData.append('geoLng', 'some string');
-        formData.append('website', 'some string');
-        formData.append('thumbnail', 'some string');
+        const result = await updateFairteilerAction({
+          name: specialCharsName,
+          address: 'some string',
+          geoLink: 'some string',
+          geoLat: 'some string',
+          geoLng: 'some string',
+          website: 'some string',
+          thumbnail: 'some string',
+        });
 
-        const result = await updateFairteilerAction(formData);
-
-        expect(result.success).toBe(true);
-        if (result.success) {
-          expect(result.data?.name).toBe(specialCharsName);
-        }
+        expect(result?.data?.name).toBe(specialCharsName);
       });
     });
 
@@ -1355,8 +1212,8 @@ describe('Authentication Actions', () => {
           name: 'Test Employee',
           role: MemberRolesEnum.EMPLOYEE,
         });
+        expect(result?.serverError).toBe('Member addition failed');
 
-        expect(result.success).toBe(false);
         expect(auth.api.removeUser).toHaveBeenCalledWith({
           body: { userId: mockUserId },
         });
@@ -1400,11 +1257,7 @@ describe('Authentication Actions', () => {
           name: 'Test Employee',
           role: MemberRolesEnum.EMPLOYEE,
         });
-
-        expect(result.success).toBe(false);
-        if (!result.success) {
-          expect(result.error).toBe('Member addition failed');
-        }
+        expect(result?.serverError).toBe('Member addition failed');
       });
     });
 
@@ -1413,24 +1266,20 @@ describe('Authentication Actions', () => {
         const sessionExpiredError = new Error('Session expired');
         vi.mocked(getActiveFairteiler).mockRejectedValue(sessionExpiredError);
 
-        const formData = new FormData();
-        formData.append('name', 'Test Fairteiler');
-        formData.append('address', 'some string');
-        formData.append('geoLink', 'some string');
-        formData.append('geoLat', 'some string');
-        formData.append('geoLng', 'some string');
-        formData.append('website', 'some string');
-        formData.append('thumbnail', 'some string');
+        const result = await updateFairteilerAction({
+          name: 'Test Fairteiler',
+          address: 'some string',
+          geoLink: 'some string',
+          geoLat: 'some string',
+          geoLng: 'some string',
+          website: 'some string',
+          thumbnail: 'some string',
+        });
 
-        const result = await updateFairteilerAction(formData);
-
-        expect(result.success).toBe(false);
-        if (!result.success) {
-          expect(result.error).toContain('Session expired');
-        }
+        expect(result?.serverError).toContain('Session expired');
       });
 
-      it('should handle invalid authentication tokens', async () => {
+      it('should surface invalid authentication tokens as serverError', async () => {
         const invalidTokenError = new Error('Invalid token');
         vi.mocked(auth.api.removeMember).mockRejectedValue(invalidTokenError);
 
@@ -1438,11 +1287,7 @@ describe('Authentication Actions', () => {
           organizationId: 'fairteiler-123',
           email: 'member@example.com',
         });
-
-        expect(result.success).toBe(false);
-        if (!result.success) {
-          expect(result.error).toBe('Invalid token');
-        }
+        expect(result?.serverError).toBe('Invalid token');
       });
     });
   });

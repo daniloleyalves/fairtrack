@@ -14,7 +14,7 @@ export function getPlatformKeyFigures(
   const totalContributions = filteredData.length;
 
   const uniqueContributors = new Set(
-    filteredData.map((contribution) => contribution.contributorEmail),
+    filteredData.map((contribution) => contribution.contributorId),
   );
   const activeContributors = uniqueContributors.size;
 
@@ -148,29 +148,6 @@ export function getPlatformContributionsByFairteiler(
     .map(([description, value], index) => ({
       position: index + 1,
       value: parseFloat(value.toFixed(2)),
-      description,
-    }));
-}
-
-export function getPlatformCoolingRequirements(
-  filteredData: vContribution[],
-): AttributeDataPoint[] {
-  const counts: Record<string, number> = {};
-
-  filteredData.forEach((c) => {
-    let label: string;
-    if (c.foodCool === true) label = 'Kühlung erforderlich';
-    else if (c.foodCool === false) label = 'Keine Kühlung';
-    else label = 'Unbekannt';
-
-    counts[label] = (counts[label] || 0) + 1;
-  });
-
-  return Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
-    .map(([description, value], index) => ({
-      position: index + 1,
-      value,
       description,
     }));
 }

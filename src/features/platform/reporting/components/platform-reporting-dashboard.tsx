@@ -5,9 +5,9 @@ import { KeyFigure } from '@/features/statistics/components/key-figure';
 import { TimespanPicker } from '@/features/statistics/components/timespan-picker';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { defaultDateRange } from '@/lib/config/site-config';
-import { BlurFade } from '@components/magicui/blur-fade';
+import { startOfYear } from 'date-fns';
 import { useState } from 'react';
+import type { DateRange } from 'react-day-picker';
 import {
   getPlatformKeyFigures,
   getPlatformVolumeTrendData,
@@ -18,6 +18,7 @@ import {
   getPlatformCalendarData,
 } from '../converter';
 import { PlatformFairteilerMap } from '../../../statistics/components/platform-fairteiler-map';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { ChartFilter } from '@/features/statistics/components/chart-filter';
 import { VolumeTrendChart } from '@/features/statistics/components/volume-trend-chart';
 import { Fairteiler, vContribution } from '@/server/db/db-types';
@@ -31,14 +32,17 @@ import { DataCalendar } from '@/features/fairteiler/dashboard/components/contrib
 interface PlatformReportingDashboardProps {
   data: vContribution[];
   fairteilers: Fairteiler[];
+  canExport: boolean;
 }
 
 export function PlatformReportingDashboard({
   data,
   fairteilers,
+  canExport,
 }: PlatformReportingDashboardProps) {
-  const [filters, setFilters] = useState<ReportFilters>({
-    dateRange: defaultDateRange,
+  const [filters, setFilters] = useState<ReportFilters>(() => {
+    const today = new Date();
+    return { dateRange: { from: startOfYear(today), to: today } };
   });
 
   const filteredData = applyFilters(data, filters);
@@ -77,10 +81,11 @@ export function PlatformReportingDashboard({
 
   return (
     <>
-      {/* Export Button */}
-      <div className='flex items-center justify-center sm:justify-end'>
-        <ExportButton filters={filters} scope='platform' />
-      </div>
+      {canExport && (
+        <div className='flex items-center justify-center sm:justify-end'>
+          <ExportButton filters={filters} scope='platform' />
+        </div>
+      )}
       {/* Active Filters Display */}
       <Card className='flex flex-col py-0 lg:flex-row'>
         <CardContent className='flex flex-wrap items-center justify-center gap-x-4 gap-y-2 py-4 sm:justify-start'>
@@ -89,6 +94,7 @@ export function PlatformReportingDashboard({
           </span>
 
           <TimespanPicker
+            dateRange={filters.dateRange as DateRange}
             onDateRangeChange={(e) =>
               setFilters((prev) => ({
                 ...prev,
@@ -177,16 +183,16 @@ export function PlatformReportingDashboard({
       </Card>
 
       <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-        {keyFigureData.map((fig, i) => (
-          <BlurFade key={fig.description} delay={i * 0.05} duration={0.2}>
+        {keyFigureData.map((fig) => (
+          <div key={fig.description}>
             <KeyFigure keyFigure={fig} />
-          </BlurFade>
+          </div>
         ))}
       </div>
 
       {/* Variety & Sourcing Section */}
       <div className='grid grid-cols-1 gap-4 xl:grid-cols-2'>
-        <BlurFade delay={0.25} duration={0.2}>
+        <div>
           <AttributeDistributionChart
             attributeDistribution={{
               name: 'Kategorie',
@@ -197,8 +203,8 @@ export function PlatformReportingDashboard({
             }
             title='Kategorien'
           />
-        </BlurFade>
-        <BlurFade delay={0.3} duration={0.2}>
+        </div>
+        <div>
           <AttributeDistributionChart
             attributeDistribution={{
               name: 'Herkunft',
@@ -209,8 +215,8 @@ export function PlatformReportingDashboard({
             }
             title='Herkünfte'
           />
-        </BlurFade>
-        <BlurFade delay={0.35} duration={0.2}>
+        </div>
+        <div>
           <AttributeDistributionChart
             attributeDistribution={{
               name: 'Betrieb',
@@ -221,8 +227,8 @@ export function PlatformReportingDashboard({
             }
             title='Betriebe'
           />
-        </BlurFade>
-        <BlurFade delay={0.4} duration={0.2}>
+        </div>
+        <div>
           <AttributeDistributionChart
             attributeDistribution={{
               name: 'Fairteiler',
@@ -233,40 +239,42 @@ export function PlatformReportingDashboard({
             }
             title='Fairteiler'
           />
-        </BlurFade>
+        </div>
       </div>
 
       {/* Geographic Map */}
-      <BlurFade delay={0.35} duration={0.2}>
-        <PlatformFairteilerMap fairteilers={fairteilers} />
-      </BlurFade>
+      <div>
+        <ErrorBoundary sentryTags={{ component: 'platform-fairteiler-map' }}>
+          <PlatformFairteilerMap fairteilers={fairteilers} />
+        </ErrorBoundary>
+      </div>
 
       {/* Time Normalized Momentum Chart */}
-      <BlurFade delay={0.25} duration={0.2}>
+      <div>
         <TimeNormalizedMomentumChart
           title='Monatliches Momentum (kontinuierlich)'
           data={volumeTrendData}
         />
-      </BlurFade>
+      </div>
 
       {/* Volume Trend Section */}
-      <BlurFade delay={0.1} duration={0.2}>
+      <div>
         <VolumeTrendChart
           title='Gerettete Lebensmittel über Zeit'
           data={volumeTrendData}
         />
-      </BlurFade>
+      </div>
 
       {/* Cumulative Trend Chart */}
-      <BlurFade delay={0.15} duration={0.2}>
+      <div>
         <CumulativeTrendChart
           title='Gerettete Lebensmittel über Zeit (Kumulativ)'
           data={volumeTrendData}
         />
-      </BlurFade>
+      </div>
 
       {/* Calendar */}
-      <BlurFade delay={0.3} duration={0.2}>
+      <div>
         <div className='max-w-xl'>
           <DataCalendar
             data={calendarData}
@@ -275,7 +283,7 @@ export function PlatformReportingDashboard({
             exportFilename='platform-kalender'
           />
         </div>
-      </BlurFade>
+      </div>
     </>
   );
 }

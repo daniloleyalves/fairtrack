@@ -33,12 +33,14 @@ import {
   getInviteMemberTemplate,
   getInviteMemberText,
 } from '@/lib/services/resend/invite-member';
-import { updateUserSecureStatus } from '@server/dal';
-import bcrypt from 'bcrypt';
+import { updateUserSecureStatus } from '@server/user/dal';
 
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,
+  advanced: {
+    disableCSRFCheck: process.env.NEXT_PUBLIC_ENV === 'testing',
+  },
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema: {
@@ -57,17 +59,12 @@ export const auth = betterAuth({
       enabled: true,
       maxAge: 5 * 60, // Cache duration in seconds
     },
+    freshAge: 0,
   },
   rateLimit: {
     enabled: process.env.NEXT_PUBLIC_ENV !== 'testing',
     window: 10,
     max: 100,
-    // customRules: {
-    //     "/example/path": {
-    //         window: 10,
-    //         max: 100
-    //     }
-    // },
     storage: 'memory',
     modelName: 'rateLimit',
   },
@@ -84,64 +81,23 @@ export const auth = betterAuth({
     },
     account: {
       update: {
-        after: async (_account, ctx) => {
-          const body = ctx?.body as { token: string; newPassword?: string };
-          const verificationEntry = await db.query.verification.findFirst({
-            where: (verification, { eq }) =>
-              eq(verification.identifier, `reset-password:${body.token}`),
-          });
-
-          if (!verificationEntry) {
-            console.error('Could not find verification entry');
-            return;
-          }
-
-          const user = await db.query.user.findFirst({
-            where: (user, { eq }) => eq(user.id, verificationEntry.value),
-          });
-
-          if (!user) {
-            console.error('Could not find user');
-            return;
-          }
-
-          // Check if password field was updated in the account
-          // This happens during password reset or password change operations
-          const hasPasswordUpdate =
-            body && 'newPassword' in (body as Record<string, unknown>);
-
-          if (hasPasswordUpdate) {
-            try {
-              await updateUserSecureStatus(user.id, true);
-              console.log(
-                `User ${user.name} marked as secure after password update`,
-              );
-            } catch (error) {
-              console.error('Failed to update user secure status:', error);
-              // Don't throw here to avoid breaking the password update flow
-            }
+        after: async (account, ctx) => {
+          const body = ctx?.body as { newPassword?: string } | undefined;
+          if (!body?.newPassword) return;
+          try {
+            await updateUserSecureStatus(account.userId, true);
+          } catch (error) {
+            console.error('Failed to update user secure status:', error);
           }
         },
       },
     },
-    // user: {
-    //     create: {
-    //         after: async (user) => {
-    //             await auth.api.addMember({
-    //                 body: {
-    //                     userId: user.id,
-    //                     organizationId: defaultOrganizationId,
-    //                     role: 'disabled'
-    //                 }
-    //             });
-    //         }
-    //     }
-    // }
   },
   plugins: [
     // jwt(),
     admin(),
     organization({
+      requireEmailVerificationOnInvitation: false,
       schema: {
         organization: {
           modelName: 'fairteiler',
@@ -207,13 +163,12 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     autoSignIn: false,
-    password: {
-      hash: async (password) => {
-        return await bcrypt.hash(password, 10);
-      },
-      verify: async ({ hash, password }) => {
-        return await bcrypt.compare(password, hash);
-      },
+    onPasswordReset: async ({ user }) => {
+      try {
+        await updateUserSecureStatus(user.id, true);
+      } catch (error) {
+        console.error('Failed to update user secure status:', error);
+      }
     },
     sendResetPassword: async ({ user, url }) => {
       if (
@@ -247,7 +202,7 @@ export const auth = betterAuth({
         required: true,
       },
       phone: {
-        type: 'number',
+        type: 'string',
         required: false,
       },
       foodsharingId: {
@@ -297,12 +252,14 @@ export async function getActiveOrganizationId(
 export async function checkPermissionOnServer(
   headers: Headers,
   checks: Record<string, string[]>,
+  organizationId?: string,
 ) {
   console.log('SERVER: Forwarding permission check to auth service.');
   return auth.api.hasPermission({
     headers: headers,
     body: {
-      permission: checks,
+      permissions: checks,
+      ...(organizationId ? { organizationId } : {}),
     },
   });
 }
