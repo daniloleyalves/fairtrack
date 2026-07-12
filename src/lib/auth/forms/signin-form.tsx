@@ -18,6 +18,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import * as Sentry from '@sentry/nextjs';
 import { authClient } from '../auth-client';
 import { getErrorMessage } from '../auth-helpers';
 import { handleClientOperation, noop } from '@/lib/client-error-handling';
@@ -196,6 +197,9 @@ export function SignInForm({
                     });
                   }
                 } catch (error) {
+                  Sentry.captureException(error, {
+                    tags: { flow: 'sign-in', step: 'accept-invitation' },
+                  });
                   console.error('Error accepting invitation:', error);
                 }
               }
@@ -217,6 +221,9 @@ export function SignInForm({
                     : '/hub/user/dashboard',
                 );
               } catch (error) {
+                Sentry.captureException(error, {
+                  tags: { flow: 'sign-in', step: 'session-check' },
+                });
                 console.error('Error checking session:', error);
                 router.push('/hub/user/dashboard');
               }
@@ -233,6 +240,9 @@ export function SignInForm({
       },
       setIsPending,
       (error) => {
+        Sentry.captureException(error, {
+          tags: { flow: 'sign-in', step: 'submit' },
+        });
         console.error('Error signing in:', error);
         signInForm.setError('root.serverError', {
           message: 'Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.',
