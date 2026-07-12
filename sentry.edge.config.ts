@@ -4,15 +4,20 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from '@sentry/nextjs';
+import {
+  SENTRY_DSN,
+  SENTRY_ENVIRONMENT,
+  sentryTracesSampler,
+} from '@/lib/monitoring/sentry';
 
 Sentry.init({
   enabled: process.env.NODE_ENV === 'production',
 
-  dsn: process.env.SENTRY_CLIENT_KEY,
+  dsn: SENTRY_DSN,
 
-  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1,
+  environment: SENTRY_ENVIRONMENT,
 
-  // Setting this option to true will print useful information to the console while you're setting up Sentry.
+  tracesSampler: sentryTracesSampler,
+
   debug: false,
 });
