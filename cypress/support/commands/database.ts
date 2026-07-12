@@ -6,6 +6,7 @@ import type {
   DatabaseUser,
   DatabaseFairteiler,
   DatabasePreference,
+  DatabaseCheckin,
 } from '../types';
 
 // ============================================================================
@@ -51,6 +52,17 @@ declare global {
         origins: DatabasePreference[];
         companies: DatabasePreference[];
       }>;
+
+      /**
+       * Create a contribution (food + checkin) for a fairteiler.
+       * Uses the fixed category/origin/company ids from seedBasicTestData.
+       */
+      createTestContribution(options: {
+        fairteilerId: string;
+        userId: string;
+        title?: string;
+        quantity?: number;
+      }): Chainable<DatabaseCheckin>;
 
       /**
        * Get user by email from database
@@ -102,6 +114,15 @@ Cypress.Commands.add('cleanDatabase', () => {
 // Custom command to seed basic test data
 Cypress.Commands.add('seedBasicTestData', () => {
   return cy.task('seedBasicTestData');
+});
+
+// Custom command to create a contribution for a fairteiler
+Cypress.Commands.add('createTestContribution', (options) => {
+  return cy
+    .task('createTestContribution', options)
+    .then(
+      (checkin) => checkin as DatabaseCheckin,
+    ) as Cypress.Chainable<DatabaseCheckin>;
 });
 
 // Custom command to get user by email
