@@ -140,7 +140,7 @@ function UserHubAccountMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className='cursor-pointer rounded-lg'>
-        <UserAvatar user={user} />
+        <UserAvatar user={user} fallbackClassName='bg-white text-primary' />
       </DropdownMenuTrigger>
       <DropdownMenuContent className='w-56' align='end' sideOffset={4}>
         <DropdownMenuLabel className='p-2 font-normal'>

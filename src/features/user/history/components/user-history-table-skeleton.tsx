@@ -7,7 +7,6 @@ export function UserHistoryTableSkeleton() {
       <CardContent>
         <div className='mb-4 flex flex-1 flex-col flex-wrap gap-2 md:flex-row md:items-center md:gap-4'>
           <Skeleton variant='onCard' className='h-9 w-[250px]' />
-          <Skeleton variant='onCard' className='h-9 w-[200px]' />
           <div className='flex flex-wrap gap-2'>
             <Skeleton variant='onCard' className='h-9 w-[120px]' />
             <Skeleton variant='onCard' className='h-9 w-[100px]' />
