@@ -50,3 +50,4 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 - `hasPermission` / `checkRolePermission` call sites updated for the 1.5 `permission` → `permissions` rename.
 - Stray `console.log('loading session')` removed from `loadSession`, which fired on every session check.
 - `checkPermissionOnServer` retries on `MEMBER_NOT_FOUND` — a transient consistency gap right after a membership is created (e.g. accepting an invitation), not a real authorization failure.
+- CI `test`/`e2e` jobs share a `concurrency` group — multiple simultaneous workflow runs were racing against the same test database, corrupting each other's fixtures mid-run.
