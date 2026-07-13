@@ -6,12 +6,13 @@
 import * as Sentry from '@sentry/nextjs';
 import {
   SENTRY_DSN,
+  SENTRY_ENABLED,
   SENTRY_ENVIRONMENT,
   sentryTracesSampler,
 } from '@/lib/monitoring/sentry';
 
 Sentry.init({
-  enabled: process.env.NODE_ENV === 'production',
+  enabled: SENTRY_ENABLED,
 
   dsn: SENTRY_DSN,
 
