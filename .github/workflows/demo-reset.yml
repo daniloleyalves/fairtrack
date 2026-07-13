@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # Manual trigger
 
 env:
-  PNPM_VERSION: latest
+  PNPM_VERSION: 10.12.1
 
 jobs:
   reset-demo-db:
