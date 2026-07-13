@@ -6,6 +6,10 @@ export const SENTRY_DSN =
 
 export const SENTRY_ENVIRONMENT = process.env.NEXT_PUBLIC_ENV;
 
+export const SENTRY_ENABLED =
+  process.env.NODE_ENV === 'production' &&
+  process.env.NEXT_PUBLIC_ENV !== 'testing';
+
 const UNSAMPLED_TRANSACTION_NAMES = ['/monitoring'];
 
 const HEALTHY_TRACES_SAMPLE_RATE = 0.15;
