@@ -18,7 +18,6 @@ import {
   tag,
 } from '../db/schema';
 import { GenericItem, Tag } from '../db/db-types';
-import { AuthError } from '../api-helpers';
 import { DatabaseError, handleDatabaseError } from '../error-handling';
 import { loadAuthenticatedSession } from '../user/dal';
 
@@ -92,7 +91,7 @@ export const loadActiveOrganization = cache(async (headers: Headers) => {
   const session = await loadAuthenticatedSession(headers);
   const fairteilerId = session.session.activeOrganizationId;
   if (!fairteilerId) {
-    throw new AuthError('No active organization');
+    return null;
   }
 
   const [error, data] = await attempt(
