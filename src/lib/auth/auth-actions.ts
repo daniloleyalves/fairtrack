@@ -49,6 +49,9 @@ export const updateFairteilerAction = fairteilerAction
   .inputSchema(fairteilerProfileSchema)
   .action(async ({ parsedInput }) => {
     const currentFairteiler = await getActiveFairteiler();
+    if (!currentFairteiler) {
+      throw new NotFoundError('active fairteiler');
+    }
 
     const permissionResult = await checkPermissionOnServer(await headers(), {
       organization: ['update'],
@@ -153,6 +156,9 @@ export const addAccessViewAction = fairteilerAction
       }
 
       const fairteiler = await getActiveFairteiler();
+      if (!fairteiler) {
+        throw new NotFoundError('active fairteiler');
+      }
       const viewCount =
         fairteiler.members.filter((m) => m.user.email.startsWith(`${role}-`))
           .length + 1;
