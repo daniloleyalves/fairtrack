@@ -97,28 +97,25 @@ describe('handleDatabaseError', () => {
     ).toThrow('Missing required data for update contribution');
   });
 
-  it('throws a generic error and reports to Sentry for unknown codes', () => {
+  it('throws a generic error for unknown codes', () => {
     const pgError = { code: '42P01' };
 
     expect(() => handleDatabaseError(pgError, 'load', 'contributions')).toThrow(
       'Failed to load contributions',
     );
-    expect(Sentry.captureException).toHaveBeenCalledWith(pgError, {
-      tags: { operation: 'load', resource: 'contributions' },
-    });
   });
 
   it('throws a generic error for non-object errors', () => {
     expect(() => handleDatabaseError('connection refused', 'save')).toThrow(
       'Failed to save data',
     );
-    expect(Sentry.captureException).toHaveBeenCalledWith('connection refused', {
-      tags: { operation: 'save', resource: 'unknown' },
-    });
   });
 
-  it('does not report constraint violations to Sentry', () => {
+  it('does not report to Sentry itself', () => {
     expect(() => handleDatabaseError({ code: '23505' }, 'create')).toThrow(
+      DatabaseError,
+    );
+    expect(() => handleDatabaseError({ code: '42P01' }, 'load')).toThrow(
       DatabaseError,
     );
     expect(Sentry.captureException).not.toHaveBeenCalled();

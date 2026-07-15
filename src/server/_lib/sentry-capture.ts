@@ -6,7 +6,6 @@ const NON_REPORTED_ERROR_NAMES = new Set([
   'PermissionError',
   'NotFoundError',
   'AuthError',
-  'DatabaseError',
 ]);
 
 export function captureUnexpected(error: unknown): void {
