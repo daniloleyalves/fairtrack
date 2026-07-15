@@ -32,7 +32,6 @@ import {
   mockOrigins,
   mockSession,
 } from '@/__tests__/mocks/server-only';
-import { NotFoundError } from '../error-handling';
 
 // Mock all DAL functions
 vi.mock('../contribution/dal', () => ({
@@ -220,12 +219,10 @@ describe('DTO Layer', () => {
         });
       });
 
-      it('should fail when DAL returns null', async () => {
+      it('should return null when DAL returns null', async () => {
         vi.mocked(fairteilerDal.loadActiveOrganization).mockResolvedValue(null);
 
-        await expect(getActiveFairteiler()).rejects.toThrow(
-          new NotFoundError('active fairteiler'),
-        );
+        await expect(getActiveFairteiler()).resolves.toBeNull();
       });
     });
   });

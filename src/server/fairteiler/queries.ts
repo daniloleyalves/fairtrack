@@ -72,7 +72,7 @@ export async function getTags() {
 export async function getActiveFairteiler() {
   const fairteiler = await loadActiveOrganization(await headers());
   if (!fairteiler) {
-    throw new NotFoundError('active fairteiler');
+    return null;
   }
 
   return {
