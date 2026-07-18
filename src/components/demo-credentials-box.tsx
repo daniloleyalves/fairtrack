@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
 import { Badge } from '@components/ui/badge';
 import { Loader2, User } from 'lucide-react';
 import { authClient } from '@/lib/auth/auth-client';
+import { usePendingRedirect } from '@/lib/hooks/use-pending-redirect';
 
 const isDemo = process.env.NEXT_PUBLIC_ENV === 'demo';
 
@@ -42,7 +42,9 @@ const DEMO_USERS = [
 export function DemoCredentialsBox() {
   const [loginInProgress, setLoginInProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  const { redirect } = usePendingRedirect(() => {
+    setLoginInProgress(null);
+  });
 
   if (!isDemo) return null;
 
@@ -60,7 +62,7 @@ export function DemoCredentialsBox() {
           onSuccess: async () => {
             const session = await authClient.getSession();
             const hasOrganization = session.data?.session?.activeOrganizationId;
-            router.push(
+            redirect(
               hasOrganization
                 ? '/hub/fairteiler/dashboard'
                 : '/hub/user/dashboard',
