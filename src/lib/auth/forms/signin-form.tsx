@@ -29,6 +29,7 @@ import {
   checkUserPasswordStatusAction,
 } from '../auth-actions';
 import { invokeAction } from '@/lib/hooks/use-form-action';
+import { usePendingRedirect } from '@/lib/hooks/use-pending-redirect';
 import { SecurityModal } from '../components/security-modal';
 
 export function SignInForm({
@@ -71,6 +72,15 @@ export function SignInForm({
       password: '',
     },
   });
+
+  const { isRedirectPending, redirect } = usePendingRedirect(() => {
+    emailForm.reset();
+    signInForm.reset();
+    setUserChecked(false);
+    setUserHasPassword(null);
+    setCurrentEmail('');
+  });
+  const isBusy = isPending || isRedirectPending;
 
   useEffect(() => {
     const invitationId = searchParams.get('invitationId');
@@ -166,12 +176,6 @@ export function SignInForm({
           },
           {
             onSuccess: async () => {
-              emailForm.reset();
-              signInForm.reset();
-              setUserChecked(false);
-              setUserHasPassword(null);
-              setCurrentEmail('');
-
               // Accept invitation if present and valid
               if (invitationData?.isValid) {
                 try {
@@ -186,29 +190,27 @@ export function SignInForm({
                 }
               }
 
-              const callbackUrl = searchParams.get('callbackUrl');
-              if (callbackUrl) {
-                router.push(callbackUrl);
-                return;
+              let redirectTo = searchParams.get('callbackUrl');
+
+              if (!redirectTo) {
+                // Check organization membership to determine redirect
+                try {
+                  const session = await authClient.getSession();
+                  const hasOrganization =
+                    session.data?.session?.activeOrganizationId;
+                  redirectTo = hasOrganization
+                    ? '/hub/fairteiler/dashboard'
+                    : '/hub/user/dashboard';
+                } catch (error) {
+                  Sentry.captureException(error, {
+                    tags: { flow: 'sign-in', step: 'session-check' },
+                  });
+                  console.error('Error checking session:', error);
+                  redirectTo = '/hub/user/dashboard';
+                }
               }
 
-              // Check organization membership to determine redirect
-              try {
-                const session = await authClient.getSession();
-                const hasOrganization =
-                  session.data?.session?.activeOrganizationId;
-                router.push(
-                  hasOrganization
-                    ? '/hub/fairteiler/dashboard'
-                    : '/hub/user/dashboard',
-                );
-              } catch (error) {
-                Sentry.captureException(error, {
-                  tags: { flow: 'sign-in', step: 'session-check' },
-                });
-                console.error('Error checking session:', error);
-                router.push('/hub/user/dashboard');
-              }
+              redirect(redirectTo);
             },
             onError: (ctx) => {
               reportAuthError(ctx.error, {
@@ -326,6 +328,7 @@ export function SignInForm({
                         variant='ghost'
                         size='sm'
                         className='absolute top-1/2 right-1 h-8 -translate-y-1/2 px-2 text-xs'
+                        disabled={isBusy}
                         onClick={() => handleBackToEmail()}
                       >
                         Ändern
@@ -350,7 +353,7 @@ export function SignInForm({
                       className='text-center'
                       type='password'
                       placeholder='passwort'
-                      disabled={isPending}
+                      disabled={isBusy}
                     />
                   </FormControl>
                   <FormMessage className='text-center' />
@@ -368,10 +371,10 @@ export function SignInForm({
               size='lg'
               className='w-full'
               type='submit'
-              disabled={isPending || !signInForm.formState.isDirty}
+              disabled={isBusy || !signInForm.formState.isDirty}
             >
-              {isPending ? <Loader2 className='animate-spin' /> : <Lock />}
-              Anmelden
+              {isBusy ? <Loader2 className='animate-spin' /> : <Lock />}
+              {isBusy ? 'Anmeldung läuft…' : 'Anmelden'}
             </Button>
           </form>
         </Form>
