@@ -1,4 +1,4 @@
-import type { ErrorEvent } from '@sentry/nextjs';
+import type { Breadcrumb, ErrorEvent } from '@sentry/nextjs';
 
 const FALLBACK_SENTRY_DSN =
   'https://58a1a1907f0139cb73444bbee77f46ad@o4509632474775552.ingest.de.sentry.io/4509632476217424';
@@ -45,5 +45,33 @@ export function sentryBeforeSend(event: ErrorEvent): ErrorEvent | null {
     return null;
   }
 
+  if (event.message) {
+    event.message = scrubEmails(event.message);
+  }
+  if (event.request?.url) {
+    event.request.url = scrubEmails(event.request.url);
+  }
+
   return event;
+}
+
+const EMAIL_PATTERN = /[\w.+-]+@[\w-]+\.[\w.-]+/gi;
+
+export function scrubEmails(text: string): string {
+  return text.replace(EMAIL_PATTERN, '[email]');
+}
+
+export function sentryBeforeBreadcrumb(breadcrumb: Breadcrumb): Breadcrumb {
+  if (breadcrumb.message) {
+    breadcrumb.message = scrubEmails(breadcrumb.message);
+  }
+  if (breadcrumb.data) {
+    for (const [key, value] of Object.entries(breadcrumb.data)) {
+      if (typeof value === 'string') {
+        breadcrumb.data[key] = scrubEmails(value);
+      }
+    }
+  }
+
+  return breadcrumb;
 }
