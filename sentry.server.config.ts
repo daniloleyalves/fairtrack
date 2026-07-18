@@ -7,6 +7,7 @@ import {
   SENTRY_DSN,
   SENTRY_ENABLED,
   SENTRY_ENVIRONMENT,
+  sentryBeforeSend,
   sentryTracesSampler,
 } from '@/lib/monitoring/sentry';
 
@@ -18,6 +19,8 @@ Sentry.init({
   environment: SENTRY_ENVIRONMENT,
 
   tracesSampler: sentryTracesSampler,
+
+  beforeSend: sentryBeforeSend,
 
   debug: false,
 });

@@ -1,3 +1,5 @@
+import type { ErrorEvent } from '@sentry/nextjs';
+
 const FALLBACK_SENTRY_DSN =
   'https://58a1a1907f0139cb73444bbee77f46ad@o4509632474775552.ingest.de.sentry.io/4509632476217424';
 
@@ -28,4 +30,20 @@ export function sentryTracesSampler(context: {
   }
 
   return HEALTHY_TRACES_SAMPLE_RATE;
+}
+
+const NOISE_MESSAGE_PREFIX = 'ResizeObserver loop';
+
+export function sentryBeforeSend(event: ErrorEvent): ErrorEvent | null {
+  const exceptions = event.exception?.values ?? [];
+  const isNoise = exceptions.some(
+    (exception) =>
+      exception.type === 'AbortError' ||
+      (exception.value ?? '').startsWith(NOISE_MESSAGE_PREFIX),
+  );
+  if (isNoise || (event.message ?? '').startsWith(NOISE_MESSAGE_PREFIX)) {
+    return null;
+  }
+
+  return event;
 }
