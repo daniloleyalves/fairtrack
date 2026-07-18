@@ -22,6 +22,7 @@ import z from 'zod';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authClient } from '../auth-client';
 import { getErrorMessage } from '../auth-helpers';
+import { reportAuthError } from '../report-auth-error';
 import { toast } from 'sonner';
 import { handleClientOperation, noop } from '@/lib/client-error-handling';
 import { SignUpFormValues, signUpSchema } from '../schemas';
@@ -167,6 +168,10 @@ export function SignUpForm({
                   }
                 },
                 onError: (signInCtx) => {
+                  reportAuthError(signInCtx.error, {
+                    flow: 'sign-up',
+                    step: 'auto-sign-in',
+                  });
                   console.error(
                     'Sign-in after signup failed:',
                     signInCtx.error,
@@ -185,6 +190,7 @@ export function SignUpForm({
             );
           },
           onError: (ctx) => {
+            reportAuthError(ctx.error, { flow: 'sign-up', step: 'submit' });
             console.error(ctx.error);
             form.setError('root.serverError', {
               // eslint-disable-next-line
