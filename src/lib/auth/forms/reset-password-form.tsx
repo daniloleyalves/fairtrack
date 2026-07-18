@@ -19,7 +19,7 @@ import z from 'zod';
 import { authClient } from '../auth-client';
 import { getErrorMessage } from '../auth-helpers';
 import { reportAuthError } from '../report-auth-error';
-import { useRouter } from 'next/navigation';
+import { usePendingRedirect } from '@/lib/hooks/use-pending-redirect';
 import { resetPasswordSchema } from '../schemas';
 
 export function ResetPasswordForm({
@@ -29,8 +29,6 @@ export function ResetPasswordForm({
   const [isPending, setIsPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const router = useRouter();
-
   const form = useForm<z.infer<typeof resetPasswordSchema>>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
@@ -38,6 +36,12 @@ export function ResetPasswordForm({
       passwordConfirm: '',
     },
   });
+
+  const { isRedirectPending, redirect } = usePendingRedirect(() => {
+    form.reset();
+    setIsPending(false);
+  });
+  const isBusy = isPending || isRedirectPending;
 
   async function onSubmit(values: z.infer<typeof resetPasswordSchema>) {
     // Clear all existing errors before a new submission
@@ -53,7 +57,7 @@ export function ResetPasswordForm({
             setIsPending(true);
           },
           onSuccess: () => {
-            router.push('/sign-in');
+            redirect('/sign-in');
           },
           onError: (ctx) => {
             reportAuthError(ctx.error, {
@@ -94,7 +98,7 @@ export function ResetPasswordForm({
                     className='text-center'
                     placeholder='********'
                     type={showPassword ? 'text' : 'password'}
-                    disabled={isPending}
+                    disabled={isBusy}
                   />
                   {!showPassword ? (
                     <button
@@ -135,7 +139,7 @@ export function ResetPasswordForm({
                     className='text-center'
                     placeholder='********'
                     type={showPassword ? 'text' : 'password'}
-                    disabled={isPending}
+                    disabled={isBusy}
                   />
                   {!showPassword ? (
                     <button
@@ -172,9 +176,9 @@ export function ResetPasswordForm({
             size='lg'
             className='w-full'
             type='submit'
-            disabled={isPending || !form.formState.isDirty}
+            disabled={isBusy || !form.formState.isDirty}
           >
-            {isPending ? <Loader2 className='animate-spin' /> : <Lock />}
+            {isBusy ? <Loader2 className='animate-spin' /> : <Lock />}
             Passwort aktualisieren
           </Button>
         </div>
