@@ -14,6 +14,14 @@ export const SENTRY_ENABLED =
 
 const UNSAMPLED_TRANSACTION_NAMES = ['/monitoring'];
 
+const FULLY_SAMPLED_TRANSACTION_NAMES = [
+  '/api/auth',
+  '/sign-in',
+  '/sign-up',
+  '/reset-password',
+  '/contribution',
+];
+
 const HEALTHY_TRACES_SAMPLE_RATE = 0.15;
 
 export function sentryTracesSampler(context: {
@@ -27,6 +35,10 @@ export function sentryTracesSampler(context: {
   const name = context.name ?? '';
   if (UNSAMPLED_TRANSACTION_NAMES.some((route) => name.includes(route))) {
     return 0;
+  }
+
+  if (FULLY_SAMPLED_TRANSACTION_NAMES.some((route) => name.includes(route))) {
+    return 1;
   }
 
   return HEALTHY_TRACES_SAMPLE_RATE;

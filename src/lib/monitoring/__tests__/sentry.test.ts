@@ -4,11 +4,43 @@ import {
   scrubEmails,
   sentryBeforeBreadcrumb,
   sentryBeforeSend,
+  sentryTracesSampler,
 } from '../sentry';
 
 function errorEvent(overrides: Partial<ErrorEvent>): ErrorEvent {
   return { type: undefined, ...overrides } as ErrorEvent;
 }
+
+describe('sentryTracesSampler', () => {
+  it('follows the parent sampling decision when present', () => {
+    expect(sentryTracesSampler({ parentSampled: true, name: '/other' })).toBe(
+      1,
+    );
+    expect(
+      sentryTracesSampler({ parentSampled: false, name: '/sign-in' }),
+    ).toBe(0);
+  });
+
+  it('never samples the monitoring tunnel', () => {
+    expect(sentryTracesSampler({ name: 'POST /monitoring' })).toBe(0);
+  });
+
+  it.each([
+    'POST /api/auth/[...all]',
+    'GET /sign-in',
+    '/sign-up',
+    '/reset-password',
+    '/hub/user/contribution',
+    '/hub/fairteiler/contribution',
+  ])('fully samples conversion-critical transaction %s', (name) => {
+    expect(sentryTracesSampler({ name })).toBe(1);
+  });
+
+  it('samples everything else at the baseline rate', () => {
+    expect(sentryTracesSampler({ name: 'GET /hub/user/dashboard' })).toBe(0.15);
+    expect(sentryTracesSampler({})).toBe(0.15);
+  });
+});
 
 describe('sentryBeforeSend', () => {
   it('drops events whose exception is an AbortError', () => {
