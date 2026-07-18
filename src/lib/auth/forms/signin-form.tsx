@@ -21,6 +21,7 @@ import { z } from 'zod';
 import * as Sentry from '@sentry/nextjs';
 import { authClient } from '../auth-client';
 import { getErrorMessage } from '../auth-helpers';
+import { reportAuthError } from '../report-auth-error';
 import { handleClientOperation, noop } from '@/lib/client-error-handling';
 import { signInSchema, emailOnlySchema } from '../schemas';
 import {
@@ -210,6 +211,10 @@ export function SignInForm({
               }
             },
             onError: (ctx) => {
+              reportAuthError(ctx.error, {
+                flow: 'sign-in',
+                step: 'credentials',
+              });
               console.error(ctx.error);
               signInForm.setError('root.serverError', {
                 // eslint-disable-next-line

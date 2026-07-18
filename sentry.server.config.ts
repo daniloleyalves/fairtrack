@@ -7,6 +7,8 @@ import {
   SENTRY_DSN,
   SENTRY_ENABLED,
   SENTRY_ENVIRONMENT,
+  sentryBeforeBreadcrumb,
+  sentryBeforeSend,
   sentryTracesSampler,
 } from '@/lib/monitoring/sentry';
 
@@ -18,6 +20,10 @@ Sentry.init({
   environment: SENTRY_ENVIRONMENT,
 
   tracesSampler: sentryTracesSampler,
+
+  beforeSend: sentryBeforeSend,
+
+  beforeBreadcrumb: sentryBeforeBreadcrumb,
 
   debug: false,
 });

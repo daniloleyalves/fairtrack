@@ -18,6 +18,7 @@ import { useForm } from 'react-hook-form';
 import z from 'zod';
 import { authClient } from '../auth-client';
 import { getErrorMessage } from '../auth-helpers';
+import { reportAuthError } from '../report-auth-error';
 import { useRouter } from 'next/navigation';
 import { resetPasswordSchema } from '../schemas';
 
@@ -55,6 +56,10 @@ export function ResetPasswordForm({
             router.push('/sign-in');
           },
           onError: (ctx) => {
+            reportAuthError(ctx.error, {
+              flow: 'reset-password',
+              step: 'submit',
+            });
             console.error(ctx.error);
             form.setError('root.serverError', {
               // eslint-disable-next-line

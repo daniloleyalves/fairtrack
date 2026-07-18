@@ -27,6 +27,7 @@ import { useForm } from 'react-hook-form';
 import { useSearchParams } from 'next/navigation';
 import z from 'zod';
 import { getErrorMessage } from '../auth-helpers';
+import { reportAuthError } from '../report-auth-error';
 import { authClient } from '../auth-client';
 import { sendInstructionsSchema } from '../schemas';
 
@@ -70,6 +71,10 @@ export function SendIntstructionsForm({
             setIsSubmitSuccessful(true);
           },
           onError: (ctx) => {
+            reportAuthError(ctx.error, {
+              flow: 'reset-password',
+              step: 'send-instructions',
+            });
             console.error(ctx.error);
             form.setError('root.serverError', {
               // eslint-disable-next-line
