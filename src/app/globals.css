@@ -203,9 +203,25 @@
   animation: float-gentle 7s ease-in-out infinite;
 }
 
+@keyframes sway-gentle {
+  0%,
+  100% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(5deg);
+  }
+}
+
+.sway-gentle {
+  transform-origin: bottom center;
+  animation: sway-gentle 6s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .blob-animate,
-  .float-gentle {
+  .float-gentle,
+  .sway-gentle {
     animation: none;
   }
 }

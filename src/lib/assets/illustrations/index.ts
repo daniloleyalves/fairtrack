@@ -15,6 +15,14 @@ import FAQIllustration from './faq_illustration.svg';
 import noPageFoundIllustration from './404_illustration.svg';
 import ProfileIllustration from './profile_illustration.svg';
 import PreferencesIllustration from './preferences_illustration.svg';
+import Bag from './bag.svg';
+import Carrot from './carrot.svg';
+import LeafPrimary from './leaf_primary.svg';
+import LeafSecondary from './leaf_secondary.svg';
+import Leaf2Primary from './leaf2_primary.svg';
+import Mushrooms from './mushrooms.svg';
+import Pepper from './pepper.svg';
+import Reddish from './reddish.svg';
 import { StaticImport } from 'next/dist/shared/lib/get-img-props';
 
 export const Illustrations: Record<string, StaticImport> = {
@@ -33,6 +41,14 @@ export const Illustrations: Record<string, StaticImport> = {
   noPageFoundIllustration: noPageFoundIllustration,
   profileIllustration: ProfileIllustration,
   preferencesIllustration: PreferencesIllustration,
+  bag: Bag,
+  carrot: Carrot,
+  leafPrimary: LeafPrimary,
+  leafSecondary: LeafSecondary,
+  leaf2Primary: Leaf2Primary,
+  mushrooms: Mushrooms,
+  pepper: Pepper,
+  reddish: Reddish,
 } as const;
 
 export type Illustrations = typeof Illustrations;

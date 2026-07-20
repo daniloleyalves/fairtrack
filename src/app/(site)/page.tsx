@@ -21,10 +21,15 @@ export default async function Home() {
   const stats = await getPublicImpactStats();
 
   return (
-    <div className='overflow-x-clip pb-24'>
+    <div className='overflow-x-clip pb-20'>
       {/* Hero + live counter */}
       <div className='relative'>
-        <section className='relative mx-auto max-w-5xl px-4 pt-16 sm:pt-24'>
+        <section className='relative mx-auto max-w-5xl px-4 pt-14 sm:pt-20'>
+          <Doodle
+            src={Illustrations.leafPrimary}
+            sway
+            className='top-[18%] right-[4%] hidden w-7 rotate-[25deg] md:block'
+          />
           <h1 className='text-center font-londrina text-6xl font-extrabold lg:text-8xl'>
             <BlurFade delay={0} className='inline-block'>
               <span>RETTEN.&nbsp;</span>
@@ -62,7 +67,7 @@ export default async function Home() {
 
         <section
           aria-label='Gesamtmenge fairteilter Lebensmittel'
-          className='relative mt-8 flex justify-center px-4 pb-16 sm:mt-12'
+          className='relative mt-4 flex justify-center px-4 pb-12 sm:mt-6'
         >
           <div className='relative flex aspect-[5/4] w-[min(92vw,560px)] items-center justify-center'>
             <MorphingBlob
@@ -78,18 +83,35 @@ export default async function Home() {
               amplitude={0.11}
               className='absolute inset-[6%] size-[88%] opacity-15'
             />
-            <FloatingLeaf className='top-[8%] left-[14%] w-7 -rotate-45' />
-            <FloatingLeaf
-              className='top-[16%] right-[10%] w-5 rotate-[30deg]'
+            <Doodle
+              src={Illustrations.carrot}
+              className='top-[5%] left-[4%] w-12 -rotate-12'
+            />
+            <Doodle
+              src={Illustrations.pepper}
+              className='top-[11%] right-[7%] w-9 rotate-12'
+              delay='-2s'
+            />
+            <Doodle
+              src={Illustrations.mushrooms}
+              className='bottom-[9%] left-[8%] w-11 rotate-6'
+              delay='-3.5s'
+            />
+            <Doodle
+              src={Illustrations.bag}
+              className='right-[5%] bottom-[3%] w-12 -rotate-6'
+              delay='-5s'
+            />
+            <Doodle
+              src={Illustrations.reddish}
+              className='top-[46%] -right-[1%] hidden w-9 rotate-[20deg] sm:block'
+              delay='-1.5s'
+            />
+            <Doodle
+              src={Illustrations.leafSecondary}
+              sway
+              className='top-[44%] -left-[1%] hidden w-8 -rotate-[20deg] sm:block'
               delay='-2.5s'
-            />
-            <FloatingLeaf
-              className='bottom-[12%] left-[10%] w-5 rotate-12'
-              delay='-4s'
-            />
-            <FloatingLeaf
-              className='right-[14%] bottom-[8%] w-8 rotate-45'
-              delay='-5.5s'
             />
             <div className='relative z-10 text-center font-londrina text-primary'>
               <h2 className='text-5xl sm:text-8xl'>
@@ -114,15 +136,33 @@ export default async function Home() {
       </div>
 
       <div className='relative'>
-        <div className='mt-16 px-4 md:mt-24'>
+        <div className='relative mt-12 px-4 md:mt-16'>
+          <Doodle
+            src={Illustrations.leaf2Primary}
+            sway
+            className='top-10 left-[6%] hidden w-5 -rotate-12 lg:block'
+            delay='-1.5s'
+          />
           <ImpactSection stats={stats} />
         </div>
 
         {/* Product tour */}
         <section
           aria-labelledby='product-tour-heading'
-          className='relative mx-auto mt-24 max-w-6xl px-4 md:mt-32'
+          className='relative mx-auto mt-20 max-w-6xl px-4 md:mt-24'
         >
+          <Doodle
+            src={Illustrations.leafSecondary}
+            sway
+            className='top-2 left-[8%] hidden w-8 -rotate-[15deg] lg:block'
+            delay='-3s'
+          />
+          <Doodle
+            src={Illustrations.leafPrimary}
+            sway
+            className='right-[5%] -bottom-10 hidden w-6 rotate-[35deg] lg:block'
+            delay='-4.5s'
+          />
           <BlurFade inView>
             <h2
               id='product-tour-heading'
@@ -131,7 +171,7 @@ export default async function Home() {
               FairTrack in Aktion
             </h2>
           </BlurFade>
-          <div className='mt-14'>
+          <div className='mt-10'>
             <ProductTour />
           </div>
         </section>
@@ -139,12 +179,18 @@ export default async function Home() {
         {/* Operator pitch */}
         <section
           aria-labelledby='operator-heading'
-          className='relative mx-auto mt-24 max-w-5xl px-4 md:mt-32'
+          className='relative mx-auto mt-20 max-w-5xl px-4 md:mt-24'
         >
           <MorphingBlob
             fill='#99BB44'
             seed={23}
             className='absolute -top-16 -right-24 -z-10 w-72 opacity-10'
+          />
+          <Doodle
+            src={Illustrations.leaf2Primary}
+            sway
+            className='-top-8 left-[12%] hidden w-5 rotate-[15deg] lg:block'
+            delay='-2s'
           />
           <BlurFade inView>
             <div className='rounded-[2.5rem] border border-primary/10 bg-white p-8 sm:p-12'>
@@ -210,7 +256,13 @@ export default async function Home() {
         </section>
 
         {/* Closing */}
-        <section className='mx-auto mt-24 max-w-4xl px-4 text-center md:mt-32'>
+        <section className='relative mx-auto mt-20 max-w-4xl px-4 text-center md:mt-24'>
+          <Doodle
+            src={Illustrations.leafPrimary}
+            sway
+            className='top-[60%] right-[16%] hidden w-6 -rotate-[25deg] md:block'
+            delay='-3.5s'
+          />
           <BlurFade inView>
             <p className='text-md font-semibold sm:text-xl md:text-2xl'>
               Durch das digitale Retteformular werden aus Schätzungen
@@ -227,7 +279,7 @@ export default async function Home() {
               </Link>
             </Button>
           </BlurFade>
-          <div className='relative mx-auto mt-16 hidden w-fit sm:block'>
+          <div className='relative mx-auto mt-12 hidden w-fit sm:block'>
             <MorphingBlob
               fill='#99BB44'
               seed={31}
@@ -245,26 +297,25 @@ export default async function Home() {
   );
 }
 
-function FloatingLeaf({
+function Doodle({
+  src,
   className,
   delay = '0s',
+  sway = false,
 }: {
+  src: (typeof Illustrations)[string];
   className?: string;
   delay?: string;
+  sway?: boolean;
 }) {
   return (
-    <svg
-      viewBox='0 0 24 24'
-      aria-hidden='true'
-      className={`float-gentle absolute ${className ?? ''}`}
+    <Image
+      src={src}
+      alt=''
+      aria-hidden
+      className={`pointer-events-none absolute select-none ${sway ? 'sway-gentle' : 'float-gentle'} ${className ?? ''}`}
       style={{ animationDelay: delay }}
-    >
-      <path
-        d='M12 22 C 4 14, 5 5, 12 2 C 19 5, 20 14, 12 22 Z'
-        fill='#446622'
-        opacity={0.55}
-      />
-    </svg>
+    />
   );
 }
 
