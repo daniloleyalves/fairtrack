@@ -31,7 +31,7 @@ import LeafSecondary from './leaf_secondary.svg';
 import Leaf2Primary from './leaf2_primary.svg';
 import Mushrooms from './mushrooms.svg';
 import Pepper from './pepper.svg';
-import Reddish from './reddish.svg';
+import BeetrootSecondary from './beetroot_secondary.svg';
 import Salad from './salad.svg';
 import Tomato from './tomato.svg';
 import { StaticImport } from 'next/dist/shared/lib/get-img-props';
@@ -68,7 +68,7 @@ export const Illustrations: Record<string, StaticImport> = {
   leaf2Primary: Leaf2Primary,
   mushrooms: Mushrooms,
   pepper: Pepper,
-  reddish: Reddish,
+  beetrootSecondary: BeetrootSecondary,
   salad: Salad,
   tomato: Tomato,
 } as const;

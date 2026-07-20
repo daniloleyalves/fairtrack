@@ -108,7 +108,7 @@ export default async function Home() {
               delay='-5.5s'
             />
             <Doodle
-              src={Illustrations.reddish}
+              src={Illustrations.beetrootSecondary}
               className='bottom-[7%] left-[18%] w-12 -rotate-6 sm:w-20'
               delay='-1.5s'
             />

@@ -83,20 +83,12 @@ const ITEMS: ItemSpec[] = [
     -40,
     { left: 47, top: 58, rotate: -2, scale: 0.35 },
     [0.15, 0.9],
-  ),
-  petal(
-    Illustrations.reddish,
-    24,
-    49,
-    22,
-    35,
-    { left: 49, top: 59, rotate: 0, scale: 0.35 },
-    [0.18, 0.92],
+    -48,
   ),
   petal(
     Illustrations.onion,
-    22,
-    65,
+    24,
+    49,
     22,
     -18,
     { left: 53, top: 58, rotate: 2, scale: 0.35 },
@@ -104,18 +96,18 @@ const ITEMS: ItemSpec[] = [
   ),
   petal(
     Illustrations.beetroot,
-    27,
-    74,
-    52,
+    30,
+    77,
+    48,
     -25,
     { left: 55, top: 60, rotate: 4, scale: 0.35 },
     [0.27, 0.98],
   ),
   petal(
     Illustrations.garlic,
-    13,
-    56,
-    36,
+    14,
+    59,
+    30,
     -12,
     { left: 51, top: 58, rotate: 0, scale: 0.4 },
     [0.21, 0.94],
@@ -255,27 +247,34 @@ function ScatterItem({
   reducedMotion: boolean;
 }) {
   const { final, packed, window: w } = item;
-  // Fountain arc: rise straight out of the bag mouth first, then swing
-  // outward to the artwork position while the pose settles.
-  const steps = [w[0], w[0] + 0.55 * (w[1] - w[0]), w[1]];
-  const midLeft = packed.left + 0.25 * (final.left - packed.left);
-  const midTop = packed.top - 0.8 * (packed.top - final.top);
-  const left = useTransform(progress, steps, [
-    `${packed.left}%`,
-    `${midLeft}%`,
-    `${final.left}%`,
-  ]);
-  const top = useTransform(progress, steps, [
-    `${packed.top}%`,
-    `${midTop}%`,
-    `${final.top}%`,
-  ]);
-  const rotate = useTransform(progress, steps, [
-    packed.rotate,
-    packed.rotate + 0.3 * (final.rotate - packed.rotate),
-    final.rotate,
-  ]);
-  const scale = useTransform(progress, steps, [packed.scale, 0.85, 1]);
+  // Fountain curve: a quadratic Bezier whose control point sits above the
+  // bag mouth, so every item launches vertically and bends outward along
+  // one continuous arc scaled to its flight distance.
+  const dist = Math.hypot(final.left - packed.left, final.top - packed.top);
+  const ctrl = {
+    left: packed.left + 0.1 * (final.left - packed.left),
+    top: packed.top - 0.6 * dist,
+  };
+  const T = [0, 0.2, 0.4, 0.6, 0.8, 1];
+  const steps = T.map((s) => w[0] + s * (w[1] - w[0]));
+  const at = (a: number, b: number, c: number, s: number) =>
+    (1 - s) * (1 - s) * a + 2 * (1 - s) * s * b + s * s * c;
+  const left = useTransform(
+    progress,
+    steps,
+    T.map((s) => `${at(packed.left, ctrl.left, final.left, s)}%`),
+  );
+  const top = useTransform(
+    progress,
+    steps,
+    T.map((s) => `${at(packed.top, ctrl.top, final.top, s)}%`),
+  );
+  const rotate = useTransform(
+    progress,
+    [w[0], w[1]],
+    [packed.rotate, final.rotate],
+  );
+  const scale = useTransform(progress, [w[0], w[1]], [packed.scale, 1]);
 
   return (
     <motion.div
