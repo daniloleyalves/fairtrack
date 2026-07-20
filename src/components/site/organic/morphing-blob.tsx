@@ -96,6 +96,7 @@ export function MorphingBlob({
   return (
     <svg
       viewBox='0 0 200 200'
+      preserveAspectRatio='none'
       aria-hidden='true'
       className={cn('pointer-events-none', className)}
     >
