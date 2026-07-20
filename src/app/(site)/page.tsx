@@ -1,5 +1,6 @@
 import { BlurFade } from '@/components/magicui/blur-fade';
 import { NumberTicker } from '@/components/magicui/number-ticker';
+import { BurstField } from '@/components/site/burst-field';
 import { FoodBagScatter } from '@/components/site/food-bag-scatter';
 import { ImpactSection } from '@/components/site/impact-section';
 import { MorphingBlob } from '@/components/site/organic/morphing-blob';
@@ -78,82 +79,84 @@ export default async function Home() {
               amplitude={0.1}
               className='absolute inset-0 size-full opacity-30'
             />
-            <Doodle
-              src={Illustrations.mushrooms}
-              className='top-[16%] left-[21%] w-12 -rotate-6 sm:w-16'
-              delay='-3.5s'
-            />
-            <Doodle
-              src={Illustrations.leafPrimary}
-              sway
-              className='top-[7%] left-[45%] w-5 rotate-[20deg] sm:w-7'
-              delay='-1s'
-            />
-            <Doodle
-              src={Illustrations.leaf2Primary}
-              sway
-              className='top-[13%] left-[52%] hidden w-5 rotate-[130deg] sm:block'
-              delay='-4s'
-            />
-            <Doodle
-              src={Illustrations.leafSecondary}
-              sway
-              className='top-[33%] left-[12%] hidden w-7 -rotate-12 sm:block'
-              delay='-2.5s'
-            />
-            <Doodle
-              src={Illustrations.leafPrimary}
-              sway
-              className='top-[62%] left-[4%] w-6 -rotate-[35deg] sm:w-9'
-              delay='-5.5s'
-            />
-            <Doodle
-              src={Illustrations.beetrootSecondary}
-              className='bottom-[7%] left-[18%] w-12 -rotate-6 sm:w-20'
-              delay='-1.5s'
-            />
-            <Doodle
-              src={Illustrations.leaf2Primary}
-              sway
-              className='bottom-[3%] left-[35%] hidden w-5 rotate-[200deg] sm:block'
-              delay='-3s'
-            />
-            <Doodle
-              src={Illustrations.leafSecondary}
-              sway
-              className='bottom-[6%] left-[60%] w-6 rotate-6 sm:w-9'
-              delay='-6s'
-            />
-            <Doodle
-              src={Illustrations.carrot}
-              className='top-[8%] right-[3%] w-16 rotate-[15deg] sm:w-28'
-            />
-            <Doodle
-              src={Illustrations.pepper}
-              className='top-[42%] right-[4%] w-8 rotate-6 sm:w-10'
-              delay='-2s'
-            />
-            <Doodle
-              src={Illustrations.bag}
-              className='right-[4%] bottom-[6%] w-16 rotate-3 sm:w-24'
-              delay='-5s'
-            />
-            <span
-              aria-hidden
-              className='absolute top-[30%] right-[21%] hidden size-3 rotate-45 border-2 border-foreground/50 sm:block'
-            />
-            <span
-              aria-hidden
-              className='absolute top-[38%] right-[19%] hidden size-2 rotate-45 border-2 border-foreground/50 sm:block'
-            />
-            <span
-              aria-hidden
-              className='absolute bottom-[26%] left-[11%] hidden size-2 rotate-45 border-2 border-foreground/50 sm:block'
-            />
-            <span
-              aria-hidden
-              className='absolute right-[27%] bottom-[20%] hidden size-2 rotate-45 border-2 border-foreground/50 sm:block'
-            />
+            <BurstField>
+              <Doodle
+                src={Illustrations.mushrooms}
+                className='top-[16%] left-[21%] w-12 -rotate-6 sm:w-16'
+                delay='-3.5s'
+              />
+              <Doodle
+                src={Illustrations.leafPrimary}
+                sway
+                className='top-[7%] left-[45%] w-5 rotate-[20deg] sm:w-7'
+                delay='-1s'
+              />
+              <Doodle
+                src={Illustrations.leaf2Primary}
+                sway
+                className='top-[13%] left-[52%] hidden w-5 rotate-[130deg] sm:block'
+                delay='-4s'
+              />
+              <Doodle
+                src={Illustrations.leafSecondary}
+                sway
+                className='top-[33%] left-[12%] hidden w-7 -rotate-12 sm:block'
+                delay='-2.5s'
+              />
+              <Doodle
+                src={Illustrations.leafPrimary}
+                sway
+                className='top-[62%] left-[4%] w-6 -rotate-[35deg] sm:w-9'
+                delay='-5.5s'
+              />
+              <Doodle
+                src={Illustrations.beetrootSecondary}
+                className='bottom-[7%] left-[18%] w-12 -rotate-6 sm:w-20'
+                delay='-1.5s'
+              />
+              <Doodle
+                src={Illustrations.leaf2Primary}
+                sway
+                className='bottom-[3%] left-[35%] hidden w-5 rotate-[200deg] sm:block'
+                delay='-3s'
+              />
+              <Doodle
+                src={Illustrations.leafSecondary}
+                sway
+                className='bottom-[6%] left-[60%] w-6 rotate-6 sm:w-9'
+                delay='-6s'
+              />
+              <Doodle
+                src={Illustrations.carrot}
+                className='top-[8%] right-[3%] w-16 rotate-[15deg] sm:w-28'
+              />
+              <Doodle
+                src={Illustrations.pepper}
+                className='top-[42%] right-[4%] w-8 rotate-6 sm:w-10'
+                delay='-2s'
+              />
+              <Doodle
+                src={Illustrations.bag}
+                className='right-[4%] bottom-[6%] w-16 rotate-3 sm:w-24'
+                delay='-5s'
+              />
+              <span
+                aria-hidden
+                className='absolute top-[30%] right-[21%] hidden size-3 rotate-45 border-2 border-foreground/50 sm:block'
+              />
+              <span
+                aria-hidden
+                className='absolute top-[38%] right-[19%] hidden size-2 rotate-45 border-2 border-foreground/50 sm:block'
+              />
+              <span
+                aria-hidden
+                className='absolute bottom-[26%] left-[11%] hidden size-2 rotate-45 border-2 border-foreground/50 sm:block'
+              />
+              <span
+                aria-hidden
+                className='absolute right-[27%] bottom-[20%] hidden size-2 rotate-45 border-2 border-foreground/50 sm:block'
+              />
+            </BurstField>
             <div className='relative z-10 text-center font-londrina text-primary'>
               <h2 className='text-5xl sm:text-8xl'>
                 <NumberTicker value={stats.totalQuantityKg} decimalPlaces={2} />
