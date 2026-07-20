@@ -88,24 +88,28 @@ export default async function Home() {
               <Doodle
                 src={Illustrations.leafPrimary}
                 sway
+                spin
                 className='top-[7%] left-[45%] w-5 rotate-[20deg] sm:w-7'
                 delay='-1s'
               />
               <Doodle
                 src={Illustrations.leaf2Primary}
                 sway
+                spin
                 className='top-[13%] left-[52%] hidden w-5 rotate-[130deg] sm:block'
                 delay='-4s'
               />
               <Doodle
                 src={Illustrations.leafSecondary}
                 sway
+                spin
                 className='top-[33%] left-[12%] hidden w-7 -rotate-12 sm:block'
                 delay='-2.5s'
               />
               <Doodle
                 src={Illustrations.leafPrimary}
                 sway
+                spin
                 className='top-[62%] left-[4%] w-6 -rotate-[35deg] sm:w-9'
                 delay='-5.5s'
               />
@@ -117,12 +121,14 @@ export default async function Home() {
               <Doodle
                 src={Illustrations.leaf2Primary}
                 sway
+                spin
                 className='bottom-[3%] left-[35%] hidden w-5 rotate-[200deg] sm:block'
                 delay='-3s'
               />
               <Doodle
                 src={Illustrations.leafSecondary}
                 sway
+                spin
                 className='bottom-[6%] left-[60%] w-6 rotate-6 sm:w-9'
                 delay='-6s'
               />
@@ -142,18 +148,22 @@ export default async function Home() {
               />
               <span
                 aria-hidden
+                data-spin=''
                 className='absolute top-[30%] right-[21%] hidden size-3 rotate-45 border-2 border-foreground/50 sm:block'
               />
               <span
                 aria-hidden
+                data-spin=''
                 className='absolute top-[38%] right-[19%] hidden size-2 rotate-45 border-2 border-foreground/50 sm:block'
               />
               <span
                 aria-hidden
+                data-spin=''
                 className='absolute bottom-[26%] left-[11%] hidden size-2 rotate-45 border-2 border-foreground/50 sm:block'
               />
               <span
                 aria-hidden
+                data-spin=''
                 className='absolute right-[27%] bottom-[20%] hidden size-2 rotate-45 border-2 border-foreground/50 sm:block'
               />
             </BurstField>
@@ -342,17 +352,20 @@ function Doodle({
   className,
   delay = '0s',
   sway = false,
+  spin = false,
 }: {
   src: (typeof Illustrations)[string];
   className?: string;
   delay?: string;
   sway?: boolean;
+  spin?: boolean;
 }) {
   return (
     <Image
       src={src}
       alt=''
       aria-hidden
+      data-spin={spin ? '' : undefined}
       className={`pointer-events-none absolute select-none ${sway ? 'sway-gentle' : 'float-gentle'} ${className ?? ''}`}
       style={{ animationDelay: delay }}
     />
