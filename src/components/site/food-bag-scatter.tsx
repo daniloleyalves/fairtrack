@@ -33,9 +33,10 @@ interface ItemSpec {
 /**
  * A petal of the bloom: placed on a polar fan around CENTER. `angle` is
  * degrees from straight up (negative = left, +/-45 is the cone edge),
- * `radius` the flight distance in container %. The same angle rotates the
- * item so its root keeps pointing at the bag mouth.
+ * `radius` the flight distance in container %. Items stay upright, taking
+ * only a mild lean from their fan angle so they never lie sideways.
  */
+const LEAN = 0.35;
 const petal = (
   src: (typeof Illustrations)[string],
   width: number,
@@ -52,7 +53,7 @@ const petal = (
     final: {
       left: CENTER.left + radius * Math.sin(rad),
       top: CENTER.top - radius * Math.cos(rad),
-      rotate: angle + jitter,
+      rotate: angle * LEAN + jitter,
     },
     packed,
     window,
@@ -67,7 +68,7 @@ const ITEMS: ItemSpec[] = [
     -45,
     45,
     0,
-    { left: 45, top: 56, rotate: -18, scale: 0.35 },
+    { left: 45, top: 56, rotate: -6, scale: 0.35 },
     [0.12, 0.88],
   ),
   petal(
@@ -76,7 +77,7 @@ const ITEMS: ItemSpec[] = [
     -30,
     44,
     0,
-    { left: 47, top: 54, rotate: -10, scale: 0.35 },
+    { left: 47, top: 54, rotate: -4, scale: 0.35 },
     [0.15, 0.9],
   ),
   petal(
@@ -85,7 +86,7 @@ const ITEMS: ItemSpec[] = [
     -12,
     45,
     0,
-    { left: 49, top: 55, rotate: -4, scale: 0.35 },
+    { left: 49, top: 55, rotate: -2, scale: 0.35 },
     [0.18, 0.92],
   ),
   petal(
@@ -103,7 +104,7 @@ const ITEMS: ItemSpec[] = [
     18,
     44,
     0,
-    { left: 53, top: 54, rotate: 8, scale: 0.35 },
+    { left: 53, top: 54, rotate: 3, scale: 0.35 },
     [0.24, 0.96],
   ),
   petal(
@@ -112,7 +113,7 @@ const ITEMS: ItemSpec[] = [
     38,
     42,
     0,
-    { left: 55, top: 56, rotate: 16, scale: 0.35 },
+    { left: 55, top: 56, rotate: 6, scale: 0.35 },
     [0.27, 0.98],
   ),
   // small fillers on an inner ring
@@ -122,7 +123,7 @@ const ITEMS: ItemSpec[] = [
     -38,
     26,
     -8,
-    { left: 46, top: 59, rotate: -12, scale: 0.5 },
+    { left: 46, top: 59, rotate: -6, scale: 0.5 },
     [0.3, 0.95],
   ),
   petal(
@@ -131,7 +132,7 @@ const ITEMS: ItemSpec[] = [
     -44,
     33,
     20,
-    { left: 45, top: 61, rotate: 24, scale: 0.5 },
+    { left: 45, top: 61, rotate: 8, scale: 0.5 },
     [0.33, 0.97],
   ),
   petal(
@@ -140,7 +141,7 @@ const ITEMS: ItemSpec[] = [
     -20,
     30,
     -15,
-    { left: 47, top: 60, rotate: -18, scale: 0.5 },
+    { left: 47, top: 60, rotate: -8, scale: 0.5 },
     [0.31, 0.96],
   ),
   petal(
@@ -149,7 +150,7 @@ const ITEMS: ItemSpec[] = [
     10,
     28,
     10,
-    { left: 53, top: 60, rotate: 14, scale: 0.5 },
+    { left: 53, top: 60, rotate: 6, scale: 0.5 },
     [0.32, 0.97],
   ),
   petal(
@@ -158,7 +159,7 @@ const ITEMS: ItemSpec[] = [
     30,
     27,
     6,
-    { left: 54, top: 59, rotate: 10, scale: 0.5 },
+    { left: 54, top: 59, rotate: 5, scale: 0.5 },
     [0.3, 0.95],
   ),
   petal(
@@ -167,7 +168,7 @@ const ITEMS: ItemSpec[] = [
     44,
     30,
     -20,
-    { left: 55, top: 61, rotate: -24, scale: 0.5 },
+    { left: 55, top: 61, rotate: -8, scale: 0.5 },
     [0.34, 0.98],
   ),
   // loose leaves drifting out last, with chaotic spin
@@ -177,7 +178,7 @@ const ITEMS: ItemSpec[] = [
     -45,
     56,
     -25,
-    { left: 48, top: 58, rotate: -70, scale: 0.4 },
+    { left: 48, top: 58, rotate: -20, scale: 0.4 },
     [0.38, 1],
   ),
   petal(
@@ -186,7 +187,7 @@ const ITEMS: ItemSpec[] = [
     45,
     54,
     30,
-    { left: 52, top: 58, rotate: 80, scale: 0.4 },
+    { left: 52, top: 58, rotate: 20, scale: 0.4 },
     [0.42, 1],
   ),
   petal(
@@ -195,7 +196,7 @@ const ITEMS: ItemSpec[] = [
     0,
     31,
     50,
-    { left: 50, top: 57, rotate: 100, scale: 0.4 },
+    { left: 50, top: 57, rotate: 30, scale: 0.4 },
     [0.4, 1],
   ),
 ];
@@ -247,10 +248,27 @@ function ScatterItem({
   reducedMotion: boolean;
 }) {
   const { final, packed, window: w } = item;
-  const left = useTransform(progress, w, [`${packed.left}%`, `${final.left}%`]);
-  const top = useTransform(progress, w, [`${packed.top}%`, `${final.top}%`]);
-  const rotate = useTransform(progress, w, [packed.rotate, final.rotate]);
-  const scale = useTransform(progress, w, [packed.scale, 1]);
+  // Fountain arc: rise straight out of the bag mouth first, then swing
+  // outward to the fan position while the outward tilt develops.
+  const steps = [w[0], w[0] + 0.55 * (w[1] - w[0]), w[1]];
+  const midLeft = packed.left + 0.25 * (final.left - packed.left);
+  const midTop = packed.top - 0.8 * (packed.top - final.top);
+  const left = useTransform(progress, steps, [
+    `${packed.left}%`,
+    `${midLeft}%`,
+    `${final.left}%`,
+  ]);
+  const top = useTransform(progress, steps, [
+    `${packed.top}%`,
+    `${midTop}%`,
+    `${final.top}%`,
+  ]);
+  const rotate = useTransform(progress, steps, [
+    packed.rotate,
+    0.3 * final.rotate,
+    final.rotate,
+  ]);
+  const scale = useTransform(progress, steps, [packed.scale, 0.85, 1]);
 
   return (
     <motion.div
