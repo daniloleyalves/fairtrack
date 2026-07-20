@@ -1,6 +1,5 @@
 import { BlurFade } from '@/components/magicui/blur-fade';
 import { NumberTicker } from '@/components/magicui/number-ticker';
-import { DrawPath } from '@/components/site/draw-path';
 import { ImpactSection } from '@/components/site/impact-section';
 import { MorphingBlob } from '@/components/site/organic/morphing-blob';
 import { ProductTour } from '@/features/product-tour/components/product-tour';
@@ -118,73 +117,6 @@ export default async function Home() {
         <div className='mt-16 px-4 md:mt-24'>
           <ImpactSection stats={stats} />
         </div>
-
-        {/* How it works */}
-        <section
-          aria-labelledby='how-it-works-heading'
-          className='relative mx-auto mt-24 max-w-6xl px-4 md:mt-32'
-        >
-          <BlurFade inView>
-            <h2
-              id='how-it-works-heading'
-              className='text-center font-londrina text-4xl text-tertiary sm:text-5xl'
-            >
-              Und so funktionierts…
-            </h2>
-          </BlurFade>
-          <div className='relative mt-14'>
-            <DrawPath
-              viewBox='0 0 1200 260'
-              d='M80 200 C 260 40, 420 60, 600 140 S 960 240, 1120 90'
-              stroke='#99BB44'
-              strokeWidth={5}
-              duration={2.2}
-              className='absolute inset-x-0 top-6 -z-10 hidden w-full opacity-40 lg:block'
-            />
-            <div className='grid grid-cols-1 gap-16 sm:grid-cols-2 lg:grid-cols-3 lg:gap-12'>
-              <HowItWorksStep
-                step={1}
-                title='Fairteiler finden'
-                image={Illustrations.walkingIllustration}
-                imageAlt='Illustration: Zu einem Fairteiler laufen'
-                delay={0}
-                blobDelay='0s'
-              >
-                Bei FairTrack registrierte{' '}
-                <Link
-                  href='/fairteiler'
-                  className='font-semibold text-primary underline-offset-2 hover:underline'
-                >
-                  Fairteiler
-                </Link>{' '}
-                in deiner Nähe finden und aufsuchen.
-              </HowItWorksStep>
-              <HowItWorksStep
-                step={2}
-                title='Abgeben & erfassen'
-                image={Illustrations.arrivingIllustration}
-                imageAlt='Illustration: Ankunft am Fairteiler'
-                delay={0.12}
-                blobDelay='-5s'
-              >
-                Lebensmittel abgeben und in unter einer Minute das digitale
-                Retteformular ausfüllen.
-              </HowItWorksStep>
-              <HowItWorksStep
-                step={3}
-                title='Wirkung verfolgen'
-                image={Illustrations.statisticsIllustration}
-                imageAlt='Illustration: Statistiken zum Foodsharing'
-                delay={0.24}
-                blobDelay='-10s'
-                className='sm:col-span-2 lg:col-span-1'
-              >
-                Deinen Beitrag im persönlichen Dashboard verfolgen – vom ersten
-                Kilo bis zum nächsten Meilenstein.
-              </HowItWorksStep>
-            </div>
-          </div>
-        </section>
 
         {/* Product tour */}
         <section
@@ -333,51 +265,6 @@ function FloatingLeaf({
         opacity={0.55}
       />
     </svg>
-  );
-}
-
-function HowItWorksStep({
-  step,
-  title,
-  image,
-  imageAlt,
-  delay,
-  blobDelay,
-  className,
-  children,
-}: {
-  step: number;
-  title: string;
-  image: (typeof Illustrations)[string];
-  imageAlt: string;
-  delay: number;
-  blobDelay: string;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <BlurFade inView delay={delay} className={className}>
-      <div className='flex h-full flex-col items-center text-center'>
-        <div
-          className='blob blob-animate bg-tertiary/15 p-5 sm:p-6'
-          style={{ animationDelay: blobDelay }}
-        >
-          <Image
-            src={image}
-            alt={imageAlt}
-            className='mx-auto w-3/5 sm:w-full'
-            loading='lazy'
-          />
-        </div>
-        <div className='mt-6 flex items-center gap-3'>
-          <span className='blob flex size-9 items-center justify-center bg-primary font-londrina text-lg text-primary-foreground'>
-            {step}
-          </span>
-          <h3 className='font-londrina text-2xl text-foreground'>{title}</h3>
-        </div>
-        <p className='mt-3 max-w-xs text-muted-foreground'>{children}</p>
-      </div>
-    </BlurFade>
   );
 }
 

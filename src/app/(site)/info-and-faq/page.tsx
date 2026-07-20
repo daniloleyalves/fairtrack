@@ -2,6 +2,7 @@ import { BlurFade } from '@/components/magicui/blur-fade';
 import { SectionNav } from '@/components/site/section-nav';
 import { MorphingBlob } from '@/components/site/organic/morphing-blob';
 import { Illustrations } from '@/lib/assets/illustrations';
+import { cn } from '@/lib/utils';
 import {
   Accordion,
   AccordionContent,
@@ -26,6 +27,7 @@ import {
 
 const SECTIONS = [
   { id: 'ueberblick', title: 'Überblick' },
+  { id: 'so-funktionierts', title: 'So funktionierts' },
   { id: 'bedienkonzept-nutzer', title: 'Für Foodsaver:innen' },
   { id: 'bedienkonzept-fairteiler', title: 'Für Fairteiler' },
   { id: 'daten-privatsphaere', title: 'Daten & Privatsphäre' },
@@ -301,6 +303,53 @@ export default function FairTrackInfo() {
                 Aktuelle Browser, stabile Internetverbindung; für Dauerbetrieb
                 empfiehlt sich ein stationäres Tablet mit Stromversorgung.
               </FactCard>
+            </div>
+          </InfoSection>
+
+          {/* So funktionierts */}
+          <InfoSection id='so-funktionierts' title='Und so funktionierts…'>
+            <p>
+              Vom Fairteiler bis zur persönlichen Statistik – eine Abgabe mit
+              FairTrack besteht aus drei einfachen Schritten.
+            </p>
+            <div className='mt-6 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8'>
+              <HowItWorksStep
+                step={1}
+                title='Fairteiler finden'
+                image={Illustrations.walkingIllustration}
+                imageAlt='Illustration: Zu einem Fairteiler laufen'
+                blobDelay='0s'
+              >
+                Bei FairTrack registrierte{' '}
+                <Link
+                  href='/fairteiler'
+                  className='font-semibold text-primary underline-offset-2 hover:underline'
+                >
+                  Fairteiler
+                </Link>{' '}
+                in deiner Nähe finden und aufsuchen.
+              </HowItWorksStep>
+              <HowItWorksStep
+                step={2}
+                title='Abgeben & erfassen'
+                image={Illustrations.arrivingIllustration}
+                imageAlt='Illustration: Ankunft am Fairteiler'
+                blobDelay='-5s'
+              >
+                Lebensmittel abgeben und in unter einer Minute das digitale
+                Retteformular ausfüllen.
+              </HowItWorksStep>
+              <HowItWorksStep
+                step={3}
+                title='Wirkung verfolgen'
+                image={Illustrations.statisticsIllustration}
+                imageAlt='Illustration: Statistiken zum Foodsharing'
+                blobDelay='-10s'
+                className='sm:col-span-2 lg:col-span-1'
+              >
+                Deinen Beitrag im persönlichen Dashboard verfolgen – vom ersten
+                Kilo bis zum nächsten Meilenstein.
+              </HowItWorksStep>
             </div>
           </InfoSection>
 
@@ -896,6 +945,49 @@ function InfoSection({
         </div>
       </BlurFade>
     </section>
+  );
+}
+
+function HowItWorksStep({
+  step,
+  title,
+  image,
+  imageAlt,
+  blobDelay,
+  className,
+  children,
+}: {
+  step: number;
+  title: string;
+  image: (typeof Illustrations)[string];
+  imageAlt: string;
+  blobDelay: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={cn('flex h-full flex-col items-center text-center', className)}
+    >
+      <div
+        className='blob blob-animate bg-tertiary/15 p-5'
+        style={{ animationDelay: blobDelay }}
+      >
+        <Image
+          src={image}
+          alt={imageAlt}
+          className='mx-auto w-3/5 sm:w-full'
+          loading='lazy'
+        />
+      </div>
+      <div className='mt-5 flex items-center gap-3'>
+        <span className='blob flex size-8 items-center justify-center bg-primary font-londrina text-primary-foreground'>
+          {step}
+        </span>
+        <h3 className='font-londrina text-xl text-foreground'>{title}</h3>
+      </div>
+      <p className='mt-2 max-w-xs text-sm text-muted-foreground'>{children}</p>
+    </div>
   );
 }
 
