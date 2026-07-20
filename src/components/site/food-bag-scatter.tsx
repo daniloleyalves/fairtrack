@@ -12,8 +12,14 @@ import {
 import Image from 'next/image';
 import { useRef } from 'react';
 
-/** Bag-mouth the packed bundle sits in and the petals radiate from. */
-const CENTER = { left: 50, top: 60 };
+/** Bag mouth the packed bundle sits in and the flight radiates from. */
+const CENTER = { left: 50, top: 64 };
+
+/**
+ * The composite artwork (food_bag_illustration.svg) is one frame of this
+ * animation; finals sit slightly past it along the outward flow.
+ */
+const PUSH = 1.08;
 
 interface Packed {
   left: number;
@@ -31,198 +37,181 @@ interface ItemSpec {
 }
 
 /**
- * A petal of the bloom: placed on a polar fan around CENTER. `angle` is
- * degrees from straight up (negative = left, +/-45 is the cone edge),
- * `radius` the flight distance in container %. `upright` counters the
- * asset's own drawn tilt so it stands vertical; on top of that the item
- * takes only a mild lean from its fan angle, never lying sideways.
+ * `artLeft`/`artTop` is the item's center in the composite artwork (% of
+ * its frame); the final position extends that placement a little further
+ * out from the bag mouth. `upright` counters the asset's drawn tilt while
+ * packed so the bundle stands vertical; the flight rotates it back into
+ * its natural artwork pose (`finalRotate`, 0 for the vegetables).
  */
-const LEAN = 0.35;
 const petal = (
   src: (typeof Illustrations)[string],
   width: number,
-  angle: number,
-  radius: number,
+  artLeft: number,
+  artTop: number,
   upright: number,
-  jitter: number,
   packed: Packed,
   window: [number, number],
-): ItemSpec => {
-  const rad = (angle * Math.PI) / 180;
-  return {
-    src,
-    width,
-    final: {
-      left: CENTER.left + radius * Math.sin(rad),
-      top: CENTER.top - radius * Math.cos(rad),
-      rotate: upright + angle * LEAN + jitter,
-    },
-    packed: { ...packed, rotate: upright + packed.rotate },
-    window,
-  };
-};
+  finalRotate = 0,
+): ItemSpec => ({
+  src,
+  width,
+  final: {
+    left: CENTER.left + (artLeft - CENTER.left) * PUSH,
+    top: CENTER.top + (artTop - CENTER.top) * PUSH,
+    rotate: finalRotate,
+  },
+  packed: { ...packed, rotate: upright + packed.rotate },
+  window,
+});
 
 const ITEMS: ItemSpec[] = [
-  // long petals fly far, packed as an upright bouquet peeking out of the bag
+  // the long produce, packed as an upright bouquet peeking out of the bag
   petal(
     Illustrations.salad,
     26,
-    -50,
-    28,
+    27,
+    46,
     40,
-    0,
-    { left: 46, top: 56, rotate: -4, scale: 0.35 },
+    { left: 46, top: 60, rotate: -4, scale: 0.35 },
     [0.12, 0.88],
   ),
   petal(
     Illustrations.carrot,
-    22,
-    -25,
-    54,
+    24,
+    31,
+    26,
     -40,
-    -8,
-    { left: 47, top: 54, rotate: -2, scale: 0.35 },
+    { left: 47, top: 58, rotate: -2, scale: 0.35 },
     [0.15, 0.9],
   ),
   petal(
     Illustrations.reddish,
-    18,
-    -7,
-    45,
+    24,
+    49,
+    22,
     35,
-    0,
-    { left: 49, top: 55, rotate: 0, scale: 0.35 },
+    { left: 49, top: 59, rotate: 0, scale: 0.35 },
     [0.18, 0.92],
   ),
   petal(
     Illustrations.onion,
-    19,
-    13,
-    46,
+    22,
+    65,
+    22,
     -18,
-    0,
-    { left: 53, top: 54, rotate: 2, scale: 0.35 },
+    { left: 53, top: 58, rotate: 2, scale: 0.35 },
     [0.24, 0.96],
   ),
   petal(
     Illustrations.beetroot,
-    25,
-    35,
-    46,
+    27,
+    74,
+    52,
     -25,
-    0,
-    { left: 55, top: 56, rotate: 4, scale: 0.35 },
+    { left: 55, top: 60, rotate: 4, scale: 0.35 },
     [0.27, 0.98],
   ),
-  // medium garlic in the crown's middle
   petal(
     Illustrations.garlic,
-    12,
-    2,
-    28,
+    13,
+    56,
+    36,
     -12,
-    0,
-    { left: 51, top: 54, rotate: 0, scale: 0.4 },
+    { left: 51, top: 58, rotate: 0, scale: 0.4 },
     [0.21, 0.94],
   ),
-  // small stuff stays close to the bag mouth
+  // the small stuff around the bag mouth
   petal(
     Illustrations.tomato,
-    9,
-    -61,
-    10.3,
+    10,
+    55.5,
+    60,
     0,
-    16,
-    { left: 46, top: 59, rotate: 0, scale: 0.5 },
+    { left: 46, top: 63, rotate: 0, scale: 0.5 },
     [0.3, 0.95],
   ),
   petal(
     Illustrations.mushroom2,
-    8,
-    -82,
-    15.1,
+    9,
+    33,
+    60,
     0,
-    23,
-    { left: 45, top: 61, rotate: 6, scale: 0.5 },
+    { left: 45, top: 65, rotate: 6, scale: 0.5 },
     [0.33, 0.97],
   ),
   petal(
     Illustrations.mushroom1,
     8,
-    -117,
-    4.5,
+    41,
+    61,
     0,
-    35,
-    { left: 47, top: 60, rotate: -6, scale: 0.5 },
+    { left: 47, top: 64, rotate: -6, scale: 0.5 },
     [0.31, 0.96],
   ),
   petal(
     Illustrations.mushroom4,
     7,
-    41,
-    10.6,
+    58,
+    52,
     0,
-    -6,
-    { left: 53, top: 60, rotate: 4, scale: 0.5 },
+    { left: 53, top: 64, rotate: 4, scale: 0.5 },
     [0.32, 0.97],
   ),
   petal(
     Illustrations.pepper2,
-    10,
-    -7,
-    8,
+    12,
+    48.8,
+    52.5,
     0,
-    6,
-    { left: 54, top: 59, rotate: 2, scale: 0.5 },
+    { left: 54, top: 63, rotate: 2, scale: 0.5 },
     [0.3, 0.95],
   ),
   petal(
     Illustrations.mushroom3,
-    8,
-    90,
-    11,
+    9,
+    61,
+    61,
     0,
-    -25,
-    { left: 55, top: 61, rotate: -6, scale: 0.5 },
+    { left: 55, top: 65, rotate: -6, scale: 0.5 },
     [0.34, 0.98],
   ),
-  // loose leaves drifting out last, with chaotic spin
+  // loose leaves drifting out last
   petal(
     Illustrations.leafPrimary,
     6,
-    -45,
-    58,
+    14,
+    27,
     0,
-    -25,
-    { left: 48, top: 58, rotate: -20, scale: 0.4 },
+    { left: 48, top: 62, rotate: -20, scale: 0.4 },
     [0.38, 1],
+    -25,
   ),
   petal(
     Illustrations.leaf2Primary,
     5,
-    45,
-    56,
+    89,
+    19,
     0,
-    30,
-    { left: 52, top: 58, rotate: 20, scale: 0.4 },
+    { left: 52, top: 62, rotate: 20, scale: 0.4 },
     [0.42, 1],
+    30,
   ),
   petal(
     Illustrations.leafSecondary,
     7,
-    18,
-    34,
+    70,
+    57,
     0,
-    50,
-    { left: 50, top: 57, rotate: 30, scale: 0.4 },
+    { left: 50, top: 61, rotate: 30, scale: 0.4 },
     [0.4, 1],
+    45,
   ),
 ];
 
 /**
- * The FairTrack bag with the illustration's vegetables packed inside; on
- * scroll they bloom out of the bag in a 90-degree upward fan, long items
- * keeping their roots pointed at the bag mouth.
+ * The FairTrack bag with the artwork's vegetables packed inside; on scroll
+ * they fountain out of the bag and settle just past their places in
+ * food_bag_illustration.svg.
  */
 export function FoodBagScatter({ className }: { className?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -236,7 +225,7 @@ export function FoodBagScatter({ className }: { className?: string }) {
   return (
     <div
       ref={containerRef}
-      className={`relative aspect-square ${className ?? ''}`}
+      className={`relative aspect-[150/187] ${className ?? ''}`}
     >
       {ITEMS.map((item, i) => (
         <ScatterItem
@@ -250,7 +239,7 @@ export function FoodBagScatter({ className }: { className?: string }) {
         src={Illustrations.fairtrackBag}
         alt=''
         aria-hidden
-        className='absolute bottom-0 left-1/2 z-10 w-[30%] -translate-x-1/2'
+        className='absolute bottom-0 left-1/2 z-10 w-[41%] -translate-x-1/2'
       />
     </div>
   );
@@ -267,7 +256,7 @@ function ScatterItem({
 }) {
   const { final, packed, window: w } = item;
   // Fountain arc: rise straight out of the bag mouth first, then swing
-  // outward to the fan position while the outward tilt develops.
+  // outward to the artwork position while the pose settles.
   const steps = [w[0], w[0] + 0.55 * (w[1] - w[0]), w[1]];
   const midLeft = packed.left + 0.25 * (final.left - packed.left);
   const midTop = packed.top - 0.8 * (packed.top - final.top);
