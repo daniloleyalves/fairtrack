@@ -1,5 +1,6 @@
 import { BlurFade } from '@/components/magicui/blur-fade';
 import { NumberTicker } from '@/components/magicui/number-ticker';
+import { FoodBagScatter } from '@/components/site/food-bag-scatter';
 import { ImpactSection } from '@/components/site/impact-section';
 import { MorphingBlob } from '@/components/site/organic/morphing-blob';
 import { ProductTour } from '@/features/product-tour/components/product-tour';
@@ -319,17 +320,13 @@ export default async function Home() {
               </Link>
             </Button>
           </BlurFade>
-          <div className='relative mx-auto mt-12 hidden w-fit sm:block'>
+          <div className='relative mx-auto mt-12 hidden w-[min(88vw,420px)] sm:block'>
             <MorphingBlob
               fill='#99BB44'
               seed={31}
-              className='absolute -inset-10 -z-10 opacity-20'
+              className='absolute inset-x-[-6%] top-[-4%] bottom-[18%] -z-10 opacity-20'
             />
-            <Image
-              src={Illustrations.foodBag}
-              className='float-gentle mx-auto'
-              alt=''
-            />
+            <FoodBagScatter />
           </div>
         </section>
       </div>
