@@ -98,7 +98,7 @@ const ITEMS: ItemSpec[] = [
     Illustrations.beetroot,
     30,
     77,
-    43,
+    38,
     -25,
     { left: 55, top: 60, rotate: 4, scale: 0.35 },
     [0.27, 0.98],
@@ -212,7 +212,9 @@ export function FoodBagScatter({ className }: { className?: string }) {
     target: containerRef,
     offset: ['start end', 'end 0.85'],
   });
-  const progress = useSpring(scrollYProgress, { stiffness: 70, damping: 20 });
+  // Hold the bundle packed for the first stretch of scroll, then bloom.
+  const delayed = useTransform(scrollYProgress, [0.3, 1], [0, 1]);
+  const progress = useSpring(delayed, { stiffness: 70, damping: 20 });
 
   return (
     <div
