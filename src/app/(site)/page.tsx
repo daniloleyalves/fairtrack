@@ -6,6 +6,7 @@ import { FlowField } from '@/components/site/organic/flow-field';
 import { GrowingVine } from '@/components/site/organic/growing-vine';
 import { MorphingBlob } from '@/components/site/organic/morphing-blob';
 import { Squiggle } from '@/components/site/organic/squiggle';
+import { ProductTour } from '@/features/product-tour/components/product-tour';
 import { Illustrations } from '@/lib/assets/illustrations';
 import { siteConfig } from '@/lib/config/site-config';
 import { getPublicImpactStats } from '@/server/platform/queries';
@@ -193,6 +194,24 @@ export default async function Home() {
                 Kilo bis zum nächsten Meilenstein.
               </HowItWorksStep>
             </div>
+          </div>
+        </section>
+
+        {/* Product tour */}
+        <section
+          aria-labelledby='product-tour-heading'
+          className='relative mx-auto mt-24 max-w-6xl px-4 md:mt-32'
+        >
+          <BlurFade inView>
+            <h2
+              id='product-tour-heading'
+              className='text-center font-londrina text-4xl text-tertiary sm:text-5xl'
+            >
+              FairTrack in Aktion
+            </h2>
+          </BlurFade>
+          <div className='mt-14'>
+            <ProductTour />
           </div>
         </section>
 
