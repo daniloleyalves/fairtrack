@@ -98,7 +98,7 @@ const ITEMS: ItemSpec[] = [
     Illustrations.beetroot,
     30,
     77,
-    48,
+    43,
     -25,
     { left: 55, top: 60, rotate: 4, scale: 0.35 },
     [0.27, 0.98],
