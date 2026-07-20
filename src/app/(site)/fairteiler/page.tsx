@@ -4,7 +4,6 @@ import { getFairteilers } from '@server/fairteiler/queries';
 import { getFairteilerQuantities } from '@server/platform/queries';
 import { BlurFade } from '@/components/magicui/blur-fade';
 import { MorphingBlob } from '@/components/site/organic/morphing-blob';
-import { Squiggle } from '@/components/site/organic/squiggle';
 import { Badge } from '@components/ui/badge';
 import { Button } from '@components/ui/button';
 import {
@@ -36,7 +35,6 @@ export default async function FairteilerPage() {
         <h1 className='font-londrina text-5xl font-semibold tracking-wider text-primary'>
           Fairteiler
         </h1>
-        <Squiggle className='h-3 w-28' />
         <p className='text-md font-medium text-muted-foreground'>
           Diese Fairteilerstationen erfassen ihre Lebensmittelabgaben mit
           FairTrack. Hier kannst du über die App Lebensmittel abgeben und

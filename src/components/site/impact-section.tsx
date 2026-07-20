@@ -2,7 +2,6 @@
 
 import { NumberTicker } from '@/components/magicui/number-ticker';
 import { BlurFade } from '@/components/magicui/blur-fade';
-import { Squiggle } from '@/components/site/organic/squiggle';
 import {
   Tooltip,
   TooltipContent,
@@ -41,7 +40,6 @@ export function ImpactSection({ stats }: { stats: PublicImpactStats }) {
         >
           Wirkung, die man messen kann
         </h2>
-        <Squiggle className='mx-auto mt-1 h-3 w-32' />
         <p className='mx-auto mt-4 max-w-2xl text-center text-muted-foreground'>
           Jede Abgabe an einem Fairteiler wird mit FairTrack digital erfasst.
           Diese Zahlen sind keine Hochrechnung – sie kommen direkt aus den

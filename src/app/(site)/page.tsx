@@ -2,10 +2,7 @@ import { BlurFade } from '@/components/magicui/blur-fade';
 import { NumberTicker } from '@/components/magicui/number-ticker';
 import { DrawPath } from '@/components/site/draw-path';
 import { ImpactSection } from '@/components/site/impact-section';
-import { FlowField } from '@/components/site/organic/flow-field';
-import { GrowingVine } from '@/components/site/organic/growing-vine';
 import { MorphingBlob } from '@/components/site/organic/morphing-blob';
-import { Squiggle } from '@/components/site/organic/squiggle';
 import { ProductTour } from '@/features/product-tour/components/product-tour';
 import { Illustrations } from '@/lib/assets/illustrations';
 import { siteConfig } from '@/lib/config/site-config';
@@ -26,10 +23,8 @@ export default async function Home() {
 
   return (
     <div className='overflow-x-clip pb-24'>
-      {/* Hero + live counter, flow field drifting behind */}
+      {/* Hero + live counter */}
       <div className='relative'>
-        <FlowField className='[mask-image:linear-gradient(to_bottom,black_65%,transparent)]' />
-
         <section className='relative mx-auto max-w-5xl px-4 pt-16 sm:pt-24'>
           <h1 className='text-center font-londrina text-6xl font-extrabold lg:text-8xl'>
             <BlurFade delay={0} className='inline-block'>
@@ -44,9 +39,6 @@ export default async function Home() {
               </span>
             </BlurFade>
           </h1>
-          <BlurFade delay={0.35}>
-            <Squiggle className='mx-auto mt-2 h-4 w-40' delay={0.5} />
-          </BlurFade>
           <BlurFade delay={0.3}>
             <p className='mx-auto mt-6 max-w-3xl text-center font-semibold sm:text-xl'>
               FairTrack macht sichtbar, was die Foodsharing-Community leistet:
@@ -122,10 +114,7 @@ export default async function Home() {
         </section>
       </div>
 
-      {/* Everything below grows along the vine */}
       <div className='relative'>
-        <GrowingVine />
-
         <div className='mt-16 px-4 md:mt-24'>
           <ImpactSection stats={stats} />
         </div>
