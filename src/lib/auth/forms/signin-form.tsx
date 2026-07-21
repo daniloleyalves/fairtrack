@@ -219,7 +219,6 @@ export function SignInForm({
               });
               console.error(ctx.error);
               signInForm.setError('root.serverError', {
-                // eslint-disable-next-line
                 message: getErrorMessage(ctx.error.code, 'de'),
               });
             },

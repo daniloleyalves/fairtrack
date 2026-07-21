@@ -39,7 +39,7 @@ export function SectionNav({ sections }: { sections: SectionNavItem[] }) {
             <a
               href={`#${section.id}`}
               className={cn(
-                'block rounded-lg border-l-2 border-transparent px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground',
+                'block border-l-2 border-transparent px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground',
                 activeId === section.id &&
                   'border-primary bg-primary/5 font-semibold text-primary',
               )}

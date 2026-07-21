@@ -30,9 +30,9 @@ const SECTIONS = [
   { id: 'so-funktionierts', title: 'So funktionierts' },
   { id: 'bedienkonzept-nutzer', title: 'Für Foodsaver:innen' },
   { id: 'bedienkonzept-fairteiler', title: 'Für Fairteiler' },
-  { id: 'daten-privatsphaere', title: 'Daten & Privatsphäre' },
   { id: 'ueber-das-projekt', title: 'Über das Projekt' },
   { id: 'haeufig-gestellte-fragen', title: 'FAQ' },
+  { id: 'daten-privatsphaere', title: 'Daten & Privatsphäre' },
   { id: 'fehlersuche-support', title: 'Fehlersuche & Support' },
 ];
 
@@ -57,7 +57,7 @@ const FAQ_GROUPS: {
       {
         question: 'Kann ich FairTrack auch ohne Smartphone nutzen?',
         answer:
-          'Ja. An Fairteilern gibt es stationäre Tablets für die Erfassung. Für persönliche Statistiken brauchst du aber einen eigenen Zugriff auf die Plattform.',
+          'Ja. An manchen Fairteilern gibt es stationäre Tablets für die Erfassung. Für persönliche Statistiken brauchst du aber einen eigenen Zugriff auf die Plattform.',
       },
       {
         question: 'Ist FairTrack eine Alternative zu foodsharing.de?',
@@ -222,19 +222,18 @@ const TROUBLESHOOTING: { problem: string; steps: string[] }[] = [
 export default function FairTrackInfo() {
   return (
     <div className='mb-8 px-4 sm:px-0 2xl:mb-56'>
-      <div className='relative flex w-full flex-col items-start gap-2 pt-10 lg:w-2/3'>
+      <div className='relative mx-auto flex max-w-2xl flex-col items-center gap-3 pt-10 text-center'>
         <MorphingBlob
           fill='#99BB44'
           seed={29}
-          className='absolute -top-6 -left-16 -z-10 w-44 opacity-15'
+          className='absolute -top-4 left-1/2 -z-10 w-44 -translate-x-1/2 opacity-15'
         />
         <h1 className='font-londrina text-5xl font-semibold tracking-wider text-primary'>
           Informationen & FAQ
         </h1>
         <p className='text-md font-medium text-muted-foreground'>
-          Umfassende Informationen über FairTrack – das digitale Tracking-Tool
-          für Fairteilerstandorte. Hier findest du alles über Funktionen,
-          Bedienung, Datenschutz und das Projekt dahinter.
+          Umfassende Informationen über FairTrack. Hier findest du alles über
+          Funktionen, Bedienung, Datenschutz und das Projekt dahinter.
         </p>
       </div>
 
@@ -254,16 +253,27 @@ export default function FairTrackInfo() {
           <InfoSection id='ueberblick' title='Überblick'>
             <p>
               In Deutschland landen jedes Jahr über 18 Millionen Tonnen
-              Lebensmittel in der Tonne. Das entspricht der Hälfte unserer
-              produzierten Nahrungsmittel. Vieles davon wäre noch genießbar und
-              wird aus Überproduktionsgründen, falschem Kaufverhalten oder
-              optischen Mängeln entsorgt. Gegen diese Verschwendung engagieren
-              sich Initiativen wie Foodsharing e.V. und viele Privatpersonen,
-              indem sie aktiv Lebensmittel retten.
+              Lebensmittel in der Tonne. Das entspricht knapp einem Drittel
+              unseres jährlichen Nahrungsmittelverbrauchs. Vieles davon wäre
+              noch genießbar und wird aus Überproduktionsgründen, falschem
+              Kaufverhalten oder optischen Mängeln entsorgt. Gegen diese
+              Verschwendung engagieren sich Initiativen wie Foodsharing e.V. und
+              viele Privatpersonen, indem sie aktiv Lebensmittel retten.
+            </p>
+            <p className='text-xs text-muted-foreground'>
+              Quelle:{' '}
+              <Link
+                href='https://www.wwf.de/themen-projekte/landwirtschaft/ernaehrung-konsum/lebensmittelverschwendung/das-grosse-wegschmeissen'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='underline underline-offset-2 hover:text-primary'
+              >
+                WWF-Studie „Das große Wegschmeißen"
+              </Link>
             </p>
             <p>
               <strong>FairTrack</strong> ist ein digitales Tracking-Tool für
-              Fairteilerstandorte, das entwickelt wurde, um dieses Engagement
+              Fairteiler-Standorte, das entwickelt wurde, um dieses Engagement
               sichtbar und mit validen Zahlen belegbar zu machen. Es erfasst
               Lebensmittelabgaben vor Ort einfach, einheitlich und
               nachvollziehbar und macht sichtbar, wie viele Lebensmittel
@@ -309,8 +319,7 @@ export default function FairTrackInfo() {
           {/* So funktionierts */}
           <InfoSection id='so-funktionierts' title='Und so funktionierts…'>
             <p>
-              Vom Fairteiler bis zur persönlichen Statistik – eine Abgabe mit
-              FairTrack besteht aus drei einfachen Schritten.
+              Eine Abgabe mit FairTrack besteht aus drei einfachen Schritten.
             </p>
             <div className='mt-6 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8'>
               <HowItWorksStep
@@ -347,18 +356,14 @@ export default function FairTrackInfo() {
                 blobDelay='-10s'
                 className='sm:col-span-2 lg:col-span-1'
               >
-                Deinen Beitrag im persönlichen Dashboard verfolgen – vom ersten
-                Kilo bis zum nächsten Meilenstein.
+                Deinen Beitrag im persönlichen Dashboard verfolgen.
               </HowItWorksStep>
             </div>
           </InfoSection>
 
           {/* Für Foodsaver:innen */}
           <InfoSection id='bedienkonzept-nutzer' title='Für Foodsaver:innen'>
-            <p>
-              Dein persönlicher Bereich bei FairTrack – vom ersten Login bis zur
-              Rettungshistorie.
-            </p>
+            <p>Dein persönlicher Bereich bei FairTrack.</p>
             <div className='mt-6 grid gap-4 sm:grid-cols-2'>
               <FeatureItem
                 icon={<LayoutDashboard className='size-5' />}
@@ -425,42 +430,26 @@ export default function FairTrackInfo() {
               ermöglichen.
             </p>
 
+            <h3 className='mt-8 mb-3 text-lg font-semibold'>
+              Das Retteformular
+            </h3>
+            <p>
+              Das Retteformular ist das zentrale Werkzeug sowohl im Nutzer- als
+              auch im Fairteiler-Bereich und funktioniert in beiden Kontexten
+              nach dem gleichen Prinzip: Alle Nutzenden geben über das Formular
+              Art, Menge und relevante Details der geretteten Lebensmittel ein.
+            </p>
+            <p>
+              <strong>Besonderheit für Fairteilermitglieder:</strong> Sie können
+              Lebensmittel nicht nur im eigenen Namen erfassen, sondern auch
+              stellvertretend für andere Zugangsprofile (z.B. Gast- oder
+              Mitarbeiter:innen).
+            </p>
+
             <h3 className='mt-6 mb-4 text-lg font-semibold'>
               Rollensystem und Funktionsumfang
             </h3>
             <div className='space-y-4'>
-              <Card>
-                <CardHeader>
-                  <CardTitle className='flex items-center gap-2 text-base'>
-                    <Badge variant='secondary'>Mitglieder</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className='mb-3 text-sm'>
-                    Haben Zugriff auf die grundlegenden Funktionen zur aktiven
-                    Nutzung des Fairteiler-Bereichs:
-                  </p>
-                  <ul className='space-y-1 text-sm text-muted-foreground'>
-                    <li>
-                      • <strong>Dashboard:</strong> Übersicht über aktuelle
-                      Aktivitäten und Statistiken des Fairteilers
-                    </li>
-                    <li>
-                      • <strong>Retteformular:</strong> Das zentrale
-                      Erfassungstool für gerettete Lebensmittel
-                    </li>
-                    <li>
-                      • <strong>Verlauf:</strong> Auflistung aller Abgaben am
-                      jeweiligen Fairteiler
-                    </li>
-                    <li>
-                      • <strong>Statistiken:</strong> Auswertungen zu
-                      Rettungsmengen, Häufigkeiten und Trends
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-
               <Card>
                 <CardHeader>
                   <CardTitle className='flex items-center gap-2 text-base'>
@@ -496,6 +485,38 @@ export default function FairTrackInfo() {
               <Card>
                 <CardHeader>
                   <CardTitle className='flex items-center gap-2 text-base'>
+                    <Badge variant='secondary'>Mitglieder</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className='mb-3 text-sm'>
+                    Haben Zugriff auf die grundlegenden Funktionen zur aktiven
+                    Nutzung des Fairteiler-Bereichs:
+                  </p>
+                  <ul className='space-y-1 text-sm text-muted-foreground'>
+                    <li>
+                      • <strong>Dashboard:</strong> Übersicht über aktuelle
+                      Aktivitäten und Statistiken des Fairteilers
+                    </li>
+                    <li>
+                      • <strong>Retteformular:</strong> Das zentrale
+                      Erfassungstool für gerettete Lebensmittel
+                    </li>
+                    <li>
+                      • <strong>Verlauf:</strong> Auflistung aller Abgaben am
+                      jeweiligen Fairteiler
+                    </li>
+                    <li>
+                      • <strong>Statistiken:</strong> Auswertungen zu
+                      Rettungsmengen, Häufigkeiten und Trends
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className='flex items-center gap-2 text-base'>
                     <Badge variant='outline'>Betrachter:innen</Badge>
                   </CardTitle>
                 </CardHeader>
@@ -513,22 +534,69 @@ export default function FairTrackInfo() {
                 </CardContent>
               </Card>
             </div>
+          </InfoSection>
 
-            <h3 className='mt-8 mb-3 text-lg font-semibold'>
-              Das Retteformular – Kernstück beider Bereiche
+          {/* Über das Projekt */}
+          <InfoSection id='ueber-das-projekt' title='Über das Projekt'>
+            <h3 className='mb-3 text-lg font-semibold'>
+              Entstehungsgeschichte
             </h3>
             <p>
-              Das Retteformular ist das zentrale Werkzeug sowohl im Nutzer- als
-              auch im Fairteiler-Bereich und funktioniert in beiden Kontexten
-              nach dem gleichen Prinzip: Alle Nutzenden geben über das Formular
-              Art, Menge und relevante Details der geretteten Lebensmittel ein.
+              FairTrack ist aus einem Uniprojekt hervorgegangen, das in
+              Zusammenarbeit zwischen der Hochschule der Medien und dem
+              Foodsharing-Café Raupe Immersatt in Stuttgart entstanden ist. Etwa
+              20 Studierende haben an diesem Projekt gearbeitet, mit dem Ziel,
+              den Prozess der Lebensmittelabgabe zu digitalisieren, um zukünftig
+              Wirkungsmessungen durchführen zu können.
             </p>
             <p>
-              <strong>Besonderheit für Fairteilermitglieder:</strong> Sie können
-              Lebensmittel nicht nur im eigenen Namen erfassen, sondern auch
-              stellvertretend für andere Zugangsprofile (z.B. Gast- oder
-              Mitarbeiter:innen).
+              Die beteiligten Teams umfassten verschiedene Disziplinen von
+              Organisation über Design bis hin zur technischen Umsetzung und
+              entwickelten eine erste Version des Retteformulars, die das
+              bestehende analoge Formular ersetzen sollte.
             </p>
+
+            <h3 className='mt-6 mb-3 text-lg font-semibold'>
+              Aktuelle Entwicklung
+            </h3>
+            <p>
+              Danilo Ley Alves, der als Teilnehmer am Uniprojekt beteiligt war,
+              hat FairTrack im Anschluss neu konzipiert und als eigenständige
+              Plattform ausgebaut. Im Fokus stehen dabei die kontinuierliche
+              Weiterentwicklung der Nutzungsoberfläche für die Anforderungen im
+              täglichen Café-Betrieb sowie ein genauerer Einblick für
+              Foodsaver:innen in ihre Beiträge im Kampf gegen
+              Lebensmittelverschwendung.
+            </p>
+          </InfoSection>
+
+          {/* FAQ */}
+          <InfoSection
+            id='haeufig-gestellte-fragen'
+            title='Häufig gestellte Fragen'
+          >
+            <p>
+              Hier findest du Antworten auf die häufigsten Fragen zu FairTrack.
+            </p>
+            <div className='mt-4 space-y-6'>
+              {FAQ_GROUPS.map((group) => (
+                <div key={group.group}>
+                  <h3 className='mb-1 text-lg font-semibold'>{group.group}</h3>
+                  <Accordion type='multiple'>
+                    {group.items.map((item) => (
+                      <AccordionItem key={item.question} value={item.question}>
+                        <AccordionTrigger className='text-left text-sm font-semibold'>
+                          {item.question}
+                        </AccordionTrigger>
+                        <AccordionContent className='text-sm text-muted-foreground'>
+                          {item.answer}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </div>
+              ))}
+            </div>
           </InfoSection>
 
           {/* Daten & Privatsphäre */}
@@ -689,81 +757,6 @@ export default function FairTrackInfo() {
             </div>
           </InfoSection>
 
-          {/* Über das Projekt */}
-          <InfoSection id='ueber-das-projekt' title='Über das Projekt'>
-            <h3 className='mb-3 text-lg font-semibold'>
-              Entstehungsgeschichte
-            </h3>
-            <p>
-              FairTrack ist aus einem Uniprojekt hervorgegangen, das in
-              Zusammenarbeit zwischen der Hochschule der Medien Stuttgart und
-              dem Foodsharing-Café Raupe Immersatt in Stuttgart entstanden ist.
-              Etwa 20 Studierende haben an diesem Projekt gearbeitet, mit dem
-              Ziel, den Prozess der Lebensmittelabgabe zu digitalisieren, um
-              zukünftig Wirkungsmessungen durchführen zu können.
-            </p>
-            <p>
-              Die beteiligten Teams umfassten verschiedene Disziplinen von
-              Organisation über Design bis hin zur technischen Umsetzung. Dieser
-              interdisziplinäre Ansatz ermöglichte es, eine ganzheitliche Lösung
-              zu entwickeln, die sowohl technisch robust als auch
-              benutzerfreundlich ist.
-            </p>
-
-            <h3 className='mt-6 mb-3 text-lg font-semibold'>
-              Aktuelle Entwicklung
-            </h3>
-            <p>
-              Als Teilnehmer des Uniprojekts hat Danilo Ley Alves das Projekt
-              übernommen und FairTrack als Plattform weiter ausgebaut. Im Fokus
-              steht dabei die kontinuierliche Weiterentwicklung der
-              Nutzungsoberfläche für die Anforderungen im täglichen Café-Betrieb
-              und die Foodsaver*innen einen genaueren Einblick über ihre
-              Beiträge im Kampf gegen Lebensmittelverschwendung zu ermöglichen.
-            </p>
-
-            <h3 className='mt-6 mb-3 text-lg font-semibold'>
-              Mission und Vision
-            </h3>
-            <p>
-              FairTrack dient als Tool für öffentliche Fairteiler und
-              Abgabestellen, mit dessen Hilfe Lebensmittelspenden erfasst werden
-              können. Damit wird das Engagement gegen Lebensmittelverschwendung
-              sichtbar und messbar, was sowohl für die interne Motivation als
-              auch für die Außendarstellung und Förderanträge von großer
-              Bedeutung ist.
-            </p>
-          </InfoSection>
-
-          {/* FAQ */}
-          <InfoSection
-            id='haeufig-gestellte-fragen'
-            title='Häufig gestellte Fragen'
-          >
-            <p>
-              Hier findest du Antworten auf die häufigsten Fragen zu FairTrack.
-            </p>
-            <div className='mt-4 space-y-6'>
-              {FAQ_GROUPS.map((group) => (
-                <div key={group.group}>
-                  <h3 className='mb-1 text-lg font-semibold'>{group.group}</h3>
-                  <Accordion type='multiple'>
-                    {group.items.map((item) => (
-                      <AccordionItem key={item.question} value={item.question}>
-                        <AccordionTrigger className='text-left text-sm font-semibold'>
-                          {item.question}
-                        </AccordionTrigger>
-                        <AccordionContent className='text-sm text-muted-foreground'>
-                          {item.answer}
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </div>
-              ))}
-            </div>
-          </InfoSection>
-
           {/* Fehlersuche & Support */}
           <InfoSection id='fehlersuche-support' title='Fehlersuche & Support'>
             <p>
@@ -799,7 +792,7 @@ export default function FairTrackInfo() {
               Support kontaktieren
             </h3>
             <p>
-              Wenn die Checkliste nicht hilft, steht das Support-Team über das
+              Wenn die Checkliste nicht hilft, stehen wir über das
               Feedback-Formular zur Verfügung.
             </p>
             <div className='mt-4 space-y-4'>

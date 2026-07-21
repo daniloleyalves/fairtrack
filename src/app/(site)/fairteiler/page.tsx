@@ -1,5 +1,3 @@
-'use cache';
-
 import { getFairteilers } from '@server/fairteiler/queries';
 import { getFairteilerQuantities } from '@server/platform/queries';
 import { BlurFade } from '@/components/magicui/blur-fade';
@@ -14,16 +12,17 @@ import {
   CardTitle,
 } from '@components/ui/card';
 import { generateBlurDataUrlFromImage } from '@/lib/services/plaiceholder';
+import { Logo } from '@/lib/assets/logo';
+import { siteConfig } from '@/lib/config/site-config';
 import { formatNumber } from '@/lib/utils';
-import { Globe, MapPin, Scale } from 'lucide-react';
+import { Globe, Mail, MapPin, Scale } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { type Fairteiler as FairteilerType } from '@server/db/db-types';
 import { cn } from '@/lib/utils';
 
-// eslint-disable-next-line
-export default async function FairteilerPage() {
+export default function FairteilerPage() {
   return (
     <div className='mb-8 px-4 pt-10 sm:px-0 2xl:mb-60'>
       <div className='relative mx-auto flex max-w-2xl flex-col items-center gap-3 text-center'>
@@ -36,9 +35,9 @@ export default async function FairteilerPage() {
           Fairteiler
         </h1>
         <p className='text-md font-medium text-muted-foreground'>
-          Diese Fairteilerstationen erfassen ihre Lebensmittelabgaben mit
-          FairTrack. Hier kannst du über die App Lebensmittel abgeben und
-          abholen – und jedes Kilo zählt für die gemeinsame Bilanz.
+          Diese Fairteiler-Stationen erfassen ihre Lebensmittelabgaben mit
+          FairTrack. Bei diesen Stationen kannst du Lebensmittel abgeben und
+          abholen :)
         </p>
       </div>
 
@@ -52,18 +51,11 @@ export default async function FairteilerPage() {
 }
 
 async function FairteilerGrid() {
+  'use cache';
   const [fairteilers, quantities] = await Promise.all([
     getFairteilers(),
     getFairteilerQuantities(),
   ]);
-
-  if (fairteilers.length === 0) {
-    return (
-      <p className='text-muted-foreground'>
-        Aktuell sind keine Fairteiler verfügbar.
-      </p>
-    );
-  }
 
   return (
     <>
@@ -80,7 +72,43 @@ async function FairteilerGrid() {
           />
         </BlurFade>
       ))}
+      <BlurFade
+        inView
+        delay={Math.min(fairteilers.length, 7) * 0.06}
+        className='h-full'
+      >
+        <FairteilerPlaceholderCard />
+      </BlurFade>
     </>
+  );
+}
+
+function FairteilerPlaceholderCard() {
+  return (
+    <Card className='flex h-full flex-col border-dashed pt-0'>
+      <div className='flex h-[180px] w-full items-center justify-center overflow-hidden rounded-t-lg bg-muted'>
+        <Logo aria-hidden className='h-auto opacity-70' />
+      </div>
+      <CardHeader>
+        <CardTitle className='mb-2 text-xl md:text-2xl'>
+          Hier könnte dein Fairteiler stehen
+        </CardTitle>
+        <CardDescription>
+          Du betreibst einen Fairteiler und möchtest deine Abgaben mit FairTrack
+          erfassen? Melde dich bei uns!
+        </CardDescription>
+      </CardHeader>
+      <CardContent className='mt-auto flex flex-col items-start'>
+        <div className='flex w-full items-center'>
+          <Mail className='mr-2 size-3.5' />
+          <Button asChild className='h-8 p-0' variant='link'>
+            <Link href={`mailto:${siteConfig.contact}`} className='truncate'>
+              {siteConfig.contact}
+            </Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -91,6 +119,7 @@ async function FairteilerCard({
   fairteiler: FairteilerType;
   trackedKg: number;
 }) {
+  'use cache';
   const blurDataURL = fairteiler.thumbnail
     ? (await generateBlurDataUrlFromImage(fairteiler.thumbnail)).base64
     : undefined;
@@ -142,12 +171,6 @@ async function FairteilerCard({
         )}
       </CardHeader>
       <CardContent className='mt-auto flex flex-col items-start'>
-        {!fairteiler.thumbnail && trackedKg > 0 && (
-          <div className='mb-2 flex items-center gap-1.5 text-sm font-semibold text-primary'>
-            <Scale className='size-3.5' />
-            {formatNumber(trackedKg, 0)} kg fairteilt
-          </div>
-        )}
         {(fairteiler.geoLink ?? fairteiler.address) && (
           <div className='flex w-full items-center'>
             <MapPin className='mr-2 size-3.5' />

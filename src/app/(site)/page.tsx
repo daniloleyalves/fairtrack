@@ -51,9 +51,8 @@ export default async function Home() {
           </h1>
           <BlurFade delay={0.15} duration={0.2}>
             <p className='mx-auto mt-6 max-w-3xl text-center font-semibold sm:text-xl'>
-              FairTrack macht sichtbar, was die Foodsharing-Community leistet:
-              Jede Lebensmittelabgabe an einem Fairteiler wird erfasst – und aus
-              Schätzungen werden Fakten.
+              Jedes Gramm zählt, und FairTrack zählt mit! Für dich, deine Bilanz
+              und die der ganzen Foodsharing-Community.
             </p>
           </BlurFade>
           <BlurFade delay={0.2} duration={0.2}>
@@ -227,8 +226,8 @@ export default async function Home() {
               FairTrack in Aktion
             </h2>
             <p className='mx-auto mt-4 max-w-2xl text-center text-muted-foreground'>
-              Vom Fairteiler-Finder bis zum fertigen Beitrag: So erfasst du
-              deine Abgabe direkt am Handy – in unter einer Minute.
+              So erfasst du deine Abgabe direkt am Handy, an jedem bei FairTrack
+              registrierten Fairteiler, vom Regal bis zum Foodsharing-Café.
             </p>
           </BlurFade>
           <div className='mt-10'>
@@ -271,14 +270,14 @@ export default async function Home() {
                     Du betreibst einen Fairteiler?
                   </h2>
                   <p className='mt-4 text-muted-foreground'>
-                    FairTrack gibt deinem Standort verlässliche Kennzahlen – für
+                    FairTrack gibt deinem Standort verlässliche Kennzahlen. Für
                     die interne Steuerung, die Öffentlichkeitsarbeit und
-                    Förderanträge. Kostenlos und Open Source.
+                    Förderanträge. Komplett kostenfrei.
                   </p>
                   <div className='mt-6 flex flex-col gap-3 sm:flex-row'>
                     <Button asChild size='lg' className='group'>
                       <Link href='/sign-up'>
-                        Fairteiler registrieren
+                        Jetzt registrieren
                         <ArrowRight className='ml-1 size-4 transition-transform group-hover:translate-x-0.5' />
                       </Link>
                     </Button>
@@ -408,7 +407,7 @@ function OperatorFeature({
     <li
       className={`rounded-2xl bg-background p-4 transition-transform duration-300 hover:rotate-0 ${tilt}`}
     >
-      <div className='blob flex size-9 items-center justify-center bg-primary/10 text-primary'>
+      <div className='blob flex size-9 items-center justify-center rounded bg-primary/10 text-primary'>
         {icon}
       </div>
       <h3 className='mt-3 text-sm font-semibold'>{title}</h3>
