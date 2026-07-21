@@ -200,7 +200,6 @@ export function SignUpForm({
             reportAuthError(ctx.error, { flow: 'sign-up', step: 'submit' });
             console.error(ctx.error);
             form.setError('root.serverError', {
-              // eslint-disable-next-line
               message: getErrorMessage(ctx.error.code, 'de'),
             });
             setIsPending(false);

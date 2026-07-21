@@ -1,0 +1,8 @@
+.mapboxgl-popup-content {
+  border-radius: 16px !important;
+  padding: 10px !important;
+}
+
+.mapboxgl-ctrl-logo {
+  display: none !important;
+}

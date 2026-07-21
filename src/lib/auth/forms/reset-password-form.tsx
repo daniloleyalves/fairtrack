@@ -66,7 +66,6 @@ export function ResetPasswordForm({
             });
             console.error(ctx.error);
             form.setError('root.serverError', {
-              // eslint-disable-next-line
               message: getErrorMessage(ctx.error.code, 'de'),
             });
             setIsPending(false);

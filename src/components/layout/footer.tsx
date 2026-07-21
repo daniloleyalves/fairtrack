@@ -17,6 +17,7 @@ export function Footer() {
           height={155}
           width={205}
           priority
+          className='plant-sway'
         />
         <Image
           src={Illustrations.footerPlantsRight}
@@ -26,6 +27,8 @@ export function Footer() {
           height={283}
           width={210}
           priority
+          className='plant-sway'
+          style={{ animationDuration: '7.8s', animationDelay: '-3.2s' }}
         />
       </div>
       <footer className='rounded-t-lg bg-foreground py-3 shadow'>

@@ -8,7 +8,7 @@ import { QueryProvider } from '@/lib/providers/query-provider';
 import NavigationLoadingIndicator from '@components/navigation-loading-indicator';
 import { DemoBanner } from '@components/demo-banner';
 import { Suspense } from 'react';
-import { Loader2 } from 'lucide-react';
+import { LoadingScreen } from '@components/loading-screen';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 
@@ -60,17 +60,11 @@ export default function RootLayout({
   return (
     <html lang='en' suppressHydrationWarning data-scroll-behavior='smooth'>
       <body
-        className={`${geistSans.variable} ${londrinaSolid.variable} flex min-h-screen flex-col font-sans antialiased`}
+        className={`${geistSans.variable} ${londrinaSolid.variable} flex min-h-screen flex-col overflow-x-clip font-sans antialiased`}
       >
         <DemoBanner />
         <NavigationLoadingIndicator />
-        <Suspense
-          fallback={
-            <div className='flex flex-1 items-center justify-center'>
-              <Loader2 className='size-10 animate-spin text-primary' />
-            </div>
-          }
-        >
+        <Suspense fallback={<LoadingScreen className='flex-1' />}>
           <AuthProvider>
             <QueryProvider>
               <ErrorBoundary>{children}</ErrorBoundary>
