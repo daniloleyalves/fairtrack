@@ -1,0 +1,70 @@
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    background-image: url('/background.png');
+    background-repeat: repeat;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  @supports (font: -apple-system-body) and (-webkit-appearance: none) {
+    [data-wrapper] {
+      @apply min-[1800px]:border-t;
+    }
+  }
+
+  /* === Input Type Number Arrows === */
+
+  /* Chrome, Safari, Edge, Opera */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  input[type='number'] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+
+  /* === Highlighting === */
+  ::selection {
+    @apply bg-primary;
+    @apply text-white;
+  }
+
+  /* === Scrollbars === */
+
+  ::-webkit-scrollbar {
+    @apply w-1.5;
+    @apply h-1.5;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply !bg-background;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-xl !bg-muted-foreground/30;
+  }
+
+  /* Firefox */
+  /* https://developer.mozilla.org/en-US/docs/Web/CSS/scrollbar-color#browser_compatibility */
+  html {
+    scrollbar-color: hsl(215.4 16.3% 46.9% / 0.3);
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
