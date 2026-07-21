@@ -4,6 +4,9 @@ node_modules
 # next
 .next
 
+# typescript
+*.tsbuildinfo
+
 # turbo
 .turbo
 
@@ -12,6 +15,7 @@ node_modules
 
 # Testing & Coverage
 .test-results/
+cypress/downloads/
 
 # debug
 pnpm-debug.log*
@@ -36,4 +40,5 @@ skills-lock.json
 
 # Local-only planning / runbook docs (kept on disk, not in git)
 docs/
+
 .notes/

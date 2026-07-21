@@ -39,9 +39,8 @@ export function SecurityModal({
             <DialogTitle>Passwort erforderlich</DialogTitle>
           </div>
           <DialogDescription className='text-left'>
-            Seit November 2025 sind alle Konten verpflichtet, ein Passwort zu
-            haben. Ihr Konto benötigt ein neues Passwort, um wieder Zugang zu
-            erhalten.
+            Ihr Konto benötigt aus Sicherheitsgründen ein neues Passwort, um
+            wieder Zugang zu erhalten.
           </DialogDescription>
         </DialogHeader>
 

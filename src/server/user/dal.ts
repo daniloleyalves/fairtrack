@@ -19,6 +19,7 @@ import { auth } from '@/lib/auth/auth';
 import { defaultDateRange } from '@/lib/config/site-config';
 import { db } from '../db/drizzle';
 import {
+  account,
   checkin,
   experienceLevels,
   experiencLevelEvents,
@@ -27,6 +28,7 @@ import {
   milestones,
   onboardingStepsEvents,
   questBadgeEvents,
+  session,
   user,
   userFeedback,
   userPreferences,
@@ -52,7 +54,6 @@ export const loadAuthenticatedSession = cache(
 
 export const loadSession = cache(
   async (headers: Headers, invalidateCookieCache = false) => {
-    console.log('loading session');
     return await auth.api.getSession({
       query: {
         disableCookieCache: invalidateCookieCache,
@@ -90,17 +91,22 @@ export async function validateResetPasswordToken(token: string) {
 
 export async function loadUserByEmail(email: string) {
   const [error, data] = await attempt(
-    db.query.user.findFirst({
-      where: eq(user.email, email),
-      columns: {
-        id: true,
-        email: true,
-        secure: true,
-      },
-    }),
+    db
+      .select({
+        id: user.id,
+        email: user.email,
+        hasPassword: sql<boolean>`${account.password} is not null`,
+      })
+      .from(user)
+      .leftJoin(
+        account,
+        and(eq(account.userId, user.id), eq(account.providerId, 'credential')),
+      )
+      .where(eq(user.email, email))
+      .limit(1),
   );
   if (error) handleDatabaseError(error, 'loadUserByEmail');
-  return data;
+  return data?.[0];
 }
 
 export async function updateUserSecureStatus(userId: string, secure: boolean) {
@@ -109,6 +115,25 @@ export async function updateUserSecureStatus(userId: string, secure: boolean) {
   );
   if (error) handleDatabaseError(error, 'updateUserSecureStatus');
   return data;
+}
+
+/**
+ * Server-authority counterpart to better-auth's admin-gated `banUser`
+ * endpoint: bans the user and deletes their sessions so an active login
+ * is terminated immediately. Callers must authorize the operation
+ * themselves (e.g. via an organization-level permission check).
+ */
+export async function banUserAndRevokeSessions(userId: string, reason: string) {
+  const [error] = await attempt(
+    Promise.all([
+      db
+        .update(user)
+        .set({ banned: true, banReason: reason })
+        .where(eq(user.id, userId)),
+      db.delete(session).where(eq(session.userId, userId)),
+    ]),
+  );
+  if (error) handleDatabaseError(error, 'banUserAndRevokeSessions');
 }
 
 // ------- USER DASHBOARD DATA ----------
@@ -364,14 +389,16 @@ export const updateUserPreferences = async (
     enableStreaks?: boolean;
     enableQuests?: boolean;
     enableAIFeedback?: boolean;
-    isAnonymous?: boolean;
   },
 ) => {
   const [error, data] = await attempt(
     db
-      .update(userPreferences)
-      .set(preferences)
-      .where(eq(userPreferences.userId, userId))
+      .insert(userPreferences)
+      .values({ userId, ...preferences })
+      .onConflictDoUpdate({
+        target: userPreferences.userId,
+        set: preferences,
+      })
       .returning(),
   );
 

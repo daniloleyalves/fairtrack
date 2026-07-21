@@ -1,4 +1,5 @@
 'use server';
+import * as Sentry from '@sentry/nextjs';
 import {
   loadCategoryDistribution,
   loadKeyFigures,
@@ -42,12 +43,14 @@ export async function getFairteilerQuantities(): Promise<
  */
 export async function getPlatformStats() {
   const [keyFigures, categoryDistribution, originDistribution, fairteilers] =
-    await Promise.all([
-      loadKeyFigures(),
-      loadCategoryDistribution(),
-      loadOriginDistribution(),
-      loadFairteilers(),
-    ]);
+    await Sentry.startSpan({ name: 'getPlatformStats', op: 'db.query' }, () =>
+      Promise.all([
+        loadKeyFigures(),
+        loadCategoryDistribution(),
+        loadOriginDistribution(),
+        loadFairteilers(),
+      ]),
+    );
 
   const totalQuantityInKg =
     parseFloat(keyFigures?.[0]?.totalQuantity ?? '0') +

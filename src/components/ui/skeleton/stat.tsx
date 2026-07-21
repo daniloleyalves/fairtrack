@@ -14,7 +14,7 @@ export function StatSkeleton({ count, variant, className }: StatSkeletonProps) {
         variant === 'icon-label' ? (
           <div
             key={i}
-            className='flex items-center gap-3 rounded-lg border bg-card p-4'
+            className='flex items-center gap-3 rounded-lg border bg-card p-4 shadow-sm'
           >
             <Skeleton variant='onCard' className='size-12 rounded-full' />
             <Skeleton variant='onCard' className='h-6 w-24' />
@@ -22,7 +22,7 @@ export function StatSkeleton({ count, variant, className }: StatSkeletonProps) {
         ) : (
           <div
             key={i}
-            className='flex flex-col items-center gap-2 rounded-lg border-4 bg-card p-4'
+            className='flex flex-col items-center gap-2 rounded-lg border-4 border-white bg-card p-4 shadow-sm'
           >
             <Skeleton variant='onCard' className='h-8 w-16' />
             <Skeleton variant='onCard' className='h-4 w-8' />

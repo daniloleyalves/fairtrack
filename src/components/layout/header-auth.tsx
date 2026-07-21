@@ -99,7 +99,7 @@ function UserMenu({
               ))}
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <SignOutMenuItem redirectTo={null} />
+          <SignOutMenuItem />
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

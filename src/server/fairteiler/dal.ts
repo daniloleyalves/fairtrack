@@ -18,9 +18,8 @@ import {
   tag,
 } from '../db/schema';
 import { GenericItem, Tag } from '../db/db-types';
-import { AuthError } from '../api-helpers';
 import { DatabaseError, handleDatabaseError } from '../error-handling';
-import { loadAuthenticatedSession } from '../user/dal';
+import { loadSession } from '../user/dal';
 
 export async function loadFairteilers() {
   const [error, data] = await attempt(
@@ -89,10 +88,10 @@ export async function loadTagsByFairteiler(fairteilerId: string) {
 }
 
 export const loadActiveOrganization = cache(async (headers: Headers) => {
-  const session = await loadAuthenticatedSession(headers);
-  const fairteilerId = session.session.activeOrganizationId;
+  const session = await loadSession(headers);
+  const fairteilerId = session?.session.activeOrganizationId;
   if (!fairteilerId) {
-    throw new AuthError('No active organization');
+    return null;
   }
 
   const [error, data] = await attempt(

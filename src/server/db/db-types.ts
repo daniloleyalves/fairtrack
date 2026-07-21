@@ -10,7 +10,6 @@ import {
   milestones,
   stepFlowProgress,
   tag,
-  user,
   userPreferences,
 } from './schema';
 import { MemberRoles } from '@/lib/auth/auth-permissions';
@@ -29,7 +28,6 @@ export interface Fairteiler {
   slug: string;
 }
 
-// export type DBMember = InferSelectModel<typeof member>;
 export interface Member {
   id: string;
   user: User;
@@ -47,8 +45,6 @@ export interface User {
   isAnonymous: boolean;
   isFirstLogin: boolean;
 }
-
-export type UpdateUser = InferInsertModel<typeof user>;
 
 export interface GenericItem {
   id: string;
@@ -92,19 +88,6 @@ export interface vContribution {
   contributorEmail: string | null;
   fairteilerId: string;
   fairteilerName: string;
-}
-
-export interface ContributionVersionHistory {
-  id: string;
-  checkinId: string;
-  fairteilerId: string;
-  userId: string;
-  authorName: string;
-  authorEmail: string;
-  prevValue: string;
-  newValue: string;
-  field: string;
-  changeDate: string;
 }
 
 export type UserPreferences = InferSelectModel<typeof userPreferences>;

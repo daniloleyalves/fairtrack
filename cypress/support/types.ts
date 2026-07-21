@@ -11,6 +11,7 @@ import type {
   category,
   origin,
   company,
+  checkin,
 } from '@/server/db/schema';
 
 // ============================================================================
@@ -48,6 +49,7 @@ export type DatabaseSession = InferSelectModel<typeof session>;
 export type DatabaseMember = InferSelectModel<typeof member>;
 export type DatabaseInvitation = InferSelectModel<typeof invitation>;
 export type DatabaseVerification = InferSelectModel<typeof verification>;
+export type DatabaseCheckin = InferSelectModel<typeof checkin>;
 export type DatabasePreference =
   | InferSelectModel<typeof category>
   | InferSelectModel<typeof origin>

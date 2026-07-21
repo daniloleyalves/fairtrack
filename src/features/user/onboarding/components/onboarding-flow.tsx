@@ -1,6 +1,6 @@
 'use client';
 
-import { startTransition, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -88,9 +88,7 @@ export function OnboardingFlow({
         Object.assign(allStepData, data);
       }
     });
-    startTransition(() => {
-      completeOnboarding.execute(allStepData);
-    });
+    completeOnboarding.execute(allStepData);
   };
 
   if (stepFlow.isLoading) {

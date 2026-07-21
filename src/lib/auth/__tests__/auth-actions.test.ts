@@ -17,7 +17,10 @@ import { put, del } from '@vercel/blob';
 import { headers } from 'next/headers';
 import { MemberRolesEnum } from '../auth-permissions';
 import { NotFoundError } from '@/server/error-handling';
-import { loadAuthenticatedSession } from '@server/user/dal';
+import {
+  banUserAndRevokeSessions,
+  loadAuthenticatedSession,
+} from '@server/user/dal';
 import { mockSession } from '@/__tests__/mocks/server-only';
 
 // Mock all external dependencies
@@ -53,6 +56,7 @@ vi.mock('@server/fairteiler/dal', () => ({
 }));
 
 vi.mock('@server/user/dal', () => ({
+  banUserAndRevokeSessions: vi.fn(),
   loadAuthenticatedSession: vi.fn(),
   loadUserByEmail: vi.fn(),
   validateResetPasswordToken: vi.fn(),
@@ -642,27 +646,6 @@ describe('Authentication Actions', () => {
           name: 'Test User',
         },
       });
-      vi.mocked(auth.api.setRole).mockResolvedValue({
-        user: {
-          id: 'user-123',
-          role: 'admin',
-          email: 'test@example.com',
-          emailVerified: true,
-          name: 'Test User',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          banned: false,
-          banReason: null,
-          banExpires: null,
-        },
-      });
-      vi.mocked(loadMemberById).mockResolvedValue({
-        id: 'member-123',
-        userId: 'user-123',
-        organizationId: 'fairteiler-123',
-        role: 'owner',
-        createdAt: new Date(),
-      });
     });
 
     it('should successfully update member role', async () => {
@@ -682,7 +665,7 @@ describe('Authentication Actions', () => {
       expect(auth.api.setRole).not.toHaveBeenCalled();
     });
 
-    it('should promote user to admin when role is owner', async () => {
+    it('should promote to owner without granting a platform role', async () => {
       await updateMemberRoleAction({
         memberId: 'member-123',
         role: MemberRolesEnum.OWNER,
@@ -696,53 +679,6 @@ describe('Authentication Actions', () => {
         },
       });
 
-      expect(auth.api.setRole).toHaveBeenCalledWith({
-        headers: mockHeaders,
-        body: {
-          role: 'admin',
-          userId: 'user-123',
-        },
-      });
-    });
-
-    it('promotes the userId owned by the memberId, not a client-supplied id', async () => {
-      vi.mocked(loadMemberById).mockResolvedValue({
-        id: 'member-123',
-        userId: 'member-123-real-owner',
-        organizationId: 'fairteiler-123',
-        role: 'owner',
-        createdAt: new Date(),
-      });
-
-      await updateMemberRoleAction({
-        memberId: 'member-123',
-        role: MemberRolesEnum.OWNER,
-      });
-
-      expect(loadMemberById).toHaveBeenCalledWith(
-        'member-123',
-        'fairteiler-123',
-      );
-      expect(auth.api.setRole).toHaveBeenCalledWith({
-        headers: mockHeaders,
-        body: {
-          role: 'admin',
-          userId: 'member-123-real-owner',
-        },
-      });
-    });
-
-    it('rejects owner promotion when the member is not in the active org', async () => {
-      vi.mocked(loadMemberById).mockResolvedValue(undefined);
-
-      const result = await updateMemberRoleAction({
-        memberId: 'member-from-another-org',
-        role: MemberRolesEnum.OWNER,
-      });
-
-      expect(result?.serverError).toBe(
-        "Member with identifier 'member-from-another-org' not found",
-      );
       expect(auth.api.setRole).not.toHaveBeenCalled();
     });
 
@@ -755,17 +691,6 @@ describe('Authentication Actions', () => {
         role: MemberRolesEnum.MEMBER,
       });
       expect(result?.serverError).toBe('Insufficient permissions');
-    });
-
-    it('should surface admin promotion errors as serverError', async () => {
-      const adminError = new Error('Failed to set admin role');
-      vi.mocked(auth.api.setRole).mockRejectedValue(adminError);
-
-      const result = await updateMemberRoleAction({
-        memberId: 'member-123',
-        role: MemberRolesEnum.OWNER,
-      });
-      expect(result?.serverError).toBe('Failed to set admin role');
     });
 
     it('should surface validation errors for invalid input parameters', async () => {
@@ -861,17 +786,18 @@ describe('Authentication Actions', () => {
 
   describe('disableAccessViewAction', () => {
     beforeEach(() => {
-      vi.mocked(auth.api.banUser).mockResolvedValue({
-        user: {
-          id: 'user-123',
-          name: 'Test User',
-          email: 'test@example.com',
-          emailVerified: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          banned: true,
-        },
+      vi.mocked(checkPermissionOnServer).mockResolvedValue({
+        success: true,
+        error: null,
       });
+      vi.mocked(loadMemberById).mockResolvedValue({
+        id: 'member-123',
+        userId: 'user-123',
+        organizationId: 'fairteiler-123',
+        role: MemberRolesEnum.EMPLOYEE,
+        createdAt: new Date(),
+      });
+      vi.mocked(banUserAndRevokeSessions).mockResolvedValue(undefined);
       vi.mocked(auth.api.updateMemberRole).mockResolvedValue({
         id: 'member-123',
         organizationId: 'fairteiler-123',
@@ -886,22 +812,26 @@ describe('Authentication Actions', () => {
       });
     });
 
-    it('should successfully disable access view', async () => {
+    it('should successfully disable access view as fairteiler owner', async () => {
       const result = await disableAccessViewAction({
         userId: 'user-123',
         memberId: 'member-123',
       });
 
       expect(result).toBeDefined();
+      expect(result?.serverError).toBeUndefined();
 
-      expect(auth.api.banUser).toHaveBeenCalledWith({
-        headers: mockHeaders,
-        body: {
-          userId: 'user-123',
-          banReason: 'DISABLED ACCESS VIEW',
-        },
+      expect(checkPermissionOnServer).toHaveBeenCalledWith(mockHeaders, {
+        user: ['ban'],
       });
-
+      expect(loadMemberById).toHaveBeenCalledWith(
+        'member-123',
+        'fairteiler-123',
+      );
+      expect(banUserAndRevokeSessions).toHaveBeenCalledWith(
+        'user-123',
+        'DISABLED ACCESS VIEW',
+      );
       expect(auth.api.updateMemberRole).toHaveBeenCalledWith({
         headers: mockHeaders,
         body: {
@@ -911,51 +841,95 @@ describe('Authentication Actions', () => {
       });
     });
 
-    it('should surface ban user errors as serverError', async () => {
-      const banError = new Error('User not found');
-      vi.mocked(auth.api.banUser).mockRejectedValue(banError);
+    it('should reject callers without the user ban permission', async () => {
+      vi.mocked(checkPermissionOnServer).mockResolvedValue({
+        success: false,
+        error: null,
+      });
 
       const result = await disableAccessViewAction({
-        userId: 'nonexistent-user',
+        userId: 'user-123',
         memberId: 'member-123',
       });
-      expect(result?.serverError).toBe('User not found');
+
+      expect(result?.serverError).toBe(
+        'Permission denied: Du bist nicht befugt User zu aktualisieren',
+      );
+      expect(banUserAndRevokeSessions).not.toHaveBeenCalled();
+      expect(auth.api.updateMemberRole).not.toHaveBeenCalled();
+    });
+
+    it('should reject members that do not belong to the active fairteiler', async () => {
+      vi.mocked(loadMemberById).mockResolvedValue(undefined);
+
+      const result = await disableAccessViewAction({
+        userId: 'user-123',
+        memberId: 'member-123',
+      });
+
+      expect(result?.serverError).toBe(
+        'Permission denied: Das ausgewählte Zugangsprofil gehört nicht zu diesem Fairteiler.',
+      );
+      expect(banUserAndRevokeSessions).not.toHaveBeenCalled();
+    });
+
+    it('should reject when the userId does not match the member record', async () => {
+      const result = await disableAccessViewAction({
+        userId: 'other-user',
+        memberId: 'member-123',
+      });
+
+      expect(result?.serverError).toBe(
+        'Permission denied: Das ausgewählte Zugangsprofil gehört nicht zu diesem Fairteiler.',
+      );
+      expect(banUserAndRevokeSessions).not.toHaveBeenCalled();
+    });
+
+    it('should reject regular team members that are not access views', async () => {
+      vi.mocked(loadMemberById).mockResolvedValue({
+        id: 'member-123',
+        userId: 'user-123',
+        organizationId: 'fairteiler-123',
+        role: MemberRolesEnum.MEMBER,
+        createdAt: new Date(),
+      });
+
+      const result = await disableAccessViewAction({
+        userId: 'user-123',
+        memberId: 'member-123',
+      });
+
+      expect(result?.serverError).toBe(
+        'Permission denied: Das ausgewählte Zugangsprofil gehört nicht zu diesem Fairteiler.',
+      );
+      expect(banUserAndRevokeSessions).not.toHaveBeenCalled();
+    });
+
+    it('should surface ban errors as serverError and skip the role update', async () => {
+      vi.mocked(banUserAndRevokeSessions).mockRejectedValue(
+        new Error('Ban failed'),
+      );
+
+      const result = await disableAccessViewAction({
+        userId: 'user-123',
+        memberId: 'member-123',
+      });
+
+      expect(result?.serverError).toBe('Ban failed');
+      expect(auth.api.updateMemberRole).not.toHaveBeenCalled();
     });
 
     it('should surface role update errors as serverError', async () => {
-      const roleError = new Error('Failed to update role');
-      vi.mocked(auth.api.updateMemberRole).mockRejectedValue(roleError);
+      vi.mocked(auth.api.updateMemberRole).mockRejectedValue(
+        new Error('Failed to update role'),
+      );
 
       const result = await disableAccessViewAction({
         userId: 'user-123',
         memberId: 'member-123',
       });
+
       expect(result?.serverError).toBe('Failed to update role');
-    });
-
-    it('should surface validation errors from ban', async () => {
-      const banError = new Error('User ID required');
-      vi.mocked(auth.api.banUser).mockRejectedValue(banError);
-
-      const result = await disableAccessViewAction({
-        userId: '',
-        memberId: '',
-      });
-      expect(result?.serverError).toBe('User ID required');
-    });
-
-    it('should not call role update if ban fails', async () => {
-      const banError = new Error('Ban failed');
-      vi.mocked(auth.api.banUser).mockRejectedValue(banError);
-
-      const result = await disableAccessViewAction({
-        userId: 'user-123',
-        memberId: 'member-123',
-      });
-      expect(result?.serverError).toBe('Ban failed');
-
-      expect(auth.api.banUser).toHaveBeenCalled();
-      expect(auth.api.updateMemberRole).not.toHaveBeenCalled();
     });
   });
 

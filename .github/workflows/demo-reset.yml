@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # Manual trigger
 
 env:
-  PNPM_VERSION: latest
+  PNPM_VERSION: 10.12.1
 
 jobs:
   reset-demo-db:
@@ -20,15 +20,15 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: '.nvmrc'
           cache: 'pnpm'

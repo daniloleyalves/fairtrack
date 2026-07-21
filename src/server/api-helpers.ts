@@ -1,4 +1,6 @@
 import { blobPathNames } from '@/lib/config/blob-storage-config';
+import { captureUnexpected } from '@/server/_lib/sentry-capture';
+import * as Sentry from '@sentry/nextjs';
 import { del, put } from '@vercel/blob';
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError } from 'zod';
@@ -80,6 +82,7 @@ export function createApiRoute<
           { status: 401 },
         );
       }
+      captureUnexpected(error);
       const message =
         error instanceof Error ? error.message : 'An unknown error occurred.';
       return NextResponse.json(
@@ -106,10 +109,13 @@ export async function handleImageUpload(
   let newImageUrl = oldImageUrl;
 
   if (image instanceof File) {
-    const blob = await put(
-      `${blobPathNames[blobPathNameKey]}/${image.name}`,
-      image,
-      { access: 'public', allowOverwrite: true },
+    const blob = await Sentry.startSpan(
+      { name: 'blob.upload', op: 'file.upload' },
+      () =>
+        put(`${blobPathNames[blobPathNameKey]}/${image.name}`, image, {
+          access: 'public',
+          allowOverwrite: true,
+        }),
     );
     newImageUrl = blob.url;
     if (oldImageUrl) {

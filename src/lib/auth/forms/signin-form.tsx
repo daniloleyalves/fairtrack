@@ -18,18 +18,18 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import * as Sentry from '@sentry/nextjs';
 import { authClient } from '../auth-client';
 import { getErrorMessage } from '../auth-helpers';
+import { reportAuthError } from '../report-auth-error';
 import { handleClientOperation, noop } from '@/lib/client-error-handling';
 import { signInSchema, emailOnlySchema } from '../schemas';
 import {
   checkInvitationAndUserAction,
-  checkUserSecureStatusAction,
+  checkUserPasswordStatusAction,
 } from '../auth-actions';
 import { invokeAction } from '@/lib/hooks/use-form-action';
-import { MemberRolesEnum } from '../auth-permissions';
-import { User } from '@/server/db/db-types';
-import { SuccessContext } from 'better-auth/react';
+import { usePendingRedirect } from '@/lib/hooks/use-pending-redirect';
 import { SecurityModal } from '../components/security-modal';
 
 export function SignInForm({
@@ -39,7 +39,7 @@ export function SignInForm({
   const [isPending, setIsPending] = useState(false);
   const [isCheckingUser, setIsCheckingUser] = useState(false);
   const [userChecked, setUserChecked] = useState(false);
-  const [userIsSecure, setUserIsSecure] = useState<boolean | null>(null);
+  const [userHasPassword, setUserHasPassword] = useState<boolean | null>(null);
   const [showSecurityModal, setShowSecurityModal] = useState(false);
   const [currentEmail, setCurrentEmail] = useState('');
   const [invitationData, setInvitationData] = useState<{
@@ -72,6 +72,15 @@ export function SignInForm({
       password: '',
     },
   });
+
+  const { isRedirectPending, redirect } = usePendingRedirect(() => {
+    emailForm.reset();
+    signInForm.reset();
+    setUserChecked(false);
+    setUserHasPassword(null);
+    setCurrentEmail('');
+  });
+  const isBusy = isPending || isRedirectPending;
 
   useEffect(() => {
     const invitationId = searchParams.get('invitationId');
@@ -110,7 +119,7 @@ export function SignInForm({
 
   function handleBackToEmail() {
     setUserChecked(false);
-    setUserIsSecure(null);
+    setUserHasPassword(null);
     signInForm.reset();
   }
 
@@ -120,7 +129,7 @@ export function SignInForm({
 
     await handleClientOperation(
       async () => {
-        const data = await invokeAction(checkUserSecureStatusAction, {
+        const data = await invokeAction(checkUserPasswordStatusAction, {
           email: values.email,
         });
 
@@ -132,17 +141,15 @@ export function SignInForm({
         }
 
         setUserChecked(true);
-        setUserIsSecure(data.isSecure ?? false);
+        setUserHasPassword(data.hasPassword ?? false);
 
-        if (data.isSecure) {
-          // User is secure, show password field
+        if (data.hasPassword) {
           signInForm.setValue('email', values.email);
           // Focus password field after a short delay to ensure it's rendered
           setTimeout(() => {
             passwordInputRef.current?.focus();
           }, 100);
         } else {
-          // User is not secure, show modal
           setShowSecurityModal(true);
         }
       },
@@ -168,54 +175,48 @@ export function SignInForm({
             password: values.password,
           },
           {
-            onSuccess: async (
-              res: SuccessContext<{
-                redirect: boolean;
-                token: string;
-                user: User;
-              }>,
-            ) => {
+            onSuccess: async () => {
               // Accept invitation if present and valid
               if (invitationData?.isValid) {
                 try {
                   await authClient.organization.acceptInvitation({
                     invitationId: invitationData.invitation.id,
                   });
-                  if (
-                    invitationData.invitation.role === MemberRolesEnum.OWNER
-                  ) {
-                    await authClient.admin.setRole({
-                      userId: res.data.user.id,
-                      role: 'admin',
-                    });
-                  }
                 } catch (error) {
+                  Sentry.captureException(error, {
+                    tags: { flow: 'sign-in', step: 'accept-invitation' },
+                  });
                   console.error('Error accepting invitation:', error);
                 }
               }
 
-              const callbackUrl = searchParams.get('callbackUrl');
-              if (callbackUrl) {
-                router.push(callbackUrl);
-                return;
+              let redirectTo = searchParams.get('callbackUrl');
+
+              if (!redirectTo) {
+                // Check organization membership to determine redirect
+                try {
+                  const session = await authClient.getSession();
+                  const hasOrganization =
+                    session.data?.session?.activeOrganizationId;
+                  redirectTo = hasOrganization
+                    ? '/hub/fairteiler/dashboard'
+                    : '/hub/user/dashboard';
+                } catch (error) {
+                  Sentry.captureException(error, {
+                    tags: { flow: 'sign-in', step: 'session-check' },
+                  });
+                  console.error('Error checking session:', error);
+                  redirectTo = '/hub/user/dashboard';
+                }
               }
 
-              // Check organization membership to determine redirect
-              try {
-                const session = await authClient.getSession();
-                const hasOrganization =
-                  session.data?.session?.activeOrganizationId;
-                router.push(
-                  hasOrganization
-                    ? '/hub/fairteiler/dashboard'
-                    : '/hub/user/dashboard',
-                );
-              } catch (error) {
-                console.error('Error checking session:', error);
-                router.push('/hub/user/dashboard');
-              }
+              redirect(redirectTo);
             },
             onError: (ctx) => {
+              reportAuthError(ctx.error, {
+                flow: 'sign-in',
+                step: 'credentials',
+              });
               console.error(ctx.error);
               signInForm.setError('root.serverError', {
                 // eslint-disable-next-line
@@ -227,6 +228,9 @@ export function SignInForm({
       },
       setIsPending,
       (error) => {
+        Sentry.captureException(error, {
+          tags: { flow: 'sign-in', step: 'submit' },
+        });
         console.error('Error signing in:', error);
         signInForm.setError('root.serverError', {
           message: 'Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.',
@@ -245,7 +249,7 @@ export function SignInForm({
         </div>
       )}
 
-      {!userChecked || !userIsSecure ? (
+      {!userChecked || !userHasPassword ? (
         <Form {...emailForm}>
           <form
             onSubmit={emailForm.handleSubmit(onEmailSubmit)}
@@ -324,6 +328,7 @@ export function SignInForm({
                         variant='ghost'
                         size='sm'
                         className='absolute top-1/2 right-1 h-8 -translate-y-1/2 px-2 text-xs'
+                        disabled={isBusy}
                         onClick={() => handleBackToEmail()}
                       >
                         Ändern
@@ -348,7 +353,7 @@ export function SignInForm({
                       className='text-center'
                       type='password'
                       placeholder='passwort'
-                      disabled={isPending}
+                      disabled={isBusy}
                     />
                   </FormControl>
                   <FormMessage className='text-center' />
@@ -366,10 +371,10 @@ export function SignInForm({
               size='lg'
               className='w-full'
               type='submit'
-              disabled={isPending || !signInForm.formState.isDirty}
+              disabled={isBusy || !signInForm.formState.isDirty}
             >
-              {isPending ? <Loader2 className='animate-spin' /> : <Lock />}
-              Anmelden
+              {isBusy ? <Loader2 className='animate-spin' /> : <Lock />}
+              {isBusy ? 'Anmeldung läuft…' : 'Anmelden'}
             </Button>
           </form>
         </Form>

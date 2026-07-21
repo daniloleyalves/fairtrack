@@ -32,7 +32,6 @@ import {
   mockOrigins,
   mockSession,
 } from '@/__tests__/mocks/server-only';
-import { NotFoundError } from '../error-handling';
 
 // Mock all DAL functions
 vi.mock('../contribution/dal', () => ({
@@ -220,12 +219,10 @@ describe('DTO Layer', () => {
         });
       });
 
-      it('should fail when DAL returns null', async () => {
+      it('should return null when DAL returns null', async () => {
         vi.mocked(fairteilerDal.loadActiveOrganization).mockResolvedValue(null);
 
-        await expect(getActiveFairteiler()).rejects.toThrow(
-          new NotFoundError('active fairteiler'),
-        );
+        await expect(getActiveFairteiler()).resolves.toBeNull();
       });
     });
   });
@@ -476,10 +473,11 @@ describe('DTO Layer', () => {
         expect(result).toEqual(mockContributions);
       });
 
-      it('allows an admin to request platform-wide contributions', async () => {
-        vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue(
-          mockSession,
-        );
+      it('allows any org member to request platform-wide contributions', async () => {
+        vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue({
+          ...mockSession,
+          user: { ...mockSession.user, role: 'member' },
+        });
         vi.mocked(dal.loadContributions).mockResolvedValue(mockContributions);
 
         const result = await getContributions({ platformWide: true });
@@ -487,19 +485,24 @@ describe('DTO Layer', () => {
         expect(dal.loadContributions).toHaveBeenCalledWith(
           expect.objectContaining({ fairteilerId: null }),
         );
-        expect(result).toEqual(mockContributions);
+        expect(result.data).toHaveLength(mockContributions.data.length);
       });
 
-      it('denies non-admins platform-wide contributions without loading any data', async () => {
+      it('strips contributor user data from platform-wide contributions', async () => {
         vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue({
           ...mockSession,
           user: { ...mockSession.user, role: 'member' },
         });
+        vi.mocked(dal.loadContributions).mockResolvedValue(mockContributions);
 
-        await expect(getContributions({ platformWide: true })).rejects.toThrow(
-          'Admin access required for platform-wide data.',
-        );
-        expect(dal.loadContributions).not.toHaveBeenCalled();
+        const result = await getContributions({ platformWide: true });
+
+        for (const contribution of result.data) {
+          expect(contribution.contributorName).toBeNull();
+          expect(contribution.contributorEmail).toBeNull();
+          expect(contribution.contributorImage).toBeNull();
+          expect(contribution.contributorId).toBeTruthy();
+        }
       });
     });
 

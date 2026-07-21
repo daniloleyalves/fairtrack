@@ -4,7 +4,7 @@ import { removeMemberAction } from '@/lib/auth/auth-actions';
 import { Member } from '@server/db/db-types';
 import { cn } from '@/lib/utils';
 import { IdCard, Loader2, MoreHorizontal, Save, Trash2 } from 'lucide-react';
-import { Dispatch, SetStateAction, startTransition, useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { ConfirmModal } from '@components/confirm-modal';
@@ -63,11 +63,9 @@ export function MemberTableActions({ member }: { member: Member }) {
   const isPending = removeMember.isPending;
 
   const handleRemoveMember = () => {
-    startTransition(() => {
-      removeMember.execute({
-        organizationId: member.fairteilerId,
-        email: member.user.email,
-      });
+    removeMember.execute({
+      organizationId: member.fairteilerId,
+      email: member.user.email,
     });
   };
 
@@ -163,11 +161,9 @@ function ChangeRoleModal({
   const isPending = updateRole.isPending;
 
   function onSubmit(values: z.infer<typeof changeRoleSchema>) {
-    startTransition(() => {
-      updateRole.execute({
-        memberId: values.memberId,
-        role: values.role,
-      });
+    updateRole.execute({
+      memberId: values.memberId,
+      role: values.role,
     });
   }
 

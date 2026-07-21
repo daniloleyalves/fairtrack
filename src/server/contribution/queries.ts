@@ -71,10 +71,6 @@ export async function getContributions(options?: {
     throw new AuthError('No active organization selected.');
   }
 
-  if (options?.platformWide && session.user.role !== 'admin') {
-    throw new AuthError('Admin access required for platform-wide data.');
-  }
-
   const contributions = await loadContributions({
     fairteilerId: options?.platformWide ? null : fairteilerId,
     dateRange: options?.dateRange,
@@ -83,9 +79,17 @@ export async function getContributions(options?: {
   });
 
   if (contributions.data) {
-    const anonymizedData = contributions.data.map((contribution) => {
-      const isAnonymous = contribution.contributorIsAnonymous ?? false;
+    const sanitizedData = contributions.data.map((contribution) => {
+      if (options?.platformWide) {
+        return {
+          ...contribution,
+          contributorName: null,
+          contributorEmail: null,
+          contributorImage: null,
+        };
+      }
 
+      const isAnonymous = contribution.contributorIsAnonymous ?? false;
       if (isAnonymous) {
         return {
           ...contribution,
@@ -99,7 +103,7 @@ export async function getContributions(options?: {
 
     return {
       ...contributions,
-      data: anonymizedData,
+      data: sanitizedData,
     };
   }
 

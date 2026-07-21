@@ -13,12 +13,14 @@ export function NavButton({
   icon,
   variant,
   size,
+  responsiveTitle = false,
 }: {
   href: string;
   title?: string;
   icon: string;
   variant?: VariantProps<typeof buttonVariants>['variant'];
   size?: VariantProps<typeof buttonVariants>['size'];
+  responsiveTitle?: boolean;
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const pathname = usePathname();
@@ -47,6 +49,12 @@ export function NavButton({
     }
   };
 
+  const titleNode = responsiveTitle ? (
+    <span className='hidden lg:inline'>{title}</span>
+  ) : (
+    title
+  );
+
   return (
     <>
       <Button variant={variant} asChild size={size}>
@@ -54,12 +62,12 @@ export function NavButton({
           {isLoading ? (
             <>
               <Loader2 className='size-4 animate-spin' />
-              {title}
+              {titleNode}
             </>
           ) : (
             <>
               <IconComponent className='size-4' />
-              {title}
+              {titleNode}
             </>
           )}
         </Link>

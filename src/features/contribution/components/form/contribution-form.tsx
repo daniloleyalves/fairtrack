@@ -7,13 +7,19 @@ import {
   ContributionFormValues,
 } from '@features/contribution/schemas/contribution-schema';
 import { zodResolver } from '@hookform/resolvers/zod';
-import React, { startTransition } from 'react';
+import React, { createContext, useContext } from 'react';
 import { DefaultValues, SubmitHandler, useForm } from 'react-hook-form';
-import { useRouter } from 'next/navigation';
 import { useFormAction } from '@/lib/hooks/use-form-action';
+import { usePendingRedirect } from '@/lib/hooks/use-pending-redirect';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { userKeys } from '@/server/user/query-keys';
 import { useQueryClient } from '@tanstack/react-query';
+
+const ContributionFormPendingContext = createContext(false);
+
+export function useContributionFormPending() {
+  return useContext(ContributionFormPendingContext);
+}
 
 interface ContributionFormConfig {
   fairteilerId: string;
@@ -32,13 +38,17 @@ export function ContributionForm({
   defaultValues?: DefaultValues<ContributionFormValues>;
   config: ContributionFormConfig;
 }) {
-  const router = useRouter();
   const queryClient = useQueryClient();
 
   const form = useForm<ContributionFormValues>({
     resolver: zodResolver(contributionFormSchema),
     defaultValues: { contributions: [], config, ...defaultValues },
     mode: 'onChange',
+  });
+
+  const { isRedirectPending, redirect } = usePendingRedirect(() => {
+    form.reset();
+    submitContribution.reset();
   });
 
   const submitContribution = useFormAction(submitContributionAction, form, {
@@ -51,11 +61,20 @@ export function ContributionForm({
         queryKey: userKeys.dashboard().queryKey,
       });
 
-      if (data?.redirectTo) {
-        router.push(data.redirectTo);
+      const redirectTo = data?.redirectTo;
+      if (redirectTo) {
+        redirect(redirectTo);
+      } else {
+        form.reset();
+        submitContribution.reset();
       }
     },
   });
+
+  const isPending =
+    submitContribution.isPending ||
+    submitContribution.hasSucceeded ||
+    isRedirectPending;
 
   const onSubmit: SubmitHandler<ContributionFormValues> = (
     data: ContributionFormValues,
@@ -76,14 +95,14 @@ export function ContributionForm({
       },
     };
 
-    startTransition(() => {
-      submitContribution.execute(submissionData);
-    });
+    submitContribution.execute(submissionData);
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>{children}</form>
-    </Form>
+    <ContributionFormPendingContext.Provider value={isPending}>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>{children}</form>
+      </Form>
+    </ContributionFormPendingContext.Provider>
   );
 }

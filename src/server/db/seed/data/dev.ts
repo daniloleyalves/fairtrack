@@ -233,6 +233,8 @@ export const devSeedData: SeedData = {
 
   members: [], // Will be populated after users and fairteiler are created
 
+  accounts: [], // Will be populated in populateRelationships with DEMO_PASSWORD hash
+
   tags: [], // Will be populated after fairteiler are created
 
   food: [], // Will be populated after origins, categories, companies are created

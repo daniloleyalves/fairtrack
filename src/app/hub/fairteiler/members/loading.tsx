@@ -1,4 +1,4 @@
-import { CardSkeleton } from '@components/ui/skeleton';
+import { MembersSkeleton } from '@/features/fairteiler/members/components/members-skeleton';
 
 export default function FairteilerMemberPageLoading() {
   return (
@@ -16,8 +16,7 @@ export default function FairteilerMemberPageLoading() {
           Gastzugänge.
         </p>
       </div>
-      <CardSkeleton height='h-[250px] w-full' />
-      <CardSkeleton height='h-[250px] w-full' />
+      <MembersSkeleton />
     </div>
   );
 }

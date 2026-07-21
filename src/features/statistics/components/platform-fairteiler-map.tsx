@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DownloadButton } from './chart-download-button';
 import { useClientEnv } from '@/lib/hooks/use-client-env';
+import { useMapRepaintOnReveal } from '@/lib/hooks/use-map-repaint-on-reveal';
 import { Fairteiler } from '@/server/db/db-types';
 import { MapFairteilerPopup } from '@/features/fairteiler-map/components/map-fairteiler-popup';
 import { FairteilerPanel } from '@/features/fairteiler-map/components/map-fairteiler-panel';
@@ -51,6 +52,8 @@ export function PlatformFairteilerMap({
     pitch: 0,
     bearing: 0,
   });
+
+  useMapRepaintOnReveal(mapRef, cardRef);
 
   // Handle fairteiler selection from panel with smooth animation
   const handleFairteilerClick = useCallback(
@@ -213,6 +216,7 @@ export function PlatformFairteilerMap({
           />
           <Map
             ref={mapRef}
+            reuseMaps
             mapboxAccessToken={env.MAPBOX_TOKEN}
             attributionControl={false}
             mapStyle='mapbox://styles/dayno/cmfljv0c3008m01sb743xhwi5'

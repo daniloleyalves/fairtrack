@@ -50,6 +50,11 @@ const customErrorCodes = {
   },
 };
 
+export const knownAuthErrorCodes: ReadonlySet<string> = new Set([
+  ...Object.keys(errorCodes),
+  ...Object.keys(customErrorCodes),
+]);
+
 export const getErrorMessage = (
   code: string | undefined,
   lang: 'en' | 'de',
@@ -109,6 +114,11 @@ export const checkAccess = (
     },
     role: role ?? 'disabled',
   });
+};
+
+export const isGuestOrEmployeeEmail = (email: string): boolean => {
+  const normalized = email.toLowerCase();
+  return normalized.includes('guest') || normalized.includes('employee');
 };
 
 export const ANONYMOUS_USER_NAME = 'Anonyme Person';

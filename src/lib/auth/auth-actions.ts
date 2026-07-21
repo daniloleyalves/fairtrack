@@ -9,11 +9,15 @@ import {
   toggleFairteilerVisibility,
   updateFairteiler,
 } from '@server/fairteiler/dal';
-import { loadUserByEmail, validateResetPasswordToken } from '@server/user/dal';
+import {
+  banUserAndRevokeSessions,
+  loadUserByEmail,
+  validateResetPasswordToken,
+} from '@server/user/dal';
 import { getActiveFairteiler } from '@server/fairteiler/queries';
 import { auth, checkPermissionOnServer } from './auth';
 import { generatePassword, getErrorMessage } from './auth-helpers';
-import { MemberRolesEnum } from './auth-permissions';
+import { ACCESS_VIEW_ROLES, MemberRolesEnum } from './auth-permissions';
 import { fairteilerProfileSchema } from '../../features/fairteiler/profile/schemas/fairteiler-profile-schema';
 import {
   action,
@@ -45,6 +49,9 @@ export const updateFairteilerAction = fairteilerAction
   .inputSchema(fairteilerProfileSchema)
   .action(async ({ parsedInput }) => {
     const currentFairteiler = await getActiveFairteiler();
+    if (!currentFairteiler) {
+      throw new NotFoundError('active fairteiler');
+    }
 
     const permissionResult = await checkPermissionOnServer(await headers(), {
       organization: ['update'],
@@ -149,6 +156,9 @@ export const addAccessViewAction = fairteilerAction
       }
 
       const fairteiler = await getActiveFairteiler();
+      if (!fairteiler) {
+        throw new NotFoundError('active fairteiler');
+      }
       const viewCount =
         fairteiler.members.filter((m) => m.user.email.startsWith(`${role}-`))
           .length + 1;
@@ -205,26 +215,11 @@ export const removeMemberAction = authedAction
 
 export const updateMemberRoleAction = fairteilerAction
   .inputSchema(changeRoleSchema)
-  .action(async ({ parsedInput, ctx }) => {
-    const reqHeaders = await headers();
+  .action(async ({ parsedInput }) => {
     await auth.api.updateMemberRole({
-      headers: reqHeaders,
+      headers: await headers(),
       body: { memberId: parsedInput.memberId, role: parsedInput.role },
     });
-
-    if (parsedInput.role === MemberRolesEnum.OWNER) {
-      const targetMember = await loadMemberById(
-        parsedInput.memberId,
-        ctx.fairteilerId,
-      );
-      if (!targetMember) {
-        throw new NotFoundError('Member', parsedInput.memberId);
-      }
-      await auth.api.setRole({
-        headers: reqHeaders,
-        body: { role: 'admin', userId: targetMember.userId },
-      });
-    }
     revalidatePath('/hub/fairteiler/members');
   });
 
@@ -241,14 +236,37 @@ export const inviteMemberAction = authedAction
     });
   });
 
-export const disableAccessViewAction = authedAction
+export const disableAccessViewAction = fairteilerAction
   .inputSchema(disableAccessViewSchema)
-  .action(async ({ parsedInput }) => {
+  .action(async ({ parsedInput, ctx }) => {
     const reqHeaders = await headers();
-    await auth.api.banUser({
-      headers: reqHeaders,
-      body: { userId: parsedInput.userId, banReason: 'DISABLED ACCESS VIEW' },
+    const permissionResult = await checkPermissionOnServer(reqHeaders, {
+      user: ['ban'],
     });
+    if (!permissionResult.success) {
+      throw new PermissionError(
+        getErrorMessage('YOU_ARE_NOT_ALLOWED_TO_UPDATE_USERS', 'de'),
+      );
+    }
+
+    const targetMember = await loadMemberById(
+      parsedInput.memberId,
+      ctx.fairteilerId,
+    );
+    const targetRole = targetMember?.role as MemberRolesEnum | undefined;
+    if (
+      !targetMember ||
+      targetMember.userId !== parsedInput.userId ||
+      !targetRole ||
+      !ACCESS_VIEW_ROLES.has(targetRole)
+    ) {
+      throw new PermissionError(
+        'Das ausgewählte Zugangsprofil gehört nicht zu diesem Fairteiler.',
+      );
+    }
+
+    await banUserAndRevokeSessions(parsedInput.userId, 'DISABLED ACCESS VIEW');
+
     const result = await auth.api.updateMemberRole({
       headers: reqHeaders,
       body: { memberId: parsedInput.memberId, role: MemberRolesEnum.DISABLED },
@@ -276,24 +294,24 @@ export const validateResetPasswordTokenAction = action
     return { isValid: true };
   });
 
-const checkUserSecureStatusSchema = z.object({
+const checkUserPasswordStatusSchema = z.object({
   email: z.string().email({ message: 'Ungültige E-Mail-Adresse.' }),
 });
 
-interface UserSecureStatusResult {
+interface UserPasswordStatusResult {
   userExists: boolean;
-  isSecure?: boolean;
+  hasPassword?: boolean;
 }
 
-export const checkUserSecureStatusAction = action
-  .inputSchema(checkUserSecureStatusSchema)
-  .action(async ({ parsedInput }): Promise<UserSecureStatusResult> => {
+export const checkUserPasswordStatusAction = action
+  .inputSchema(checkUserPasswordStatusSchema)
+  .action(async ({ parsedInput }): Promise<UserPasswordStatusResult> => {
     const result = await loadUserByEmail(parsedInput.email);
     if (!result) {
       return { userExists: false };
     }
     return {
       userExists: true,
-      isSecure: result.secure,
+      hasPassword: result.hasPassword,
     };
   });

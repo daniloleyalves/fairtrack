@@ -1,5 +1,6 @@
 'use server';
 
+import * as Sentry from '@sentry/nextjs';
 import { headers } from 'next/headers';
 import {
   addMilestoneEvent,
@@ -25,6 +26,11 @@ import { transformMilestoneData } from '@/features/user/gamification/milestones/
 import { calculateUserAllTimeStreaks } from '@/features/user/gamification/streaks/streak-processor';
 import { gamificationElements } from '@/features/user/gamification/gamification-config';
 import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
+
+export async function getIsPlatformAdmin(headers: Headers) {
+  const session = await loadSession(headers);
+  return session?.user.role === 'admin';
+}
 
 export async function getUserProfile() {
   const session = await getSession(await headers());
@@ -136,14 +142,18 @@ export async function getUserDashboardData() {
     recentContributions,
     calendarData,
     milestoneData,
-  ] = await Promise.all([
-    loadUserKeyFigures(userId),
-    loadUserCategoryDistribution(userId),
-    loadUserOriginDistribution(userId),
-    loadUserRecentContributions(userId),
-    loadUserCalendarData(userId),
-    loadMilestonesByUser(userId),
-  ]);
+  ] = await Sentry.startSpan(
+    { name: 'getUserDashboardData', op: 'db.query' },
+    () =>
+      Promise.all([
+        loadUserKeyFigures(userId),
+        loadUserCategoryDistribution(userId),
+        loadUserOriginDistribution(userId),
+        loadUserRecentContributions(userId),
+        loadUserCalendarData(userId),
+        loadMilestonesByUser(userId),
+      ]),
+  );
 
   const formattedKeyFigures = [
     {
@@ -248,16 +258,14 @@ export async function getOnboardingData(
 /**
  * Get user preferences for the authenticated user
  */
-export async function getUserPreferences(): Promise<
-  UserPreferences | null | undefined
-> {
+export async function getUserPreferences(): Promise<UserPreferences | null> {
   const session = await loadAuthenticatedSession(await headers());
   const userId = session.user.id;
   if (!userId) {
     throw new AuthError('No active session.');
   }
 
-  return await loadUserPreferences(userId);
+  return (await loadUserPreferences(userId)) ?? null;
 }
 
 export async function getUserStreak(headers: Headers) {

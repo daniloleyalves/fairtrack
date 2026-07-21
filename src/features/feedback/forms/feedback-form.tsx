@@ -29,7 +29,7 @@ import { submitFeedbackAction } from '@/server/user/actions';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, MessageCircleHeart, Send } from 'lucide-react';
-import { startTransition, useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { FeedbackFormData, feedbackSchema } from '../schemas/feedack-schema';
 
@@ -59,9 +59,7 @@ export function FeedbackForm() {
   const isSubmitting = submitFeedback.isPending;
 
   const onSubmit = (data: FeedbackFormData) => {
-    startTransition(() => {
-      submitFeedback.execute(data);
-    });
+    submitFeedback.execute(data);
   };
 
   if (isSubmitted) {

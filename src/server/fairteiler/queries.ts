@@ -1,5 +1,6 @@
 'use server';
 
+import * as Sentry from '@sentry/nextjs';
 import { headers } from 'next/headers';
 import {
   loadActiveMembership,
@@ -71,7 +72,7 @@ export async function getTags() {
 export async function getActiveFairteiler() {
   const fairteiler = await loadActiveOrganization(await headers());
   if (!fairteiler) {
-    throw new NotFoundError('active fairteiler');
+    return null;
   }
 
   return {
@@ -252,14 +253,18 @@ export async function getFairteilerDashboardData() {
     leaderboard,
     recentContributions,
     calendarData,
-  ] = await Promise.all([
-    loadKeyFigures(fairteilerId),
-    loadCategoryDistribution(fairteilerId),
-    loadOriginDistribution(fairteilerId),
-    loadLeaderboard(fairteilerId),
-    loadRecentContributions(fairteilerId),
-    loadCalendarData(fairteilerId),
-  ]);
+  ] = await Sentry.startSpan(
+    { name: 'getFairteilerDashboardData', op: 'db.query' },
+    () =>
+      Promise.all([
+        loadKeyFigures(fairteilerId),
+        loadCategoryDistribution(fairteilerId),
+        loadOriginDistribution(fairteilerId),
+        loadLeaderboard(fairteilerId),
+        loadRecentContributions(fairteilerId),
+        loadCalendarData(fairteilerId),
+      ]),
+  );
 
   const formattedKeyFigures = [
     {

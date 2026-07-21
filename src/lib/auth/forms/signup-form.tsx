@@ -22,14 +22,16 @@ import z from 'zod';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authClient } from '../auth-client';
 import { getErrorMessage } from '../auth-helpers';
+import { reportAuthError } from '../report-auth-error';
 import { toast } from 'sonner';
 import { handleClientOperation, noop } from '@/lib/client-error-handling';
 import { SignUpFormValues, signUpSchema } from '../schemas';
 import {
   checkInvitationAndUserAction,
-  checkUserSecureStatusAction,
+  checkUserPasswordStatusAction,
 } from '../auth-actions';
 import { invokeAction } from '@/lib/hooks/use-form-action';
+import { usePendingRedirect } from '@/lib/hooks/use-pending-redirect';
 
 export function SignUpForm({
   className,
@@ -64,6 +66,12 @@ export function SignUpForm({
       notificationsConsent: false,
     },
   });
+
+  const { isRedirectPending, redirect } = usePendingRedirect(() => {
+    form.reset();
+    setIsPending(false);
+  });
+  const isBusy = isPending || isRedirectPending;
 
   useEffect(() => {
     const invitationId = searchParams.get('invitationId');
@@ -105,7 +113,7 @@ export function SignUpForm({
     // the user sees a clear error instead of being silently redirected to sign-in.
     setIsPending(true);
     try {
-      const existing = await invokeAction(checkUserSecureStatusAction, {
+      const existing = await invokeAction(checkUserPasswordStatusAction, {
         email: values.email,
       });
       if (existing.userExists) {
@@ -152,21 +160,25 @@ export function SignUpForm({
                   }
 
                   // Check organization membership to determine redirect
+                  let redirectTo: string;
                   try {
                     const session = await authClient.getSession();
                     const hasOrganization =
                       session.data?.session?.activeOrganizationId;
-                    router.push(
-                      hasOrganization
-                        ? '/hub/fairteiler/dashboard'
-                        : '/hub/user/dashboard',
-                    );
+                    redirectTo = hasOrganization
+                      ? '/hub/fairteiler/dashboard'
+                      : '/hub/user/dashboard';
                   } catch (error) {
                     console.error('Error checking session:', error);
-                    router.push('/hub/user/dashboard');
+                    redirectTo = '/hub/user/dashboard';
                   }
+                  redirect(redirectTo);
                 },
                 onError: (signInCtx) => {
+                  reportAuthError(signInCtx.error, {
+                    flow: 'sign-up',
+                    step: 'auto-sign-in',
+                  });
                   console.error(
                     'Sign-in after signup failed:',
                     signInCtx.error,
@@ -179,12 +191,13 @@ export function SignUpForm({
                       'de',
                     ) || 'Anmeldung nach Registrierung fehlgeschlagen.',
                   );
-                  router.push('/sign-in');
+                  redirect('/sign-in');
                 },
               },
             );
           },
           onError: (ctx) => {
+            reportAuthError(ctx.error, { flow: 'sign-up', step: 'submit' });
             console.error(ctx.error);
             form.setError('root.serverError', {
               // eslint-disable-next-line
@@ -221,11 +234,7 @@ export function SignUpForm({
             <FormItem>
               <FormLabel className='justify-center'>Vorname</FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  className='text-center'
-                  disabled={isPending}
-                />
+                <Input {...field} className='text-center' disabled={isBusy} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -239,11 +248,7 @@ export function SignUpForm({
             <FormItem>
               <FormLabel className='justify-center'>Nachname</FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  className='text-center'
-                  disabled={isPending}
-                />
+                <Input {...field} className='text-center' disabled={isBusy} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -257,11 +262,7 @@ export function SignUpForm({
             <FormItem>
               <FormLabel className='justify-center'>Email</FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  className='text-center'
-                  disabled={isPending}
-                />
+                <Input {...field} className='text-center' disabled={isBusy} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -282,7 +283,7 @@ export function SignUpForm({
                     className='text-center'
                     placeholder='********'
                     type={showPassword ? 'text' : 'password'}
-                    disabled={isPending}
+                    disabled={isBusy}
                   />
                   {!showPassword ? (
                     <button
@@ -323,7 +324,7 @@ export function SignUpForm({
                     className='text-center'
                     placeholder='********'
                     type={showPassword ? 'text' : 'password'}
-                    disabled={isPending}
+                    disabled={isBusy}
                   />
                   {!showPassword ? (
                     <button
@@ -420,9 +421,9 @@ export function SignUpForm({
           size='lg'
           className='w-full'
           type='submit'
-          disabled={isPending || !form.formState.isDirty}
+          disabled={isBusy || !form.formState.isDirty}
         >
-          {isPending ? <Loader2 className='animate-spin' /> : null}
+          {isBusy ? <Loader2 className='animate-spin' /> : null}
           Jetzt Registrieren
         </Button>
       </form>

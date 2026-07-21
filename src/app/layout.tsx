@@ -65,13 +65,11 @@ export default function RootLayout({
         <DemoBanner />
         <NavigationLoadingIndicator />
         <Suspense fallback={<LoadingScreen className='flex-1' />}>
-          {/* <AuthErrorBoundary> */}
           <AuthProvider>
             <QueryProvider>
               <ErrorBoundary>{children}</ErrorBoundary>
             </QueryProvider>
           </AuthProvider>
-          {/* </AuthErrorBoundary> */}
         </Suspense>
         <Toaster />
         <SpeedInsights />
