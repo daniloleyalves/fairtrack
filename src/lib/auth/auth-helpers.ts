@@ -50,6 +50,11 @@ const customErrorCodes = {
   },
 };
 
+export const knownAuthErrorCodes: ReadonlySet<string> = new Set([
+  ...Object.keys(errorCodes),
+  ...Object.keys(customErrorCodes),
+]);
+
 export const getErrorMessage = (
   code: string | undefined,
   lang: 'en' | 'de',

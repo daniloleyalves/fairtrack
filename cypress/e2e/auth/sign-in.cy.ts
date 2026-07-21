@@ -37,7 +37,7 @@ describe('User Login E2E', () => {
 
       // Should show loading spinner during final submission
       cy.get('button[type="submit"]')
-        .contains('Anmelden')
+        .contains('Anmeldung läuft')
         .find('svg')
         .should('have.class', 'animate-spin');
 

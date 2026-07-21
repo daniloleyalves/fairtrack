@@ -30,6 +30,7 @@ import { GenericItem } from '@server/db/db-types';
 import { ContributionWizard } from './form/wizard/contribution-wizard';
 import { Skeleton } from '@ui/skeleton';
 import { useContribution } from '../context/contribution-context';
+import { useContributionFormPending } from './form/contribution-form';
 
 export default function ContributionTable() {
   const { preferences, updatePreference } = useUserPreferences();
@@ -39,12 +40,20 @@ export default function ContributionTable() {
 
   const { control, trigger } = useFormContext();
   const formState = useFormState({ control });
+  const isPending = useContributionFormPending();
 
   return (
     <ContributionTableProvider isFastView={isFormTableViewFast}>
       <Card>
         <CardContent>
-          <div className='rounded-md border'>
+          <div
+            inert={isPending}
+            aria-busy={isPending}
+            className={cn(
+              'rounded-md border transition-opacity',
+              isPending && 'opacity-60',
+            )}
+          >
             <Table>
               <TableHeader>
                 <ContributionTableHead />
@@ -61,6 +70,7 @@ export default function ContributionTable() {
             <div className='flex items-center gap-2'>
               <Switch
                 id='tableView-mode'
+                disabled={isPending}
                 checked={isFormTableViewFast}
                 onCheckedChange={() => {
                   setEditingIndex(null);
@@ -81,13 +91,13 @@ export default function ContributionTable() {
                 Schnelle Ansicht
               </Label>
             </div>
-            <Button type='submit' disabled={!formState.isDirty}>
-              {formState.isSubmitSuccessful ? (
-                <Loader2 className='animate-spin' />
+            <Button type='submit' disabled={!formState.isDirty || isPending}>
+              {isPending ? (
+                <Loader2 className='mr-2 size-4 animate-spin' />
               ) : (
                 <Send className='mr-2 size-4' />
               )}
-              Absenden
+              {isPending ? 'Wird gesendet…' : 'Absenden'}
             </Button>
           </div>
         </CardContent>

@@ -34,12 +34,16 @@ import {
   getInviteMemberText,
 } from '@/lib/services/resend/invite-member';
 import { updateUserSecureStatus } from '@server/user/dal';
+import { handleAuthApiError } from './on-api-error';
 
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,
   advanced: {
     disableCSRFCheck: process.env.NEXT_PUBLIC_ENV === 'testing',
+  },
+  onAPIError: {
+    onError: handleAuthApiError,
   },
   database: drizzleAdapter(db, {
     provider: 'pg',

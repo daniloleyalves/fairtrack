@@ -316,8 +316,8 @@ Cypress.Commands.add(
 Cypress.Commands.add('submitContributions', () => {
   cy.get('button[type="submit"]').contains('Absenden').click();
 
-  // Wait for submission to complete
-  cy.get('button[type="submit"]').should('not.be.disabled');
+  // Submission freezes the form until navigation completes
+  cy.get('button[type="submit"]').should('be.disabled');
 });
 
 // Fill optional fields

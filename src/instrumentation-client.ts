@@ -7,6 +7,8 @@ import {
   SENTRY_DSN,
   SENTRY_ENABLED,
   SENTRY_ENVIRONMENT,
+  sentryBeforeBreadcrumb,
+  sentryBeforeSend,
   sentryTracesSampler,
 } from '@/lib/monitoring/sentry';
 
@@ -26,6 +28,10 @@ Sentry.init({
   ],
 
   tracesSampler: sentryTracesSampler,
+
+  beforeSend: sentryBeforeSend,
+
+  beforeBreadcrumb: sentryBeforeBreadcrumb,
 
   // Define how likely Replay events are sampled.
   // This sets the sample rate to be 10%. You may want this to be 100% while
