@@ -1,9 +1,15 @@
 import { ChevronDown, MoreHorizontal, Plus, Send, User } from 'lucide-react';
 import { motion } from 'motion/react';
-import { FONT_SANS, Pop, SvgButton, SvgCard } from '../../svg-primitives';
+import {
+  FONT_SANS,
+  Pop,
+  SvgButton,
+  SvgCard,
+  tourTime,
+} from '../../svg-primitives';
 import { FairteilerChrome } from './fairteiler-chrome';
 
-const STEP_DURATION = 8;
+const STEP_DURATION = 7.7;
 const t = (seconds: number) => seconds / STEP_DURATION;
 
 function between(from: number, to: number) {
@@ -14,10 +20,13 @@ function between(from: number, to: number) {
       transition:
         to > 0
           ? {
-              duration: STEP_DURATION,
+              duration: tourTime(STEP_DURATION),
               times: [0, t(from), t(from + 0.2), t(to), t(to + 0.2)],
             }
-          : { duration: STEP_DURATION, times: [0, t(from), t(from + 0.2)] },
+          : {
+              duration: tourTime(STEP_DURATION),
+              times: [0, t(from), t(from + 0.2)],
+            },
     },
     done: { opacity: to > 0 ? 0 : 1, transition: { duration: 0.2 } },
   };
@@ -60,7 +69,7 @@ const CELLS = [
 export function FairteilerContributionScreen({ state }: { state: string }) {
   return (
     <motion.g initial='idle' animate={state}>
-      <FairteilerChrome active='form' title='Retteformular' />
+      <FairteilerChrome active='form' title='Retteformular' bannerH={220} />
 
       {/* AccessViewSelector trigger */}
       <Pop delay={0.3} dy={4}>

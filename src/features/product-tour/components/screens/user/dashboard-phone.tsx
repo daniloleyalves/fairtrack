@@ -16,6 +16,8 @@ import {
   PhoneChrome,
   Pop,
   SvgCard,
+  tourTime,
+  useTourFilter,
 } from '../../svg-primitives';
 
 const DONUT = [
@@ -47,6 +49,8 @@ const MILESTONES = [
 ];
 
 export function DashboardPhone({ state }: { state: string }) {
+  const shadowFilter = useTourFilter('shadow');
+  const grayscaleFilter = useTourFilter('grayscale');
   return (
     <motion.g initial='idle' animate={state}>
       <PhoneChrome>
@@ -204,7 +208,7 @@ export function DashboardPhone({ state }: { state: string }) {
                   opacity: m.achieved ? 1 : 0.5,
                   y: 0,
                   transition: {
-                    delay: 0.95 + i * 0.18,
+                    delay: tourTime(0.95 + i * 0.18),
                     duration: 0.4,
                     ease: 'backOut',
                   },
@@ -223,7 +227,7 @@ export function DashboardPhone({ state }: { state: string }) {
                 width={44}
                 height={38}
                 preserveAspectRatio='xMidYMid meet'
-                filter={m.achieved ? undefined : 'url(#tour-grayscale)'}
+                filter={m.achieved ? undefined : grayscaleFilter}
               />
               <circle
                 cx={m.cx}
@@ -258,7 +262,7 @@ export function DashboardPhone({ state }: { state: string }) {
                 opacity: [0, 0.7, 0],
                 scale: [0.8, 1.2, 1.35],
                 transition: {
-                  delay: 1.9,
+                  delay: tourTime(1.9),
                   duration: 1.4,
                   repeat: Infinity,
                   repeatDelay: 0.4,
@@ -288,11 +292,11 @@ export function DashboardPhone({ state }: { state: string }) {
                       opacity: 1,
                       transition: {
                         pathLength: {
-                          delay: 1.3,
+                          delay: tourTime(1.3),
                           duration: 1,
                           ease: 'easeOut',
                         },
-                        opacity: { delay: 1.3, duration: 0.1 },
+                        opacity: { delay: tourTime(1.3), duration: 0.1 },
                       },
                     },
                     done: {
@@ -351,7 +355,7 @@ export function DashboardPhone({ state }: { state: string }) {
             fill='var(--card)'
             stroke='var(--border)'
             strokeWidth={1.5}
-            filter='url(#tour-shadow)'
+            filter={shadowFilter}
           />
           {DOCK_ICONS.map(({ Icon, x }) => (
             <Icon

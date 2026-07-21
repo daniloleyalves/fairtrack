@@ -1,9 +1,23 @@
 import type { LucideIcon } from 'lucide-react';
 import { motion, type Variants } from 'motion/react';
-import type { ReactNode } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
+import { tourTime } from '../tour-steps';
+
+export { tourTime };
 
 export const FONT_DISPLAY = 'var(--font-londrina-solid)';
 export const FONT_SANS = 'var(--font-geist-sans), sans-serif';
+
+/**
+ * Multiple ProductTour instances render on one page, so filter ids are
+ * suffixed with the instance id to keep DOM ids unique; url() references
+ * resolve through this context.
+ */
+export const TourInstanceContext = createContext('');
+
+export function useTourFilter(name: 'shadow' | 'grayscale') {
+  return `url(#tour-${name}-${useContext(TourInstanceContext)})`;
+}
 
 export function pop(delay: number, dy = 12): Variants {
   return {
@@ -11,7 +25,7 @@ export function pop(delay: number, dy = 12): Variants {
     active: {
       opacity: 1,
       y: 0,
-      transition: { delay, duration: 0.5, ease: 'easeOut' },
+      transition: { delay: tourTime(delay), duration: 0.5, ease: 'easeOut' },
     },
     done: { opacity: 1, y: 0, transition: { duration: 0.2 } },
   };
@@ -24,8 +38,8 @@ export function draw(delay: number, duration = 0.8): Variants {
       pathLength: 1,
       opacity: 1,
       transition: {
-        pathLength: { delay, duration, ease: 'easeInOut' },
-        opacity: { delay, duration: 0.15 },
+        pathLength: { delay: tourTime(delay), duration, ease: 'easeInOut' },
+        opacity: { delay: tourTime(delay), duration: 0.15 },
       },
     },
     done: { pathLength: 1, opacity: 1, transition: { duration: 0.2 } },
@@ -67,7 +81,7 @@ export function SvgCard({
       fill='var(--card)'
       stroke='var(--border)'
       strokeWidth={1.5}
-      filter='url(#tour-shadow)'
+      filter={useTourFilter('shadow')}
     />
   );
 }
@@ -122,6 +136,7 @@ export function SvgButton({
   shadow?: boolean;
 }) {
   const style = BUTTON_STYLES[variant];
+  const shadowFilter = useTourFilter('shadow');
   const iconSize = fontSize + 3;
   const iconY = y + (h - iconSize) / 2;
   return (
@@ -135,7 +150,7 @@ export function SvgButton({
         fill={style.fill}
         stroke={style.stroke}
         strokeWidth={style.stroke ? 1.5 : undefined}
-        filter={shadow ? 'url(#tour-shadow)' : undefined}
+        filter={shadow ? shadowFilter : undefined}
       />
       {Icon ? (
         <Icon
@@ -185,7 +200,7 @@ export function PhoneChrome({ children }: { children?: ReactNode }) {
         height={PHONE.h + 20}
         rx={46}
         fill='var(--foreground)'
-        filter='url(#tour-shadow)'
+        filter={useTourFilter('shadow')}
       />
       <rect width={PHONE.w} height={PHONE.h} rx={38} fill='var(--background)' />
       {children}
@@ -230,7 +245,7 @@ export function ScreenChrome({
         fill='var(--background)'
         stroke='var(--border)'
         strokeWidth={1.5}
-        filter='url(#tour-shadow)'
+        filter={useTourFilter('shadow')}
       />
       <path
         d={`M0 24 A24 24 0 0 1 24 0 H${w - 24} A24 24 0 0 1 ${w} 24 V${bannerH - 20} A20 20 0 0 1 ${w - 20} ${bannerH} H20 A20 20 0 0 1 0 ${bannerH - 20} Z`}

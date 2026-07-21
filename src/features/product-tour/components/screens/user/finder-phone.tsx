@@ -8,6 +8,8 @@ import {
   Pop,
   SvgButton,
   SvgCard,
+  tourTime,
+  useTourFilter,
 } from '../../svg-primitives';
 
 const PINS = [
@@ -17,6 +19,7 @@ const PINS = [
 ];
 
 export function FinderPhone({ state }: { state: string }) {
+  const shadowFilter = useTourFilter('shadow');
   return (
     <motion.g initial='idle' animate={state}>
       <PhoneChrome>
@@ -51,7 +54,7 @@ export function FinderPhone({ state }: { state: string }) {
             idle: { opacity: 0 },
             active: {
               opacity: 1,
-              transition: { delay: 0.9, duration: 0.5 },
+              transition: { delay: tourTime(0.9), duration: 0.5 },
             },
             done: { opacity: 1, transition: { duration: 0.2 } },
           }}
@@ -85,7 +88,7 @@ export function FinderPhone({ state }: { state: string }) {
                 opacity: 1,
                 y: 0,
                 transition: {
-                  delay: pin.delay,
+                  delay: tourTime(pin.delay),
                   duration: 0.45,
                   ease: 'backOut',
                 },
@@ -106,7 +109,7 @@ export function FinderPhone({ state }: { state: string }) {
             height={34}
             rx={17}
             fill='var(--primary)'
-            filter='url(#tour-shadow)'
+            filter={shadowFilter}
           />
           <MapPin
             x={92}
@@ -135,7 +138,11 @@ export function FinderPhone({ state }: { state: string }) {
               opacity: 1,
               y: 0,
               scale: 1,
-              transition: { delay: 3.1, duration: 0.4, ease: 'backOut' },
+              transition: {
+                delay: tourTime(3.1),
+                duration: 0.4,
+                ease: 'backOut',
+              },
             },
             done: {
               opacity: 1,
@@ -149,7 +156,7 @@ export function FinderPhone({ state }: { state: string }) {
           <path
             d='M120 402 l-8 -10 h16 Z'
             fill='var(--card)'
-            filter='url(#tour-shadow)'
+            filter={shadowFilter}
           />
           <SvgCard x={62} y={194} w={176} h={198} rx={12} />
           <clipPath id='tour-ft-thumb'>

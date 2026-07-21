@@ -2,12 +2,11 @@ import { BlurFade } from '@/components/magicui/blur-fade';
 import { NumberTicker } from '@/components/magicui/number-ticker';
 import { BurstField } from '@/components/site/burst-field';
 import { FoodBagScatter } from '@/components/site/food-bag-scatter';
-import { ImpactSection } from '@/components/site/impact-section';
 import { MorphingBlob } from '@/components/site/organic/morphing-blob';
 import { ProductTour } from '@/features/product-tour/components/product-tour';
 import { Illustrations } from '@/lib/assets/illustrations';
 import { siteConfig } from '@/lib/config/site-config';
-import { getPublicImpactStats } from '@/server/platform/queries';
+import { getPublicTotalQuantityKg } from '@/server/platform/queries';
 import { Button } from '@components/ui/button';
 import {
   ArrowRight,
@@ -20,39 +19,44 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 export default async function Home() {
-  const stats = await getPublicImpactStats();
+  const totalQuantityKg = await getPublicTotalQuantityKg();
 
   return (
-    <div className='overflow-x-clip pb-20'>
+    <div className='pb-20'>
       {/* Hero + live counter */}
       <div className='relative'>
         <section className='relative mx-auto max-w-5xl px-4 pt-14 sm:pt-20'>
+          <MorphingBlob
+            fill='#99BB44'
+            seed={11}
+            className='absolute -top-8 -left-36 -z-10 hidden w-72 opacity-10 lg:block'
+          />
           <Doodle
             src={Illustrations.leafPrimary}
             sway
-            className='top-[18%] right-[4%] hidden w-7 rotate-[25deg] md:block'
+            className='top-[18%] right-0 hidden w-5 rotate-[25deg] md:block xl:-right-12'
           />
           <h1 className='text-center font-londrina text-6xl font-extrabold lg:text-8xl'>
-            <BlurFade delay={0} className='inline-block'>
+            <BlurFade delay={0} duration={0.2} className='inline-block'>
               <span>RETTEN.&nbsp;</span>
             </BlurFade>
-            <BlurFade delay={0.12} className='inline-block'>
+            <BlurFade delay={0.06} duration={0.2} className='inline-block'>
               <span>TRACKEN.&nbsp;</span>
             </BlurFade>
-            <BlurFade delay={0.24} className='inline-block'>
+            <BlurFade delay={0.12} duration={0.2} className='inline-block'>
               <span className='inline-block -rotate-2 text-tertiary'>
                 TEILEN.
               </span>
             </BlurFade>
           </h1>
-          <BlurFade delay={0.3}>
+          <BlurFade delay={0.15} duration={0.2}>
             <p className='mx-auto mt-6 max-w-3xl text-center font-semibold sm:text-xl'>
               FairTrack macht sichtbar, was die Foodsharing-Community leistet:
               Jede Lebensmittelabgabe an einem Fairteiler wird erfasst – und aus
               Schätzungen werden Fakten.
             </p>
           </BlurFade>
-          <BlurFade delay={0.4}>
+          <BlurFade delay={0.2} duration={0.2}>
             <div className='sm:max-w-auto mx-auto mt-8 flex max-w-[220px] flex-col justify-center gap-4 sm:flex-row'>
               <Button asChild size='lg' className='text-md group'>
                 <Link href='/sign-in'>
@@ -69,7 +73,7 @@ export default async function Home() {
 
         <section
           aria-label='Gesamtmenge fairteilter Lebensmittel'
-          className='relative mt-4 flex justify-center px-4 pb-12 sm:mt-6'
+          className='relative mt-14 flex justify-center overflow-x-clip px-4 pb-12 sm:mt-6'
         >
           <div className='relative flex aspect-[4/3] w-[min(92vw,600px)] items-center justify-center sm:aspect-[2/1] sm:w-[min(94vw,900px)]'>
             <MorphingBlob
@@ -77,26 +81,26 @@ export default async function Home() {
               seed={5}
               speed={1.3}
               amplitude={0.1}
-              className='absolute inset-0 size-full opacity-30'
+              className='absolute inset-0 size-full scale-125 opacity-30 sm:scale-100'
             />
             <BurstField>
               <Doodle
                 src={Illustrations.mushrooms}
-                className='top-[16%] left-[21%] w-12 -rotate-6 sm:w-16'
+                className='top-[7%] left-[9%] w-[10.5vw] -rotate-6 sm:top-[16%] sm:left-[21%] sm:w-12 lg:w-16'
                 delay='-3.5s'
               />
               <Doodle
                 src={Illustrations.leafPrimary}
                 sway
                 spin
-                className='top-[7%] left-[45%] w-5 rotate-[20deg] sm:w-7'
+                className='top-[4%] left-[43%] w-[5.5vw] rotate-[20deg] sm:w-7'
                 delay='-1s'
               />
               <Doodle
                 src={Illustrations.leaf2Primary}
                 sway
                 spin
-                className='top-[13%] left-[52%] hidden w-5 rotate-[130deg] sm:block'
+                className='top-[8%] left-[57%] hidden w-5 rotate-210 sm:block'
                 delay='-4s'
               />
               <Doodle
@@ -110,12 +114,12 @@ export default async function Home() {
                 src={Illustrations.leafPrimary}
                 sway
                 spin
-                className='top-[62%] left-[4%] w-6 -rotate-[35deg] sm:w-9'
+                className='top-[62%] left-[4%] w-[6.5vw] -rotate-[35deg] sm:w-9'
                 delay='-5.5s'
               />
               <Doodle
                 src={Illustrations.beetrootSecondary}
-                className='bottom-[7%] left-[18%] w-12 -rotate-6 sm:w-20'
+                className='bottom-[2%] left-[7%] w-[10.5vw] -rotate-6 sm:bottom-[7%] sm:left-[18%] sm:w-12 md:w-16 lg:w-20'
                 delay='-1.5s'
               />
               <Doodle
@@ -129,21 +133,21 @@ export default async function Home() {
                 src={Illustrations.leafSecondary}
                 sway
                 spin
-                className='bottom-[6%] left-[60%] w-6 rotate-6 sm:w-9'
+                className='bottom-[6%] left-[60%] w-[6.5vw] rotate-[210deg] sm:w-9'
                 delay='-6s'
               />
               <Doodle
                 src={Illustrations.carrot}
-                className='top-[8%] right-[3%] w-16 rotate-[15deg] sm:w-28'
+                className='top-[8%] right-[3%] w-[13vw] rotate-[15deg] sm:w-16 md:w-20 lg:w-28'
               />
               <Doodle
                 src={Illustrations.pepper}
-                className='top-[42%] right-[4%] w-8 rotate-6 sm:w-10'
+                className='top-[80%] right-[2%] w-[8.5vw] rotate-6 sm:top-[42%] sm:right-[4%] sm:w-10'
                 delay='-2s'
               />
               <Doodle
                 src={Illustrations.bag}
-                className='right-[4%] bottom-[6%] w-16 rotate-3 sm:w-24'
+                className='right-[4%] bottom-[6%] hidden w-16 rotate-3 sm:block md:w-20 lg:w-24'
                 delay='-5s'
               />
               <span
@@ -168,8 +172,8 @@ export default async function Home() {
               />
             </BurstField>
             <div className='relative z-10 text-center font-londrina text-primary'>
-              <h2 className='text-5xl sm:text-8xl'>
-                <NumberTicker value={stats.totalQuantityKg} decimalPlaces={2} />
+              <h2 className='text-[clamp(3.75rem,2.36rem+6vw,4.5rem)] sm:text-7xl lg:text-8xl'>
+                <NumberTicker value={totalQuantityKg} decimalPlaces={2} />
               </h2>
               <p className='mt-1 text-lg md:text-xl'>
                 Kilogramm Lebensmittel fairteilt
@@ -190,60 +194,67 @@ export default async function Home() {
       </div>
 
       <div className='relative'>
-        <div className='relative mt-12 px-4 md:mt-16'>
-          <Doodle
-            src={Illustrations.leaf2Primary}
-            sway
-            className='top-10 left-[6%] hidden w-5 -rotate-12 lg:block'
-            delay='-1.5s'
-          />
-          <ImpactSection stats={stats} />
-        </div>
-
         {/* Product tour */}
         <section
           aria-labelledby='product-tour-heading'
-          className='relative mx-auto mt-20 max-w-6xl px-4 md:mt-24'
+          className='relative mx-auto mt-16 max-w-6xl px-4 md:mt-24'
         >
+          <MorphingBlob
+            fill='#99BB44'
+            seed={17}
+            className='absolute top-1/2 left-[15%] -z-10 hidden w-80 -translate-y-1/2 opacity-10 lg:block'
+          />
           <Doodle
             src={Illustrations.leafSecondary}
             sway
-            className='top-2 left-[8%] hidden w-8 -rotate-[15deg] lg:block'
+            className='top-2 left-0 hidden w-6 lg:block xl:-left-4'
             delay='-3s'
           />
           <Doodle
             src={Illustrations.leafPrimary}
             sway
-            className='right-[5%] -bottom-10 hidden w-6 rotate-[35deg] lg:block'
+            className='right-0 -bottom-10 hidden w-5 rotate-[35deg] lg:block xl:-right-8'
             delay='-4.5s'
           />
           <BlurFade inView>
+            <p className='text-center text-sm font-semibold tracking-widest text-tertiary uppercase'>
+              Für Foodsaver:innen
+            </p>
             <h2
               id='product-tour-heading'
-              className='text-center font-londrina text-4xl text-tertiary sm:text-5xl'
+              className='mt-2 text-center font-londrina text-4xl text-primary sm:text-5xl'
             >
               FairTrack in Aktion
             </h2>
+            <p className='mx-auto mt-4 max-w-2xl text-center text-muted-foreground'>
+              Vom Fairteiler-Finder bis zum fertigen Beitrag: So erfasst du
+              deine Abgabe direkt am Handy – in unter einer Minute.
+            </p>
           </BlurFade>
           <div className='mt-10'>
-            <ProductTour />
+            <ProductTour persona='user' />
           </div>
         </section>
 
         {/* Operator pitch */}
         <section
           aria-labelledby='operator-heading'
-          className='relative mx-auto mt-20 max-w-5xl px-4 md:mt-24'
+          className='relative mx-auto mt-36 max-w-5xl px-4 md:mt-40'
         >
           <MorphingBlob
             fill='#99BB44'
             seed={23}
-            className='absolute -top-16 -right-24 -z-10 w-72 opacity-10'
+            className='absolute -top-16 -right-24 -z-10 hidden w-72 opacity-10 lg:block'
+          />
+          <MorphingBlob
+            fill='#99BB44'
+            seed={41}
+            className='absolute -bottom-8 -left-12 -z-10 hidden w-80 opacity-10 lg:block'
           />
           <Doodle
             src={Illustrations.leaf2Primary}
             sway
-            className='-top-8 left-[12%] hidden w-5 rotate-[15deg] lg:block'
+            className='-top-8 left-[2%] hidden w-4 rotate-[15deg] lg:block xl:-left-12'
             delay='-2s'
           />
           <BlurFade inView>
@@ -307,23 +318,38 @@ export default async function Home() {
               </div>
             </div>
           </BlurFade>
+          <div className='relative mt-14 md:mt-16'>
+            <Doodle
+              src={Illustrations.leafSecondary}
+              sway
+              className='-top-10 left-[10%] hidden w-6 -rotate-[20deg] md:block'
+              delay='-2.5s'
+            />
+            <ProductTour persona='fairteiler' />
+          </div>
         </section>
 
         {/* Closing */}
-        <section className='relative mx-auto mt-20 max-w-4xl px-4 text-center md:mt-24'>
+        <section className='relative mx-auto mt-36 max-w-4xl px-4 text-center md:mt-40'>
           <Doodle
             src={Illustrations.leafPrimary}
             sway
-            className='top-[60%] right-[16%] hidden w-6 -rotate-[25deg] md:block'
+            className='top-[60%] right-[2%] hidden w-5 -rotate-[200deg] md:block lg:-right-6'
             delay='-3.5s'
+          />
+          <Doodle
+            src={Illustrations.leafSecondary}
+            sway
+            className='bottom-4 -left-6 hidden w-7 rotate-[15deg] md:block lg:-left-20'
+            delay='-2s'
           />
           <BlurFade inView>
             <p className='text-md font-semibold sm:text-xl md:text-2xl'>
               Durch das digitale Retteformular werden aus Schätzungen
-              <span className='font-bold text-tertiary'> Fakten </span>
+              <span className='font-bold text-primary'> Fakten </span>
               über das Engagement der Foodsharing-Community.
             </p>
-            <h2 className='mt-6 font-londrina text-3xl font-medium text-tertiary sm:text-4xl md:text-5xl'>
+            <h2 className='mt-10 font-londrina text-3xl font-medium text-tertiary sm:text-4xl md:text-5xl'>
               Gemeinsam für mehr Lebensmittelwertschätzung
             </h2>
             <Button asChild size='lg' className='text-md group mt-8'>
@@ -333,12 +359,7 @@ export default async function Home() {
               </Link>
             </Button>
           </BlurFade>
-          <div className='relative mx-auto mt-12 hidden w-[min(88vw,420px)] sm:block'>
-            <MorphingBlob
-              fill='#99BB44'
-              seed={31}
-              className='absolute inset-x-[-6%] top-[-4%] bottom-[18%] -z-10 opacity-20'
-            />
+          <div className='relative mx-auto mt-20 hidden w-[min(88vw,420px)] sm:block'>
             <FoodBagScatter />
           </div>
         </section>

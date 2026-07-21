@@ -12,6 +12,7 @@ import {
   Pop,
   SvgButton,
   SvgCard,
+  tourTime,
 } from '../../svg-primitives';
 import { FairteilerChrome } from './fairteiler-chrome';
 
@@ -24,7 +25,10 @@ function swapOut(at: number) {
     idle: { opacity: 1 },
     active: {
       opacity: [1, 1, 0],
-      transition: { duration: STEP_DURATION, times: [0, t(at), t(at + 0.3)] },
+      transition: {
+        duration: tourTime(STEP_DURATION),
+        times: [0, t(at), t(at + 0.3)],
+      },
     },
     done: { opacity: 0, transition: { duration: 0.2 } },
   };
@@ -35,7 +39,10 @@ function swapIn(at: number) {
     idle: { opacity: 0 },
     active: {
       opacity: [0, 0, 1],
-      transition: { duration: STEP_DURATION, times: [0, t(at), t(at + 0.3)] },
+      transition: {
+        duration: tourTime(STEP_DURATION),
+        times: [0, t(at), t(at + 0.3)],
+      },
     },
     done: { opacity: 1, transition: { duration: 0.2 } },
   };
@@ -180,7 +187,7 @@ function DonutCard({
                   pathLength: [0, 0, seg.fraction, seg.fraction, seg.filtered],
                   opacity: [0, 0, 1, 1, 1],
                   transition: {
-                    duration: STEP_DURATION,
+                    duration: tourTime(STEP_DURATION),
                     times: [
                       0,
                       t(drawDelay),
@@ -300,7 +307,7 @@ export function FairteilerStatisticsScreen({ state }: { state: string }) {
             idle: { opacity: 0 },
             active: {
               opacity: 1,
-              transition: { delay: 5.6, duration: 0.3 },
+              transition: { delay: tourTime(5.6), duration: 0.3 },
             },
             done: { opacity: 1, transition: { duration: 0.2 } },
           }}
@@ -462,7 +469,7 @@ export function FairteilerStatisticsScreen({ state }: { state: string }) {
                 pathLength: [0, 0, 1, 1, 1],
                 opacity: [0, 0, 1, 1, 0],
                 transition: {
-                  duration: STEP_DURATION,
+                  duration: tourTime(STEP_DURATION),
                   times: [0, t(1.5), t(2.7), t(FILTER_AT), t(FILTER_AT + 0.4)],
                 },
               },
@@ -485,7 +492,7 @@ export function FairteilerStatisticsScreen({ state }: { state: string }) {
                 pathLength: [0, 0, 1],
                 opacity: [0, 0, 1],
                 transition: {
-                  duration: STEP_DURATION,
+                  duration: tourTime(STEP_DURATION),
                   times: [0, t(FILTER_AT + 0.2), t(FILTER_AT + 1.2)],
                 },
               },
@@ -503,7 +510,7 @@ export function FairteilerStatisticsScreen({ state }: { state: string }) {
               active: {
                 opacity: [0, 0, 1, 1, 0],
                 transition: {
-                  duration: STEP_DURATION,
+                  duration: tourTime(STEP_DURATION),
                   times: [0, t(3.2), t(3.5), t(5.6), t(5.9)],
                 },
               },
@@ -598,7 +605,10 @@ export function FairteilerStatisticsScreen({ state }: { state: string }) {
                   idle: { opacity: 0 },
                   active: {
                     opacity: 1,
-                    transition: { delay: 1.3 + i * 0.05, duration: 0.25 },
+                    transition: {
+                      delay: tourTime(1.3 + i * 0.05),
+                      duration: 0.25,
+                    },
                   },
                   done: { opacity: 1, transition: { duration: 0.2 } },
                 }}

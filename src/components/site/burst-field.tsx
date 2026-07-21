@@ -29,16 +29,14 @@ export function BurstField({
       if (!el.offsetWidth) return;
       const dx = cx - (el.offsetLeft + el.offsetWidth / 2);
       const dy = cy - (el.offsetTop + el.offsetHeight / 2);
-      // CSS animations (float/sway) outrank script animations for the
-      // transform property, so silence them for the flight. The flight
-      // animates the individual translate/scale properties, which compose
-      // BEFORE the rotate property — using `transform` instead would move
-      // rotated items (leaves, diamonds) along their rotated axes.
-      el.style.animationName = 'none';
+      // The flight animates the individual translate/scale/rotate
+      // properties, which compose with the float/sway CSS animations on
+      // `transform` — those keep running throughout so the landing hands
+      // off into the idle motion without a jump.
       // data-spin items tumble into their final orientation while flying.
       const rot = parseFloat(getComputedStyle(el).rotate) || 0;
       const spin = 'spin' in el.dataset ? (i % 2 ? 200 : -200) : 0;
-      const flight = el.animate(
+      el.animate(
         [
           {
             translate: `${dx}px ${dy}px`,
@@ -61,9 +59,6 @@ export function BurstField({
           fill: 'backwards',
         },
       );
-      flight.onfinish = () => {
-        el.style.animationName = '';
-      };
     });
   }, []);
 

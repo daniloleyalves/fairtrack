@@ -6,6 +6,7 @@ import {
   ScreenChrome,
   SvgButton,
   SvgCard,
+  tourTime,
 } from '../../svg-primitives';
 
 const CONFETTI = [
@@ -20,7 +21,7 @@ const CONFETTI = [
 export function SuccessScreen({ state }: { state: string }) {
   return (
     <motion.g initial='idle' animate={state}>
-      <ScreenChrome w={900} h={560} bannerH={90} />
+      <ScreenChrome w={900} h={560} bannerH={220} />
 
       {CONFETTI.map((c, i) => (
         <motion.circle
@@ -36,7 +37,7 @@ export function SuccessScreen({ state }: { state: string }) {
               x: c.dx,
               y: c.dy,
               transition: {
-                delay: 0.9,
+                delay: tourTime(0.9),
                 duration: 1,
                 ease: 'easeOut',
                 times: [0, 0.2, 1],

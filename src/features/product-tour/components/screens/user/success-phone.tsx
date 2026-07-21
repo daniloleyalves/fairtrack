@@ -7,6 +7,7 @@ import {
   Pop,
   SvgButton,
   SvgCard,
+  tourTime,
 } from '../../svg-primitives';
 
 const AI_PURPLE = '#7c3aed';
@@ -44,7 +45,7 @@ export function SuccessPhone({ state }: { state: string }) {
                 x: c.dx,
                 y: c.dy,
                 transition: {
-                  delay: 0.9,
+                  delay: tourTime(0.9),
                   duration: 1,
                   ease: 'easeOut',
                   times: [0, 0.2, 1],
@@ -201,7 +202,9 @@ export function SuccessPhone({ state }: { state: string }) {
                       active: {
                         opacity: 1,
                         transition: {
-                          delay: AI_TYPE_START + (offset + ci) * AI_CHAR_DELAY,
+                          delay: tourTime(
+                            AI_TYPE_START + (offset + ci) * AI_CHAR_DELAY,
+                          ),
                           duration: 0.01,
                         },
                       },

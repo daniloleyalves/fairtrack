@@ -8,7 +8,13 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { CATEGORY_ICONS } from '../../../assets';
-import { FONT_DISPLAY, FONT_SANS, Pop, SvgCard } from '../../svg-primitives';
+import {
+  FONT_DISPLAY,
+  FONT_SANS,
+  Pop,
+  SvgCard,
+  tourTime,
+} from '../../svg-primitives';
 import { FairteilerChrome } from './fairteiler-chrome';
 
 const KATEGORIEN = [
@@ -112,11 +118,11 @@ function Donut({
                   opacity: 1,
                   transition: {
                     pathLength: {
-                      delay: drawDelay,
+                      delay: tourTime(drawDelay),
                       duration: 1,
                       ease: 'easeOut',
                     },
-                    opacity: { delay: drawDelay, duration: 0.1 },
+                    opacity: { delay: tourTime(drawDelay), duration: 0.1 },
                   },
                 },
                 done: {
@@ -499,7 +505,10 @@ export function FairteilerDashboardScreen({ state }: { state: string }) {
                 idle: { opacity: 0 },
                 active: {
                   opacity: 1,
-                  transition: { delay: 1.3 + i * 0.05, duration: 0.25 },
+                  transition: {
+                    delay: tourTime(1.3 + i * 0.05),
+                    duration: 0.25,
+                  },
                 },
                 done: { opacity: 1, transition: { duration: 0.2 } },
               }}

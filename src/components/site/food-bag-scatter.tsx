@@ -1,6 +1,7 @@
 'use client';
 
 import { Illustrations } from '@/lib/assets/illustrations';
+import { MorphingBlob } from '@/components/site/organic/morphing-blob';
 import {
   motion,
   useReducedMotion,
@@ -73,7 +74,7 @@ const ITEMS: ItemSpec[] = [
     46,
     40,
     { left: 46, top: 60, rotate: -4, scale: 0.35 },
-    [0.12, 0.88],
+    [0.12, 1],
   ),
   petal(
     Illustrations.carrot,
@@ -82,17 +83,17 @@ const ITEMS: ItemSpec[] = [
     26,
     -40,
     { left: 47, top: 58, rotate: -2, scale: 0.35 },
-    [0.15, 0.9],
+    [0.15, 1],
     -48,
   ),
   petal(
     Illustrations.onion,
     24,
-    49,
-    22,
+    46,
+    25,
     -18,
-    { left: 53, top: 58, rotate: 2, scale: 0.35 },
-    [0.24, 0.96],
+    { left: 50, top: 58, rotate: 10, scale: 0.35 },
+    [0.24, 1],
   ),
   petal(
     Illustrations.beetroot,
@@ -101,7 +102,7 @@ const ITEMS: ItemSpec[] = [
     38,
     -25,
     { left: 55, top: 60, rotate: 4, scale: 0.35 },
-    [0.27, 0.98],
+    [0.27, 1],
   ),
   petal(
     Illustrations.garlic,
@@ -110,7 +111,7 @@ const ITEMS: ItemSpec[] = [
     30,
     -12,
     { left: 51, top: 58, rotate: 0, scale: 0.4 },
-    [0.21, 0.94],
+    [0.21, 1],
   ),
   // the small stuff around the bag mouth
   petal(
@@ -120,25 +121,25 @@ const ITEMS: ItemSpec[] = [
     60,
     0,
     { left: 46, top: 63, rotate: 0, scale: 0.5 },
-    [0.3, 0.95],
+    [0.3, 1],
   ),
   petal(
     Illustrations.mushroom2,
     9,
-    33,
+    38,
     60,
     0,
     { left: 45, top: 65, rotate: 6, scale: 0.5 },
-    [0.33, 0.97],
+    [0.33, 1],
   ),
   petal(
     Illustrations.mushroom1,
     8,
-    41,
+    45,
     61,
     0,
     { left: 47, top: 64, rotate: -6, scale: 0.5 },
-    [0.31, 0.96],
+    [0.31, 1],
   ),
   petal(
     Illustrations.mushroom4,
@@ -147,16 +148,16 @@ const ITEMS: ItemSpec[] = [
     52,
     0,
     { left: 53, top: 64, rotate: 4, scale: 0.5 },
-    [0.32, 0.97],
+    [0.32, 1],
   ),
   petal(
     Illustrations.pepper2,
     12,
     48.8,
-    52.5,
+    50,
     0,
-    { left: 54, top: 63, rotate: 2, scale: 0.5 },
-    [0.3, 0.95],
+    { left: 50, top: 63, rotate: 2, scale: 0.5 },
+    [0.3, 1],
   ),
   petal(
     Illustrations.mushroom3,
@@ -165,38 +166,27 @@ const ITEMS: ItemSpec[] = [
     61,
     0,
     { left: 55, top: 65, rotate: -6, scale: 0.5 },
-    [0.34, 0.98],
+    [0.34, 1],
   ),
-  // loose leaves drifting out last
+  // loose leaves rising out last, staying close to the bag's vertical
   petal(
     Illustrations.leafPrimary,
     6,
-    14,
-    27,
+    30,
+    3,
     0,
     { left: 48, top: 62, rotate: -20, scale: 0.4 },
     [0.38, 1],
-    -25,
   ),
   petal(
     Illustrations.leaf2Primary,
     5,
-    89,
-    19,
-    0,
-    { left: 52, top: 62, rotate: 20, scale: 0.4 },
-    [0.42, 1],
-    30,
-  ),
-  petal(
-    Illustrations.leafSecondary,
-    7,
     70,
-    57,
+    9,
     0,
-    { left: 50, top: 61, rotate: 30, scale: 0.4 },
-    [0.4, 1],
-    45,
+    { left: 52, top: 62, rotate: 180, scale: 0.4 },
+    [0.42, 1],
+    180,
   ),
 ];
 
@@ -215,12 +205,24 @@ export function FoodBagScatter({ className }: { className?: string }) {
   // Hold the bundle packed for the first stretch of scroll, then bloom.
   const delayed = useTransform(scrollYProgress, [0.3, 1], [0, 1]);
   const progress = useSpring(delayed, { stiffness: 70, damping: 20 });
+  const blobScale = useTransform(progress, [0, 1], [0.7, 1.1]);
 
   return (
     <div
       ref={containerRef}
       className={`relative aspect-[150/187] ${className ?? ''}`}
     >
+      <motion.div
+        aria-hidden='true'
+        className='absolute inset-x-[-6%] top-[-4%] bottom-[18%] -z-10'
+        style={reducedMotion ? undefined : { scale: blobScale }}
+      >
+        <MorphingBlob
+          fill='#99BB44'
+          seed={31}
+          className='size-full opacity-20'
+        />
+      </motion.div>
       {ITEMS.map((item, i) => (
         <ScatterItem
           key={i}
@@ -249,34 +251,40 @@ function ScatterItem({
   reducedMotion: boolean;
 }) {
   const { final, packed, window: w } = item;
-  // Fountain curve: a quadratic Bezier whose control point sits above the
-  // bag mouth, so every item launches vertically and bends outward along
-  // one continuous arc scaled to its flight distance.
-  const dist = Math.hypot(final.left - packed.left, final.top - packed.top);
+  // Rising curve: the control point sits between launch and seat, biased
+  // vertical, so items climb the whole flight — launching upward, drifting
+  // outward late, never dipping back down to settle.
   const ctrl = {
-    left: packed.left + 0.1 * (final.left - packed.left),
-    top: packed.top - 0.6 * dist,
+    left: packed.left + 0.25 * (final.left - packed.left),
+    top: packed.top + 0.55 * (final.top - packed.top),
   };
   const T = [0, 0.2, 0.4, 0.6, 0.8, 1];
   const steps = T.map((s) => w[0] + s * (w[1] - w[0]));
+  // Shared ease-out so every item is still gliding until the end of the
+  // scroll and settles softly, instead of freezing when its window closes.
+  const easeOut = (u: number) => 1 - (1 - u) * (1 - u);
   const at = (a: number, b: number, c: number, s: number) =>
     (1 - s) * (1 - s) * a + 2 * (1 - s) * s * b + s * s * c;
   const left = useTransform(
     progress,
     steps,
-    T.map((s) => `${at(packed.left, ctrl.left, final.left, s)}%`),
+    T.map((s) => `${at(packed.left, ctrl.left, final.left, easeOut(s))}%`),
   );
   const top = useTransform(
     progress,
     steps,
-    T.map((s) => `${at(packed.top, ctrl.top, final.top, s)}%`),
+    T.map((s) => `${at(packed.top, ctrl.top, final.top, easeOut(s))}%`),
   );
   const rotate = useTransform(
     progress,
-    [w[0], w[1]],
-    [packed.rotate, final.rotate],
+    steps,
+    T.map((s) => packed.rotate + (final.rotate - packed.rotate) * easeOut(s)),
   );
-  const scale = useTransform(progress, [w[0], w[1]], [packed.scale, 1]);
+  const scale = useTransform(
+    progress,
+    steps,
+    T.map((s) => packed.scale + (1 - packed.scale) * easeOut(s)),
+  );
 
   return (
     <motion.div

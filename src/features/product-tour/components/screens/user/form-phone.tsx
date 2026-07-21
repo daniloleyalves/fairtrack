@@ -8,9 +8,10 @@ import {
   Pop,
   SvgButton,
   SvgCard,
+  tourTime,
 } from '../../svg-primitives';
 
-const STEP_DURATION = 12;
+const STEP_DURATION = 11.2;
 const t = (seconds: number) => seconds / STEP_DURATION;
 
 const TILE = { w: 112, h: 70, xs: [33, 155], ys: [195, 285] };
@@ -33,7 +34,10 @@ const CATEGORIES = [
 function fadeAt(delay: number) {
   return {
     idle: { opacity: 0 },
-    active: { opacity: 1, transition: { delay, duration: 0.3 } },
+    active: {
+      opacity: 1,
+      transition: { delay: tourTime(delay), duration: 0.3 },
+    },
     done: { opacity: 1, transition: { duration: 0.2 } },
   };
 }
@@ -53,7 +57,7 @@ function phaseVariants(inAt: number, outAt?: number) {
           : [0, 0, 0, -24]
         : [24, 24, 0, 0],
       transition: {
-        duration: STEP_DURATION,
+        duration: tourTime(STEP_DURATION),
         times: outAt
           ? inAt > 0
             ? [0, t(inAt), t(inAt + 0.4), t(outAt), t(outAt + 0.4)]
@@ -339,7 +343,11 @@ export function FormPhone({ state }: { state: string }) {
                 active: {
                   opacity: 1,
                   y: 0,
-                  transition: { delay: 9.8, duration: 0.35, ease: 'backOut' },
+                  transition: {
+                    delay: tourTime(9.8),
+                    duration: 0.35,
+                    ease: 'backOut',
+                  },
                 },
                 done: { opacity: 1, y: 0, transition: { duration: 0.2 } },
               }}
@@ -361,7 +369,7 @@ export function FormPhone({ state }: { state: string }) {
                 fontWeight={700}
                 fill='var(--primary-foreground)'
               >
-                2,5 kg
+                2 kg
               </text>
             </motion.g>
           </motion.g>
@@ -391,7 +399,7 @@ export function FormPhone({ state }: { state: string }) {
               active: {
                 opacity: [1, 1, 0],
                 transition: {
-                  duration: STEP_DURATION,
+                  duration: tourTime(STEP_DURATION),
                   times: [0, t(5.5), t(5.8)],
                 },
               },
@@ -414,7 +422,7 @@ export function FormPhone({ state }: { state: string }) {
               active: {
                 opacity: [0, 0, 1],
                 transition: {
-                  duration: STEP_DURATION,
+                  duration: tourTime(STEP_DURATION),
                   times: [0, t(5.7), t(6.0)],
                 },
               },
@@ -438,7 +446,7 @@ export function FormPhone({ state }: { state: string }) {
               active: {
                 opacity: [0, 0, 1, 1, 0],
                 transition: {
-                  duration: STEP_DURATION,
+                  duration: tourTime(STEP_DURATION),
                   times: [0, t(6.9), t(7.15), t(9.6), t(9.85)],
                 },
               },
@@ -537,8 +545,8 @@ export function FormPhone({ state }: { state: string }) {
             />
             {[
               { value: '0', from: 0, to: 7.7 },
-              { value: '1,0', from: 7.7, to: 8.4 },
-              { value: '2,5', from: 8.4, to: 0 },
+              { value: '1', from: 7.7, to: 8.4 },
+              { value: '2', from: 8.4, to: 0 },
             ].map((v) => (
               <motion.text
                 key={v.value}
@@ -560,7 +568,7 @@ export function FormPhone({ state }: { state: string }) {
                           ? [0, 0, 1, 1, 0]
                           : [0, 0, 1],
                     transition: {
-                      duration: STEP_DURATION,
+                      duration: tourTime(STEP_DURATION),
                       times:
                         v.from === 0
                           ? [0, t(v.to), t(v.to + 0.05)]

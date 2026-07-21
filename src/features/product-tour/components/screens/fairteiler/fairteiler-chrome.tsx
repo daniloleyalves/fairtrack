@@ -6,9 +6,13 @@ import {
   History,
   LayoutDashboard,
   MessageCircleHeart,
-  Rocket,
 } from 'lucide-react';
-import { FONT_DISPLAY, FONT_SANS, Pop } from '../../svg-primitives';
+import {
+  FONT_DISPLAY,
+  FONT_SANS,
+  Pop,
+  useTourFilter,
+} from '../../svg-primitives';
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard },
@@ -33,6 +37,8 @@ export function FairteilerChrome({
   title: string;
   bannerH?: number;
 }) {
+  const shadowFilter = useTourFilter('shadow');
+  const avatarClipId = `tour-avatar-clip-${active}`;
   return (
     <g>
       <rect
@@ -42,7 +48,7 @@ export function FairteilerChrome({
         fill='var(--background)'
         stroke='var(--border)'
         strokeWidth={1.5}
-        filter='url(#tour-shadow)'
+        filter={shadowFilter}
       />
       {/* sidebar */}
       <path
@@ -145,11 +151,10 @@ export function FairteilerChrome({
           Platform
         </text>
         {[
-          { label: 'Platform-Statistiken', Icon: Globe, muted: false },
-          { label: 'Releases & Roadmap', Icon: Rocket, muted: true },
-          { label: 'Feedback', Icon: MessageCircleHeart, muted: false },
+          { label: 'Platform-Statistiken', Icon: Globe },
+          { label: 'Feedback', Icon: MessageCircleHeart },
         ].map((item, i) => (
-          <g key={item.label} opacity={item.muted ? 0.45 : 1}>
+          <g key={item.label}>
             <item.Icon
               x={24}
               y={284 + i * 28}
@@ -171,11 +176,11 @@ export function FairteilerChrome({
         ))}
       </Pop>
       <Pop delay={0.6} dy={4}>
-        <clipPath id='tour-avatar-clip'>
+        <clipPath id={avatarClipId}>
           <circle cx={30} cy={526} r={14} />
         </clipPath>
         <circle cx={30} cy={526} r={14} fill='var(--secondary)' />
-        <g clipPath='url(#tour-avatar-clip)'>
+        <g clipPath={`url(#${avatarClipId})`}>
           <circle cx={30} cy={521} r={8} fill='#8a5a3b' />
           <rect
             x={21.5}
