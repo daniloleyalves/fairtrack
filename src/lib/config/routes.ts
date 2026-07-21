@@ -9,7 +9,6 @@ import {
   History,
   ChartBar,
   Globe,
-  Rocket,
   MessageCircleHeart,
   LucideIcon,
   ClipboardList,
@@ -84,12 +83,6 @@ export const routes: Record<string, Route[]> = {
       url: `/hub/fairteiler/platform-reporting`,
       disabled: false,
       reqPermissions: { section: 'reporting', permissions: ['read'] },
-    },
-    {
-      title: 'Releases & Roadmap',
-      icon: Rocket,
-      url: `/hub/releases-roadmap`,
-      disabled: true,
     },
     {
       title: 'Feedback',

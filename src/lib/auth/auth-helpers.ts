@@ -55,14 +55,11 @@ export const knownAuthErrorCodes: ReadonlySet<string> = new Set([
   ...Object.keys(customErrorCodes),
 ]);
 
-export const getErrorMessage = (
-  code: string | undefined,
-  lang: 'en' | 'de',
-): string => {
+export const getErrorMessage = (code: unknown, lang: 'en' | 'de'): string => {
   const unexpectedErrorMessage =
     'Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.';
 
-  if (!code) {
+  if (typeof code !== 'string' || !code) {
     return unexpectedErrorMessage;
   }
 

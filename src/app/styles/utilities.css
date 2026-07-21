@@ -1,0 +1,95 @@
+.list-square {
+  list-style-type: square;
+}
+
+/* === Organic shapes === */
+
+.blob {
+  border-radius: 58% 42% 55% 45% / 52% 48% 60% 40%;
+}
+
+@keyframes blob-morph {
+  0%,
+  100% {
+    border-radius: 58% 42% 55% 45% / 52% 48% 60% 40%;
+  }
+  33% {
+    border-radius: 45% 55% 48% 52% / 60% 42% 58% 40%;
+  }
+  66% {
+    border-radius: 52% 48% 60% 40% / 45% 58% 42% 55%;
+  }
+}
+
+.blob-animate {
+  animation: blob-morph 16s ease-in-out infinite;
+}
+
+@keyframes float-gentle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(1.5deg);
+  }
+}
+
+.float-gentle {
+  animation: float-gentle 7s ease-in-out infinite;
+}
+
+@keyframes sway-gentle {
+  0%,
+  100% {
+    transform: rotate(-8deg);
+  }
+  50% {
+    transform: translateY(-7px) rotate(9deg);
+  }
+}
+
+.sway-gentle {
+  transform-origin: bottom center;
+  animation: sway-gentle 6s ease-in-out infinite;
+}
+
+@keyframes plant-sway {
+  0%,
+  100% {
+    transform: skewX(-3.5deg) rotate(-1.25deg);
+  }
+  50% {
+    transform: skewX(5deg) rotate(1.75deg);
+  }
+}
+
+.plant-sway {
+  transform-origin: bottom center;
+  animation: plant-sway 6.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blob-animate,
+  .float-gentle,
+  .sway-gentle,
+  .plant-sway {
+    animation: none;
+  }
+}
+
+@keyframes loading-bar {
+  0% {
+    transform: scaleX(0);
+  }
+  50% {
+    transform: scaleX(0.6);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+.animate-loading-bar {
+  animation: loading-bar 0.5s ease-in-out infinite;
+}

@@ -149,6 +149,20 @@ export async function loadCategoryDistribution(fairteilerId?: string) {
   return data;
 }
 
+export async function loadQuantityByFairteiler() {
+  const [error, data] = await attempt(
+    db
+      .select({
+        fairteilerId: checkin.fairteilerId,
+        totalQuantity: sum(checkin.quantity),
+      })
+      .from(checkin)
+      .groupBy(checkin.fairteilerId),
+  );
+  if (error) handleDatabaseError(error, 'loadQuantityByFairteiler');
+  return data;
+}
+
 export async function loadOriginDistribution(fairteilerId?: string) {
   const query = db
     .select({

@@ -4,10 +4,38 @@ import {
   loadCategoryDistribution,
   loadKeyFigures,
   loadOriginDistribution,
+  loadQuantityByFairteiler,
 } from '../contribution/dal';
 import { loadFairteilers } from '../fairteiler/dal';
 import { initialContributionQuantity } from '@/lib/config/site-config';
 import { formatNumber } from '@/lib/utils';
+
+/**
+ * Public total rescued quantity for the landing page counter - no
+ * authentication required. Raw number for the animated counter.
+ */
+export async function getPublicTotalQuantityKg(): Promise<number> {
+  const keyFigures = await loadKeyFigures();
+  return (
+    parseFloat(keyFigures?.[0]?.totalQuantity ?? '0') +
+    initialContributionQuantity
+  );
+}
+
+/**
+ * Total tracked quantity per fairteiler - public, used by the directory page.
+ */
+export async function getFairteilerQuantities(): Promise<
+  Record<string, number>
+> {
+  const rows = await loadQuantityByFairteiler();
+  return Object.fromEntries(
+    (rows ?? []).map((row) => [
+      row.fairteilerId,
+      parseFloat(row.totalQuantity ?? '0'),
+    ]),
+  );
+}
 
 /**
  * Public platform stats endpoint - no authentication required.
