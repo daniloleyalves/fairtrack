@@ -41,15 +41,17 @@ const populateRelationships = async (data: SeedData): Promise<SeedData> => {
   // Create account records for demo users (so they can sign in)
   if (populatedData.accounts !== undefined) {
     const demoPasswordHash = await hashPassword(DEMO_PASSWORD);
-    populatedData.accounts = populatedData.users.map((user) => ({
-      id: generateId(),
-      accountId: user.id,
-      providerId: 'credential',
-      userId: user.id,
-      password: demoPasswordHash,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    }));
+    populatedData.accounts = populatedData.users
+      .filter((user) => user.id !== schema.DELETED_USER_ID)
+      .map((user) => ({
+        id: generateId(),
+        accountId: user.id,
+        providerId: 'credential',
+        userId: user.id,
+        password: demoPasswordHash,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      }));
   }
 
   // Create onboarding progress and preferences for users who completed onboarding
@@ -100,137 +102,145 @@ const populateRelationships = async (data: SeedData): Promise<SeedData> => {
   }
 
   // fairteilerOrigins
-  populatedData.fairteilerOrigins = populatedData.fairteiler.flatMap(
-    (fairteiler) => {
-      const shuffled = [...populatedData.origins].sort(
-        () => Math.random() - 0.5,
-      );
-      return shuffled
-        .slice(0, Math.min(3, populatedData.origins.length))
-        .map((origin) => ({
-          id: generateId(),
-          fairteilerId: fairteiler.id,
-          originId: origin.id,
-          createdAt: createTimestamp(Math.floor(Math.random() * 10)),
-        }));
-    },
-  );
+  if (populatedData.fairteilerOrigins.length === 0) {
+    populatedData.fairteilerOrigins = populatedData.fairteiler.flatMap(
+      (fairteiler) => {
+        const shuffled = [...populatedData.origins].sort(
+          () => Math.random() - 0.5,
+        );
+        return shuffled
+          .slice(0, Math.min(3, populatedData.origins.length))
+          .map((origin) => ({
+            id: generateId(),
+            fairteilerId: fairteiler.id,
+            originId: origin.id,
+            createdAt: createTimestamp(Math.floor(Math.random() * 10)),
+          }));
+      },
+    );
+  }
 
   // fairteilerCategories
-  populatedData.fairteilerCategories = populatedData.fairteiler.flatMap(
-    (fairteiler) => {
-      const shuffled = [...populatedData.categories].sort(
-        () => Math.random() - 0.5,
-      );
-      return shuffled
-        .slice(0, Math.min(4, populatedData.categories.length))
-        .map((category) => ({
-          id: generateId(),
-          fairteilerId: fairteiler.id,
-          categoryId: category.id,
-          createdAt: createTimestamp(Math.floor(Math.random() * 10)),
-        }));
-    },
-  );
+  if (populatedData.fairteilerCategories.length === 0) {
+    populatedData.fairteilerCategories = populatedData.fairteiler.flatMap(
+      (fairteiler) => {
+        const shuffled = [...populatedData.categories].sort(
+          () => Math.random() - 0.5,
+        );
+        return shuffled
+          .slice(0, Math.min(4, populatedData.categories.length))
+          .map((category) => ({
+            id: generateId(),
+            fairteilerId: fairteiler.id,
+            categoryId: category.id,
+            createdAt: createTimestamp(Math.floor(Math.random() * 10)),
+          }));
+      },
+    );
+  }
 
   // fairteilerCompanies
-  populatedData.fairteilerCompanies = populatedData.fairteiler.flatMap(
-    (fairteiler) => {
-      const shuffled = [...populatedData.companies].sort(
-        () => Math.random() - 0.5,
-      );
-      return shuffled
-        .slice(0, Math.min(3, populatedData.companies.length))
-        .map((company) => ({
-          id: generateId(),
-          fairteilerId: fairteiler.id,
-          companyId: company.id,
-          createdAt: createTimestamp(Math.floor(Math.random() * 10)),
-        }));
-    },
-  );
+  if (populatedData.fairteilerCompanies.length === 0) {
+    populatedData.fairteilerCompanies = populatedData.fairteiler.flatMap(
+      (fairteiler) => {
+        const shuffled = [...populatedData.companies].sort(
+          () => Math.random() - 0.5,
+        );
+        return shuffled
+          .slice(0, Math.min(3, populatedData.companies.length))
+          .map((company) => ({
+            id: generateId(),
+            fairteilerId: fairteiler.id,
+            companyId: company.id,
+            createdAt: createTimestamp(Math.floor(Math.random() * 10)),
+          }));
+      },
+    );
+  }
 
   // Create member relationships (users to fairteiler) - each user only in one fairteiler
-  populatedData.members = (() => {
-    const adminUser = populatedData.users.find((u) => u.role === 'admin');
-    const guestUsers = populatedData.users.filter((u) =>
-      u.email.startsWith('guest-'),
-    );
-    const employeeUsers = populatedData.users.filter((u) =>
-      u.email.startsWith('employee-'),
-    );
-    const regularUsers = populatedData.users.filter(
-      (u) =>
-        u.role !== 'admin' &&
-        !u.email.startsWith('guest-') &&
-        !u.email.startsWith('employee-'),
-    );
-    const shuffledRegular = [...regularUsers].sort(() => Math.random() - 0.5);
+  if (populatedData.members.length === 0) {
+    populatedData.members = (() => {
+      const adminUser = populatedData.users.find((u) => u.role === 'admin');
+      const guestUsers = populatedData.users.filter((u) =>
+        u.email.startsWith('guest-'),
+      );
+      const employeeUsers = populatedData.users.filter((u) =>
+        u.email.startsWith('employee-'),
+      );
+      const regularUsers = populatedData.users.filter(
+        (u) =>
+          u.role !== 'admin' &&
+          !u.email.startsWith('guest-') &&
+          !u.email.startsWith('employee-'),
+      );
+      const shuffledRegular = [...regularUsers].sort(() => Math.random() - 0.5);
 
-    const members: typeof populatedData.members = [];
+      const members: typeof populatedData.members = [];
 
-    // Admin is always owner of the first fairteiler
-    if (adminUser && populatedData.fairteiler.length > 0) {
-      members.push({
-        id: generateId(),
-        organizationId: populatedData.fairteiler[0].id,
-        userId: adminUser.id,
-        role: 'owner' as const,
-        createdAt: createTimestamp(Math.floor(Math.random() * 15)),
-      });
-    }
-
-    // Guest users get 'guest' role on the first fairteiler
-    for (const guest of guestUsers) {
-      if (populatedData.fairteiler.length > 0) {
+      // Admin is always owner of the first fairteiler
+      if (adminUser && populatedData.fairteiler.length > 0) {
         members.push({
           id: generateId(),
           organizationId: populatedData.fairteiler[0].id,
-          userId: guest.id,
-          role: 'guest' as const,
+          userId: adminUser.id,
+          role: 'owner' as const,
           createdAt: createTimestamp(Math.floor(Math.random() * 15)),
         });
       }
-    }
 
-    // Employee users get 'employee' role on the first fairteiler
-    for (const employee of employeeUsers) {
-      if (populatedData.fairteiler.length > 0) {
-        members.push({
-          id: generateId(),
-          organizationId: populatedData.fairteiler[0].id,
-          userId: employee.id,
-          role: 'employee' as const,
-          createdAt: createTimestamp(Math.floor(Math.random() * 15)),
-        });
+      // Guest users get 'guest' role on the first fairteiler
+      for (const guest of guestUsers) {
+        if (populatedData.fairteiler.length > 0) {
+          members.push({
+            id: generateId(),
+            organizationId: populatedData.fairteiler[0].id,
+            userId: guest.id,
+            role: 'guest' as const,
+            createdAt: createTimestamp(Math.floor(Math.random() * 15)),
+          });
+        }
       }
-    }
 
-    // Distribute remaining regular users across fairteilers
-    let userIndex = 0;
-    for (const fairteiler of populatedData.fairteiler) {
-      const usersPerFairteiler = Math.ceil(
-        shuffledRegular.length / populatedData.fairteiler.length,
-      );
-      const fairteilerUsers = shuffledRegular.slice(
-        userIndex,
-        userIndex + usersPerFairteiler,
-      );
-      userIndex += usersPerFairteiler;
-
-      for (const user of fairteilerUsers) {
-        members.push({
-          id: generateId(),
-          organizationId: fairteiler.id,
-          userId: user.id,
-          role: 'member' as const,
-          createdAt: createTimestamp(Math.floor(Math.random() * 15)),
-        });
+      // Employee users get 'employee' role on the first fairteiler
+      for (const employee of employeeUsers) {
+        if (populatedData.fairteiler.length > 0) {
+          members.push({
+            id: generateId(),
+            organizationId: populatedData.fairteiler[0].id,
+            userId: employee.id,
+            role: 'employee' as const,
+            createdAt: createTimestamp(Math.floor(Math.random() * 15)),
+          });
+        }
       }
-    }
 
-    return members;
-  })();
+      // Distribute remaining regular users across fairteilers
+      let userIndex = 0;
+      for (const fairteiler of populatedData.fairteiler) {
+        const usersPerFairteiler = Math.ceil(
+          shuffledRegular.length / populatedData.fairteiler.length,
+        );
+        const fairteilerUsers = shuffledRegular.slice(
+          userIndex,
+          userIndex + usersPerFairteiler,
+        );
+        userIndex += usersPerFairteiler;
+
+        for (const user of fairteilerUsers) {
+          members.push({
+            id: generateId(),
+            organizationId: fairteiler.id,
+            userId: user.id,
+            role: 'member' as const,
+            createdAt: createTimestamp(Math.floor(Math.random() * 15)),
+          });
+        }
+      }
+
+      return members;
+    })();
+  }
 
   // Create tags for fairteiler
   if (populatedData.tags.length > 0) {
@@ -242,8 +252,8 @@ const populateRelationships = async (data: SeedData): Promise<SeedData> => {
     });
   }
 
-  // Add more tags for demo environment
-  if (populatedData.fairteiler.length > 0) {
+  // Fallback tags when the data file does not define any
+  if (populatedData.tags.length === 0 && populatedData.fairteiler.length > 0) {
     const additionalTags = ['Stuttgart', 'Berlin', 'Café'].map(
       (tagName, index) => ({
         id: generateId(),
@@ -257,7 +267,11 @@ const populateRelationships = async (data: SeedData): Promise<SeedData> => {
   }
 
   // Create food items
-  if (populatedData.origins.length > 0 && populatedData.categories.length > 0) {
+  if (
+    populatedData.food.length === 0 &&
+    populatedData.origins.length > 0 &&
+    populatedData.categories.length > 0
+  ) {
     const foodItems = [
       {
         title: 'Fresh Tomatoes',
@@ -329,6 +343,7 @@ const populateRelationships = async (data: SeedData): Promise<SeedData> => {
 
   // Create checkins (contributions)
   if (
+    populatedData.checkins.length === 0 &&
     populatedData.users.length > 0 &&
     populatedData.fairteiler.length > 0 &&
     populatedData.food.length > 0
