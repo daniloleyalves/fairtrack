@@ -5,7 +5,6 @@ import {
   loadKeyFigures,
   loadOriginDistribution,
   loadPublicTotalQuantity,
-  loadQuantityByFairteiler,
 } from '../contribution/dal';
 import { loadFairteilers } from '../fairteiler/dal';
 import { initialContributionQuantity } from '@/lib/config/site-config';
@@ -18,21 +17,6 @@ import { formatNumber } from '@/lib/utils';
 export async function getPublicTotalQuantityKg(): Promise<number> {
   const totalQuantity = await loadPublicTotalQuantity();
   return parseFloat(totalQuantity ?? '0') + initialContributionQuantity;
-}
-
-/**
- * Total tracked quantity per fairteiler - public, used by the directory page.
- */
-export async function getFairteilerQuantities(): Promise<
-  Record<string, number>
-> {
-  const rows = await loadQuantityByFairteiler();
-  return Object.fromEntries(
-    (rows ?? []).map((row) => [
-      row.fairteilerId,
-      parseFloat(row.totalQuantity ?? '0'),
-    ]),
-  );
 }
 
 /**
