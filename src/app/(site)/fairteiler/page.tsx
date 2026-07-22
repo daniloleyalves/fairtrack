@@ -86,8 +86,8 @@ function FairteilerPlaceholderCard() {
           Hier könnte dein Fairteiler stehen
         </CardTitle>
         <CardDescription>
-          Du betreibst einen Fairteiler und möchtest deine Abgaben mit FairTrack
-          erfassen? Melde dich bei uns!
+          Du betreibst einen Fairteiler und möchtest die Erfassung eurer Abgaben
+          mit FairTrack ermöglichen? Melde dich bei uns!
         </CardDescription>
       </CardHeader>
       <CardContent className='mt-auto flex flex-col items-start'>
