@@ -1,5 +1,4 @@
 import { getFairteilers } from '@server/fairteiler/queries';
-import { getFairteilerQuantities } from '@server/platform/queries';
 import { BlurFade } from '@/components/magicui/blur-fade';
 import { MorphingBlob } from '@/components/site/organic/morphing-blob';
 import { Badge } from '@components/ui/badge';
@@ -14,8 +13,7 @@ import {
 import { generateBlurDataUrlFromImage } from '@/lib/services/plaiceholder';
 import { Logo } from '@/lib/assets/logo';
 import { siteConfig } from '@/lib/config/site-config';
-import { formatNumber } from '@/lib/utils';
-import { Globe, Mail, MapPin, Scale } from 'lucide-react';
+import { Globe, Mail, MapPin } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Suspense } from 'react';
@@ -52,10 +50,7 @@ export default function FairteilerPage() {
 
 async function FairteilerGrid() {
   'use cache';
-  const [fairteilers, quantities] = await Promise.all([
-    getFairteilers(),
-    getFairteilerQuantities(),
-  ]);
+  const fairteilers = await getFairteilers();
 
   return (
     <>
@@ -66,10 +61,7 @@ async function FairteilerGrid() {
           delay={Math.min(index, 7) * 0.06}
           className='h-full'
         >
-          <FairteilerCard
-            fairteiler={fairteiler}
-            trackedKg={quantities[fairteiler.id] ?? 0}
-          />
+          <FairteilerCard fairteiler={fairteiler} />
         </BlurFade>
       ))}
       <BlurFade
@@ -112,13 +104,7 @@ function FairteilerPlaceholderCard() {
   );
 }
 
-async function FairteilerCard({
-  fairteiler,
-  trackedKg,
-}: {
-  fairteiler: FairteilerType;
-  trackedKg: number;
-}) {
+async function FairteilerCard({ fairteiler }: { fairteiler: FairteilerType }) {
   'use cache';
   const blurDataURL = fairteiler.thumbnail
     ? (await generateBlurDataUrlFromImage(fairteiler.thumbnail)).base64
@@ -148,12 +134,6 @@ async function FairteilerCard({
             alt={`Bild von ${fairteiler.name}`}
             className='bg-secondary object-cover transition-transform duration-500 group-hover:scale-105'
           />
-        )}
-        {fairteiler.thumbnail && trackedKg > 0 && (
-          <div className='absolute top-3 right-3 flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-primary backdrop-blur-sm'>
-            <Scale className='size-3.5' />
-            {formatNumber(trackedKg, 0)} kg fairteilt
-          </div>
         )}
       </div>
       <CardHeader>
