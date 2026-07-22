@@ -307,10 +307,10 @@ describe('User Login E2E', () => {
 
     // Should show registration link
     cy.contains('Zum ersten Mal hier?').should('be.visible');
-    cy.get('a[href="/sign-up"]').should('be.visible');
+    cy.get('a[href="/sign-up"]:visible').should('be.visible');
 
     // Click registration link
-    cy.get('a[href="/sign-up"]').click();
+    cy.get('a[href="/sign-up"]:visible').click();
     cy.url().should('include', '/sign-up');
   });
 
@@ -318,13 +318,13 @@ describe('User Login E2E', () => {
     cy.visit('/sign-in');
 
     // Should show password reset link
-    cy.get('a[href="/reset-password"]').should(
+    cy.get('a[href="/reset-password"]:visible').should(
       'contain',
       'Passwort zurücksetzen',
     );
 
     // Click password reset link
-    cy.get('a[href="/reset-password"]').click();
+    cy.get('a[href="/reset-password"]:visible').click();
     cy.url().should('include', '/reset-password');
   });
 

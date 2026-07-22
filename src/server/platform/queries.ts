@@ -4,6 +4,7 @@ import {
   loadCategoryDistribution,
   loadKeyFigures,
   loadOriginDistribution,
+  loadPublicTotalQuantity,
   loadQuantityByFairteiler,
 } from '../contribution/dal';
 import { loadFairteilers } from '../fairteiler/dal';
@@ -15,11 +16,8 @@ import { formatNumber } from '@/lib/utils';
  * authentication required. Raw number for the animated counter.
  */
 export async function getPublicTotalQuantityKg(): Promise<number> {
-  const keyFigures = await loadKeyFigures();
-  return (
-    parseFloat(keyFigures?.[0]?.totalQuantity ?? '0') +
-    initialContributionQuantity
-  );
+  const totalQuantity = await loadPublicTotalQuantity();
+  return parseFloat(totalQuantity ?? '0') + initialContributionQuantity;
 }
 
 /**

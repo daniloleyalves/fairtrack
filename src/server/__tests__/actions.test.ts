@@ -49,6 +49,7 @@ vi.mock('../contribution/dal', () => ({
   addVersionHistoryRecord: vi.fn(),
   loadContributions: vi.fn(),
   checkInvitationAndUser: vi.fn(),
+  PUBLIC_TOTAL_QUANTITY_TAG: 'public-total-quantity',
 }));
 
 vi.mock('../fairteiler/dal', () => ({
