@@ -10,6 +10,7 @@ import {
   sql,
   sum,
 } from 'drizzle-orm';
+import { cacheLife, cacheTag } from 'next/cache';
 import { DateRange } from 'react-day-picker';
 import { attempt } from '@/lib/attempt';
 import { defaultDateRange } from '@/lib/config/site-config';
@@ -128,6 +129,20 @@ export async function loadKeyFigures(
   );
   if (error) handleDatabaseError(error, 'loadKeyFigures');
   return data;
+}
+
+export const PUBLIC_TOTAL_QUANTITY_TAG = 'public-total-quantity';
+
+export async function loadPublicTotalQuantity() {
+  'use cache';
+  cacheLife('minutes');
+  cacheTag(PUBLIC_TOTAL_QUANTITY_TAG);
+
+  const [error, data] = await attempt(
+    db.select({ totalQuantity: sum(checkin.quantity) }).from(checkin),
+  );
+  if (error) handleDatabaseError(error, 'loadPublicTotalQuantity');
+  return data?.[0]?.totalQuantity ?? null;
 }
 
 export async function loadCategoryDistribution(fairteilerId?: string) {

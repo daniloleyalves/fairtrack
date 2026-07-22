@@ -3,12 +3,9 @@ import { ErrorBoundary } from '@components/error-boundary';
 import type { Metadata } from 'next';
 import { Geist, Londrina_Solid } from 'next/font/google';
 import './globals.css';
-import { AuthProvider } from '@/lib/auth/auth-provider';
 import { QueryProvider } from '@/lib/providers/query-provider';
 import NavigationLoadingIndicator from '@components/navigation-loading-indicator';
 import { DemoBanner } from '@components/demo-banner';
-import { Suspense } from 'react';
-import { LoadingScreen } from '@components/loading-screen';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 
@@ -64,13 +61,9 @@ export default function RootLayout({
       >
         <DemoBanner />
         <NavigationLoadingIndicator />
-        <Suspense fallback={<LoadingScreen className='flex-1' />}>
-          <AuthProvider>
-            <QueryProvider>
-              <ErrorBoundary>{children}</ErrorBoundary>
-            </QueryProvider>
-          </AuthProvider>
-        </Suspense>
+        <QueryProvider>
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </QueryProvider>
         <Toaster />
         <SpeedInsights />
         <Analytics />

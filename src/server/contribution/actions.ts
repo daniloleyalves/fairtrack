@@ -1,12 +1,13 @@
 'use server';
 
 import { z } from 'zod';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { headers } from 'next/headers';
 import {
   addVersionHistoryRecord,
   checkinContribution,
   loadContributions,
+  PUBLIC_TOTAL_QUANTITY_TAG,
 } from './dal';
 import {
   contributionEditSchema,
@@ -79,6 +80,8 @@ export const submitContributionAction = authedAction
       contributingUserId,
       parsedInput.contributions,
     );
+
+    updateTag(PUBLIC_TOTAL_QUANTITY_TAG);
 
     const defaultSuccessRedirect = '/hub/user/contribution/success';
 
