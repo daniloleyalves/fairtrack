@@ -46,14 +46,43 @@ export function sentryTracesSampler(context: {
 
 const NOISE_MESSAGE_PREFIX = 'ResizeObserver loop';
 
+const NOISE_MESSAGE_FRAGMENTS = [
+  'Failed to find Server Action',
+  'NetworkError',
+  'Load failed',
+];
+
+const INJECTED_FRAME_PATTERN =
+  /^(?:chrome|moz|safari|safari-web|ms-browser)-extension:\/\/|^ext:|^<[a-z][\w-]*:/i;
+
+function isNoiseMessage(text: string): boolean {
+  return (
+    text.startsWith(NOISE_MESSAGE_PREFIX) ||
+    NOISE_MESSAGE_FRAGMENTS.some((fragment) => text.includes(fragment))
+  );
+}
+
+function isInjectedByExtension(event: ErrorEvent): boolean {
+  const frames = (event.exception?.values ?? []).flatMap(
+    (exception) => exception.stacktrace?.frames ?? [],
+  );
+  return (
+    frames.length > 0 &&
+    frames.some((frame) => INJECTED_FRAME_PATTERN.test(frame.filename ?? ''))
+  );
+}
+
 export function sentryBeforeSend(event: ErrorEvent): ErrorEvent | null {
   const exceptions = event.exception?.values ?? [];
   const isNoise = exceptions.some(
     (exception) =>
-      exception.type === 'AbortError' ||
-      (exception.value ?? '').startsWith(NOISE_MESSAGE_PREFIX),
+      exception.type === 'AbortError' || isNoiseMessage(exception.value ?? ''),
   );
-  if (isNoise || (event.message ?? '').startsWith(NOISE_MESSAGE_PREFIX)) {
+  if (isNoise || isNoiseMessage(event.message ?? '')) {
+    return null;
+  }
+
+  if (isInjectedByExtension(event)) {
     return null;
   }
 

@@ -249,7 +249,7 @@ export function SignInForm({
       )}
 
       {!userChecked || !userHasPassword ? (
-        <Form {...emailForm}>
+        <Form key='email-step' {...emailForm}>
           <form
             onSubmit={emailForm.handleSubmit(onEmailSubmit)}
             className={cn('space-y-8', className)}
@@ -302,7 +302,7 @@ export function SignInForm({
           </form>
         </Form>
       ) : (
-        <Form {...signInForm}>
+        <Form key='password-step' {...signInForm}>
           <form
             onSubmit={signInForm.handleSubmit(onSignInSubmit)}
             className={cn('space-y-8', className)}

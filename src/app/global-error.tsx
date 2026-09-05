@@ -1,8 +1,8 @@
 'use client';
 
 import * as Sentry from '@sentry/nextjs';
-import NextError from 'next/error';
 import { useEffect } from 'react';
+import './globals.css';
 
 export default function GlobalError({
   error,
@@ -14,13 +14,21 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <html>
-      <body>
-        {/* `NextError` is the default Next.js error page component. Its type
-        definition requires a `statusCode` prop. However, since the App Router
-        does not expose status codes for errors, we simply pass 0 to render a
-        generic error message. */}
-        <NextError statusCode={0} />
+    <html lang='de'>
+      <body className='flex min-h-screen flex-col items-center justify-center gap-6 p-8 text-center font-sans antialiased'>
+        <h1 className='text-2xl font-semibold'>Etwas ist schiefgelaufen</h1>
+        <p className='max-w-md text-muted-foreground'>
+          Ein unerwarteter Fehler ist aufgetreten. Bitte laden Sie die Seite neu
+          oder kontaktieren Sie den Support, falls das Problem weiterhin
+          besteht.
+        </p>
+        <button
+          type='button'
+          onClick={() => window.location.reload()}
+          className='rounded-md bg-primary px-6 py-2 font-medium text-primary-foreground'
+        >
+          Seite neu laden
+        </button>
       </body>
     </html>
   );
