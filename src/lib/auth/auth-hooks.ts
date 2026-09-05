@@ -3,9 +3,12 @@
 import { authClient } from './auth-client';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { useSentryUser } from '@/lib/monitoring/use-sentry-user';
 
 export function useSession() {
   const { data: session, isPending, error, refetch } = authClient.useSession();
+
+  useSentryUser(session?.user?.id ?? null, isPending);
 
   return {
     session: session?.session ?? null,

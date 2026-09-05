@@ -297,8 +297,8 @@ export default function FairTrackInfo() {
             <div className='mt-6 grid gap-4 md:grid-cols-2'>
               <FactCard title='Zielgruppe'>
                 Betreibende von Fairteiler-Stationen, Foodsharing-Cafés und
-                Initiativen, die Abgaben standardisiert dokumentieren und
-                auswerten möchten.
+                Initiativen, die eine standardisierte Erfassung und Auswertung
+                ihrer Abgaben ermöglichen möchten.
               </FactCard>
               <FactCard title='Nutzungskontext'>
                 Vor Ort am Fairteiler auf Tablet oder Smartphone. Nicht für den

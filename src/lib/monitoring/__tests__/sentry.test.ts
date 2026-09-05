@@ -89,6 +89,75 @@ describe('sentryBeforeSend', () => {
     expect(sentryBeforeSend(event)).toBeNull();
   });
 
+  it('drops stale or forged server action posts', () => {
+    const event = errorEvent({
+      exception: {
+        values: [
+          {
+            type: 'Error',
+            value:
+              'Failed to find Server Action. This request might be from an older or newer deployment.',
+          },
+        ],
+      },
+    });
+
+    expect(sentryBeforeSend(event)).toBeNull();
+  });
+
+  it.each(['NetworkError: A network error occurred.', 'Load failed'])(
+    'drops dropped-request noise: %s',
+    (value) => {
+      const event = errorEvent({
+        exception: { values: [{ type: 'Error', value }] },
+      });
+
+      expect(sentryBeforeSend(event)).toBeNull();
+    },
+  );
+
+  it.each([
+    'chrome-extension://abc/inject.js',
+    'moz-extension://abc/inject.js',
+    'ext:core/01_core.js',
+    '<obscura:bootstrap>',
+  ])('drops events thrown from injected frame %s', (filename) => {
+    const event = errorEvent({
+      exception: {
+        values: [
+          {
+            type: 'TypeError',
+            value: "Cannot read properties of undefined (reading 'toObject')",
+            stacktrace: { frames: [{ filename }] },
+          },
+        ],
+      },
+    });
+
+    expect(sentryBeforeSend(event)).toBeNull();
+  });
+
+  it('keeps events whose frames are all first-party', () => {
+    const event = errorEvent({
+      exception: {
+        values: [
+          {
+            type: 'TypeError',
+            value: 'x is not a function',
+            stacktrace: {
+              frames: [
+                { filename: 'app:///_next/static/chunks/main.js' },
+                { filename: '<anonymous>' },
+              ],
+            },
+          },
+        ],
+      },
+    });
+
+    expect(sentryBeforeSend(event)).toBe(event);
+  });
+
   it('passes normal error events through unchanged', () => {
     const event = errorEvent({
       exception: {
