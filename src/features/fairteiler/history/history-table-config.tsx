@@ -51,7 +51,6 @@ export function getContributorAccessType(
   }
 }
 
-// Anonymous contributors share one key so they appear as a single filter option.
 export const ANONYMOUS_CONTRIBUTOR_KEY = 'anonymous';
 
 export function getContributorKey(item: vContribution) {
@@ -60,7 +59,6 @@ export function getContributorKey(item: vContribution) {
     : item.contributorId;
 }
 
-// Names of anonymous contributors are already replaced server-side.
 export function getContributorLabel(item: vContribution) {
   return item.contributorName ?? 'Unbekannt';
 }
