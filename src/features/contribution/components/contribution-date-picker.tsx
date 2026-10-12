@@ -16,7 +16,6 @@ import {
 } from '../lib/contribution-date';
 
 interface ContributionDatePickerProps {
-  /** Selected day as yyyy-MM-dd, or null for today. */
   value: string | null;
   onChange: (day: string | null) => void;
 }

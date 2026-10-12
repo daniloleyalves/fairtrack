@@ -59,8 +59,6 @@ export function ContributionContent() {
   const pathname = usePathname();
   const isUserContext = pathname.includes('/hub/user/');
 
-  // Owners, members and employees can record food handed in on an earlier
-  // day, so a backlog doesn't all land on the day it is typed in.
   const canBackdate =
     !isUserContext &&
     !!currentMemberRecord &&
