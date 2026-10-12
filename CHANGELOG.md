@@ -20,6 +20,10 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 
 ## [Unreleased]
 
+### Fixed
+
+- Dashboard milestones no longer stack up as more are reached: only the latest achieved and the next milestone are shown (earlier ones in the tooltip), and 3–4 digit milestones (100+) fit their badge.
+
 ## [1.1.0] - 2026-07-12
 
 ### Added
