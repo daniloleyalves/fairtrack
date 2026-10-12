@@ -27,6 +27,7 @@ interface ContributionFormConfig {
   revalidatePaths?: string[];
   context?: 'fairteiler' | 'user' | 'admin';
   submitAsAccessViewId?: string | null;
+  contributionDate?: string | null;
 }
 
 export function ContributionForm({
@@ -92,6 +93,7 @@ export function ContributionForm({
         revalidatePaths: config.revalidatePaths,
         context: config.context,
         submitAsAccessViewId: config.submitAsAccessViewId,
+        contributionDate: config.contributionDate,
       },
     };
 

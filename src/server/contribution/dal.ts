@@ -46,6 +46,7 @@ export async function checkinContribution(
   fairteilerId: string,
   userId: string,
   payload: ContributionItem[],
+  createdAt?: Date,
 ) {
   const insertedFoods = [];
 
@@ -72,6 +73,7 @@ export async function checkinContribution(
         foodId: c.foodId,
         fairteilerId: fairteilerId,
         quantity: c.quantity,
+        ...(createdAt && { createdAt }),
       });
 
       insertedFoods.push(newFood);

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { headers } from 'next/headers';
 import {
   submitContributionAction,
@@ -438,9 +438,96 @@ describe('Server Actions', () => {
           mockFairteiler.id,
           'user-123',
           mockContributionData.contributions,
+          undefined,
         );
         expect(result?.data).toEqual({
           redirectTo: '/hub/user/contribution/success',
+        });
+      });
+
+      describe('backdated contributions', () => {
+        const backdated = (contributionDate: string) => ({
+          ...mockContributionData,
+          config: { fairteilerId: 'fairteiler-123', contributionDate },
+        });
+
+        beforeEach(() => {
+          vi.useFakeTimers({ toFake: ['Date'] });
+          vi.setSystemTime(new Date('2026-10-12T08:00:00Z'));
+          vi.mocked(dal.checkinContribution).mockResolvedValue([]);
+        });
+
+        afterEach(() => {
+          vi.useRealTimers();
+        });
+
+        it('stores noon UTC of the chosen day for an employee', async () => {
+          vi.mocked(fairteilerDal.loadFairteilerMembership).mockResolvedValue({
+            id: 'member-1',
+            organizationId: 'fairteiler-123',
+            userId: 'user-123',
+            role: 'employee',
+            createdAt: new Date(),
+          });
+
+          const result = await submitContributionAction(
+            backdated('2026-10-05'),
+          );
+
+          expect(result?.serverError).toBeUndefined();
+          expect(dal.checkinContribution).toHaveBeenCalledWith(
+            'fairteiler-123',
+            'user-123',
+            mockContributionData.contributions,
+            new Date('2026-10-05T12:00:00Z'),
+          );
+        });
+
+        it('treats today as a regular submission without a membership check', async () => {
+          await submitContributionAction(backdated('2026-10-12'));
+
+          expect(fairteilerDal.loadFairteilerMembership).not.toHaveBeenCalled();
+          expect(dal.checkinContribution).toHaveBeenCalledWith(
+            'fairteiler-123',
+            'user-123',
+            mockContributionData.contributions,
+            undefined,
+          );
+        });
+
+        it('rejects guests', async () => {
+          vi.mocked(fairteilerDal.loadFairteilerMembership).mockResolvedValue({
+            id: 'member-1',
+            organizationId: 'fairteiler-123',
+            userId: 'user-123',
+            role: 'guest',
+            createdAt: new Date(),
+          });
+
+          const result = await submitContributionAction(
+            backdated('2026-10-05'),
+          );
+
+          expect(result?.serverError).toContain('nachträglich');
+          expect(dal.checkinContribution).not.toHaveBeenCalled();
+        });
+
+        it('rejects future dates', async () => {
+          const result = await submitContributionAction(
+            backdated('2026-10-13'),
+          );
+
+          expect(result?.serverError).toContain('Zukunft');
+          expect(dal.checkinContribution).not.toHaveBeenCalled();
+        });
+
+        it('rejects dates more than a year back', async () => {
+          const result = await submitContributionAction(
+            backdated('2025-10-01'),
+          );
+
+          expect(result?.serverError).toContain('Zukunft');
+          expect(dal.checkinContribution).not.toHaveBeenCalled();
         });
       });
 
@@ -482,6 +569,7 @@ describe('Server Actions', () => {
           'fairteiler-123',
           'access-view-user-9',
           submitAsData.contributions,
+          undefined,
         );
         expect(result?.data?.redirectTo).toContain(
           'submitAsUserId=access-view-user-9',
@@ -774,6 +862,7 @@ describe('Server Actions', () => {
           mockFairteiler.id,
           'user-123',
           largeContributionsArray,
+          undefined,
         );
         expect(result?.data).toEqual({
           redirectTo: '/hub/user/contribution/success',
