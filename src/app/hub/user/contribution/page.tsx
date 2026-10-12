@@ -13,6 +13,7 @@ import { DataErrorBoundary } from '@/components/error-boundary';
 import { headers } from 'next/headers';
 import { UnauthorizedAccess } from '@/components/unauthorized-access';
 import { ContributionTutorial } from '@/features/contribution/tutorial/components/contribution-tutorial';
+import { hasValidScanProof } from '@/server/contribution/verification';
 
 interface UserContributionPageProps {
   searchParams: Promise<{
@@ -48,12 +49,15 @@ export default async function UserContributionPage({
     fairteilerData.fairteiler.id,
   );
 
+  const isScanVerified = await hasValidScanProof(fairteilerData.fairteiler.id);
+
   return (
     <DataErrorBoundary>
       <UserPreferencesProvider initialData={userPreferences}>
         <ContributionProvider
           initialData={fairteilerData}
           trackUserLocation={true}
+          isScanVerified={isScanVerified}
         >
           {!tutorial ||
           (tutorialProgress && tutorialProgress?.progress === 100) ? (

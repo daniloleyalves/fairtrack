@@ -13,6 +13,8 @@ function debugLog(message: string, data?: unknown) {
 
 export interface LocationState {
   coordinates: Coordinates | null;
+  /** Reported accuracy of `coordinates`, in meters. */
+  accuracy: number | null;
   error: string | null;
   loading: boolean;
   permissionDenied: boolean;
@@ -35,6 +37,7 @@ export function useUserLocation(options?: {
 
   const [state, setState] = useState<LocationState>({
     coordinates: null,
+    accuracy: null,
     error: null,
     loading: true,
     permissionDenied: false,
@@ -45,6 +48,7 @@ export function useUserLocation(options?: {
       debugLog('🚫 Location tracking disabled');
       setState({
         coordinates: null,
+        accuracy: null,
         error: null,
         loading: false,
         permissionDenied: false,
@@ -56,6 +60,7 @@ export function useUserLocation(options?: {
       debugLog('❌ Geolocation not supported');
       setState({
         coordinates: null,
+        accuracy: null,
         error: 'Geolocation is not supported by this browser',
         loading: false,
         permissionDenied: false,
@@ -88,6 +93,7 @@ export function useUserLocation(options?: {
 
       setState({
         coordinates: coords,
+        accuracy: position.coords.accuracy,
         error: null,
         loading: false,
         permissionDenied: false,
@@ -118,6 +124,7 @@ export function useUserLocation(options?: {
 
       setState({
         coordinates: null,
+        accuracy: null,
         error: errorMessage,
         loading: false,
         permissionDenied,

@@ -2,6 +2,7 @@
 
 import { Form } from '@components/ui/form';
 import { submitContributionAction } from '@server/contribution/actions';
+import { useContribution } from '../../context/contribution-context';
 import {
   contributionFormSchema,
   ContributionFormValues,
@@ -33,12 +34,16 @@ export function ContributionForm({
   children,
   defaultValues,
   config,
+  submitAction = submitContributionAction,
 }: {
   children: React.ReactNode;
   defaultValues?: DefaultValues<ContributionFormValues>;
   config: ContributionFormConfig;
+  /** Defaults to the signed-in submission; the QR guest flow swaps it. */
+  submitAction?: typeof submitContributionAction;
 }) {
   const queryClient = useQueryClient();
+  const { coordinates, accuracy } = useContribution();
 
   const form = useForm<ContributionFormValues>({
     resolver: zodResolver(contributionFormSchema),
@@ -51,7 +56,7 @@ export function ContributionForm({
     submitContribution.reset();
   });
 
-  const submitContribution = useFormAction(submitContributionAction, form, {
+  const submitContribution = useFormAction(submitAction, form, {
     successMessage: 'Lebensmittel erfolgreich beigetragen!',
     onSuccess: (data) => {
       void queryClient.invalidateQueries({
@@ -92,6 +97,9 @@ export function ContributionForm({
         revalidatePaths: config.revalidatePaths,
         context: config.context,
         submitAsAccessViewId: config.submitAsAccessViewId,
+        // The server uses this to verify the contribution happens at the
+        // fairteiler when no QR code was scanned.
+        location: coordinates ? { ...coordinates, accuracy } : null,
       },
     };
 

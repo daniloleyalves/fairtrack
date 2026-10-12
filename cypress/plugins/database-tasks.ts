@@ -85,6 +85,7 @@ export const databaseTasks = {
   async cleanDatabase() {
     try {
       // Clean up in correct order due to foreign keys
+      await testDb.delete(schema.fairteilerQrCode);
       await testDb.delete(schema.contributionVersionHistory);
       await testDb.delete(schema.checkin);
       await testDb.delete(schema.food);
@@ -284,6 +285,41 @@ export const databaseTasks = {
       return checkin[0];
     } catch (error) {
       console.error('Create test contribution failed:', error);
+      throw error;
+    }
+  },
+
+  async createTestQrCode({
+    fairteilerId,
+    guestAccessViewId = null,
+  }: {
+    fairteilerId: string;
+    guestAccessViewId?: string | null;
+  }) {
+    try {
+      const qrCode = await testDb
+        .insert(schema.fairteilerQrCode)
+        .values({
+          fairteilerId,
+          guestAccessViewId,
+          token: `test-qr-${Date.now()}`,
+        })
+        .returning();
+
+      return qrCode[0];
+    } catch (error) {
+      console.error('Create test QR code failed:', error);
+      throw error;
+    }
+  },
+
+  async getCheckinsByFairteiler(fairteilerId: string) {
+    try {
+      return await testDb.query.checkin.findMany({
+        where: eq(schema.checkin.fairteilerId, fairteilerId),
+      });
+    } catch (error) {
+      console.error('Get checkins failed:', error);
       throw error;
     }
   },

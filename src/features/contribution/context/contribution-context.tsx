@@ -3,11 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useUserLocation } from '@/lib/hooks/use-user-location';
-import {
-  isWithinRadius,
-  DEFAULT_PROXIMITY_RADIUS,
-  type Coordinates,
-} from '@/lib/geo';
+import { isAtLocation, type Coordinates } from '@/lib/geo';
 import {
   GenericItem,
   FairteilerTutorialWithSteps,
@@ -54,7 +50,11 @@ export interface ContributionContextValue {
   user: User | null;
   locationStatus: LocationStatus;
   coordinates: Coordinates | null;
+  /** Reported accuracy of `coordinates`, in meters. */
+  accuracy: number | null;
   isLocationVerified: boolean;
+  /** This browser scanned the fairteiler's QR code recently. */
+  isScanVerified: boolean;
   error: string | null;
   requestLocation: () => void;
 }
@@ -69,6 +69,7 @@ interface ContributionProviderProps {
   trackUserLocation?: boolean;
   user?: User | null;
   pendingFallback?: React.ReactNode;
+  isScanVerified?: boolean;
 }
 
 export function ContributionProvider({
@@ -77,11 +78,13 @@ export function ContributionProvider({
   trackUserLocation = false,
   user = null,
   pendingFallback = null,
+  isScanVerified = false,
 }: ContributionProviderProps) {
-  const { coordinates, error, loading, permissionDenied } = useUserLocation({
-    enabled: trackUserLocation,
-    watchPosition: trackUserLocation,
-  });
+  const { coordinates, accuracy, error, loading, permissionDenied } =
+    useUserLocation({
+      enabled: trackUserLocation,
+      watchPosition: trackUserLocation,
+    });
   const [locationStatus, setLocationStatus] =
     useState<LocationStatus>('loading');
 
@@ -125,7 +128,7 @@ export function ContributionProvider({
   const isLocationVerified = Boolean(
     coordinates &&
     fairteilerCoords &&
-    isWithinRadius(coordinates, fairteilerCoords, DEFAULT_PROXIMITY_RADIUS),
+    isAtLocation(coordinates, fairteilerCoords, accuracy),
   );
 
   useEffect(() => {
@@ -200,7 +203,9 @@ export function ContributionProvider({
     tutorial,
     locationStatus,
     coordinates,
+    accuracy,
     isLocationVerified,
+    isScanVerified,
     error,
     requestLocation,
   };

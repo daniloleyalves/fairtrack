@@ -816,6 +816,16 @@ export const foodRelations = relations(food, ({ one, many }) => ({
   checkins: many(checkin),
 }));
 
+// How a contribution was confirmed to have happened at the fairteiler:
+// a scanned QR code, the contributor's location, or a fairteiler member
+// (owner, staff or a signed-in access view). Null for contributions made
+// before verification existed.
+export const verificationMethodEnum = pgEnum('verification_method', [
+  'qr',
+  'location',
+  'staff',
+]);
+
 export const checkin = pgTable(
   'checkin',
   {
@@ -835,6 +845,7 @@ export const checkin = pgTable(
       .references(() => food.id, { onDelete: 'cascade' }),
     quantity: real('quantity').notNull(),
     shelfLife: timestamp('shelf_life', { withTimezone: true }),
+    verifiedVia: verificationMethodEnum('verified_via'),
     createdAt: timestamp('created_at')
       .notNull()
       .default(sql`now()`),
@@ -904,6 +915,50 @@ export const contributionVersionHistoryRelations = relations(
   }),
 );
 
+// QR codes printed at a fairteiler. Scanning one proves the person is at the
+// fairteiler. The token is printed on a public poster, so it is not a secret
+// and is stored as is; revoking a code is how a leaked poster is retired.
+export const fairteilerQrCode = pgTable(
+  'fairteiler_qr_code',
+  {
+    id: text('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    fairteilerId: text('fairteiler_id')
+      .notNull()
+      .references(() => fairteiler.id, { onDelete: 'cascade' }),
+    token: text('token').notNull(),
+    label: text('label'),
+    // Guest access view people can contribute through after scanning,
+    // without signing in. Null means only own accounts are offered.
+    guestAccessViewId: text('guest_access_view_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at')
+      .notNull()
+      .default(sql`now()`),
+    revokedAt: timestamp('revoked_at'),
+  },
+  (table) => [
+    uniqueIndex('fairteiler_qr_code_token_idx').on(table.token),
+    index('fairteiler_qr_code_fairteiler_id_idx').on(table.fairteilerId),
+  ],
+);
+
+export const fairteilerQrCodeRelations = relations(
+  fairteilerQrCode,
+  ({ one }) => ({
+    fairteiler: one(fairteiler, {
+      fields: [fairteilerQrCode.fairteilerId],
+      references: [fairteiler.id],
+    }),
+    guestAccessView: one(user, {
+      fields: [fairteilerQrCode.guestAccessViewId],
+      references: [user.id],
+    }),
+  }),
+);
+
 export const vContributions = pgView('v_contributions', {
   checkinId: text('checkin_id').notNull(),
   fairteilerId: text('fairteiler_id').notNull(),
@@ -911,6 +966,7 @@ export const vContributions = pgView('v_contributions', {
   userId: text('user_id').notNull(),
   quantity: real('quantity').notNull(),
   shelfLife: timestamp('shelf_life', { withTimezone: true }),
+  verifiedVia: verificationMethodEnum('verified_via'),
   foodId: text('food_id'),
   foodTitle: text('food_title'),
   foodCool: boolean('food_cool'),
@@ -942,6 +998,7 @@ export const vContributions = pgView('v_contributions', {
         c.user_id AS user_id,
         c.quantity AS quantity,
         c.shelf_life AS shelf_life,
+        c.verified_via AS verified_via,
         f.id AS food_id,
         f.title AS food_title,
         f.cool AS food_cool,

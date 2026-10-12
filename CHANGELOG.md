@@ -20,6 +20,15 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 
 ## [Unreleased]
 
+### Added
+
+- QR codes for unattended fairteilers: owners create and print them under Präferenzen. After scanning, people contribute with their own account (sign-in or sign-up continues straight to the form) or, if the owner linked one, through a guest access view without signing in.
+- Every contribution now records how it was confirmed at the fairteiler (QR code, location or team on site), shown as "Bestätigt durch" in the history.
+
+### Changed
+
+- Foodsavers contributing with their own account must either have scanned the fairteiler's QR code or share a location at the fairteiler. The location check now runs on the server instead of only showing a hint. Requires migration `0041_qr_codes_and_verification`.
+
 ## [1.1.0] - 2026-07-12
 
 ### Added

@@ -36,4 +36,31 @@ export function isWithinRadius(
 
 export const DEFAULT_PROXIMITY_RADIUS = 20; // meters
 
+// How much of a reading's reported GPS inaccuracy is forgiven. Phones indoors
+// often report 20-50 m; anything beyond this cap is too vague to count as
+// being at the fairteiler.
+export const MAX_ACCURACY_TOLERANCE = 30; // meters
+
+/**
+ * Whether a location reading places the user at the target. The reading's
+ * own accuracy (in meters, as reported by the browser) widens the radius, up
+ * to `MAX_ACCURACY_TOLERANCE`.
+ */
+export function isAtLocation(
+  userLocation: Coordinates,
+  targetLocation: Coordinates,
+  accuracy: number | null | undefined,
+  radiusInMeters: number = DEFAULT_PROXIMITY_RADIUS,
+): boolean {
+  const tolerance = Math.min(
+    Math.max(accuracy ?? 0, 0),
+    MAX_ACCURACY_TOLERANCE,
+  );
+  return isWithinRadius(
+    userLocation,
+    targetLocation,
+    radiusInMeters + tolerance,
+  );
+}
+
 export const DEFAULT_FAIRTEILERSLUG_IN_MAP = 'raupe-immersatt';

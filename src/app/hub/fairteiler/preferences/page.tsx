@@ -2,6 +2,7 @@ import { FormSelectionsWrapper } from '@/features/fairteiler/preferences/compone
 import { ListErrorBoundary } from '@/components/error-boundary';
 import { FairteilerDisableWrapper } from '@/features/fairteiler/preferences/components/fairteiler-disable-wrapper';
 import { FairteilerTutorialCardWrapper } from '@/features/fairteiler/tutorial/components/fairteiler-tutorial-card-wrapper';
+import { QrCodeCard } from '@/features/qr-code/components/qr-code-card';
 
 export default function FairteilerPreferencesPage() {
   return (
@@ -22,6 +23,9 @@ export default function FairteilerPreferencesPage() {
       </div>
       <ListErrorBoundary>
         <FairteilerDisableWrapper />
+      </ListErrorBoundary>
+      <ListErrorBoundary>
+        <QrCodeCard />
       </ListErrorBoundary>
       <ListErrorBoundary>
         <FairteilerTutorialCardWrapper />

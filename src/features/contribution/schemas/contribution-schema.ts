@@ -51,6 +51,16 @@ export const contributionFormSchema = z.object({
     revalidatePaths: z.array(z.string()).optional(),
     context: z.enum(['fairteiler', 'user', 'admin']).optional(),
     submitAsAccessViewId: z.string().nullable().optional(),
+    // Latest location reading, used to verify the contribution happens at the
+    // fairteiler when no QR code was scanned.
+    location: z
+      .object({
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+        accuracy: z.number().nonnegative().nullable().optional(),
+      })
+      .nullable()
+      .optional(),
   }),
 });
 

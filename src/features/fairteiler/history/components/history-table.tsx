@@ -128,9 +128,15 @@ export function HistoryTable({
         ...prev,
         company: false,
         origin: false,
+        verification: false,
       }));
     } else {
-      setColumnVisibility((prev) => ({ ...prev, company: true, origin: true }));
+      setColumnVisibility((prev) => ({
+        ...prev,
+        company: true,
+        origin: true,
+        verification: true,
+      }));
     }
   }, [isTablet]);
 

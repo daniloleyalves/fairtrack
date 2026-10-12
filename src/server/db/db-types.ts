@@ -11,6 +11,7 @@ import {
   stepFlowProgress,
   tag,
   userPreferences,
+  verificationMethodEnum,
 } from './schema';
 import { MemberRoles } from '@/lib/auth/auth-permissions';
 
@@ -86,9 +87,14 @@ export interface vContribution {
   contributorName: string | null;
   contributorImage: string | null;
   contributorEmail: string | null;
+  verifiedVia?: VerificationMethod | null;
   fairteilerId: string;
   fairteilerName: string;
 }
+
+/** How a contribution was verified as happening at the fairteiler. */
+export type VerificationMethod =
+  (typeof verificationMethodEnum.enumValues)[number];
 
 export type UserPreferences = InferSelectModel<typeof userPreferences>;
 export type StepFlowProgress = InferSelectModel<typeof stepFlowProgress>;

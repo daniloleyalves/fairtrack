@@ -3,7 +3,8 @@
 import { Button } from '@/components/ui/button';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { ContributionForm } from './form/contribution-form';
-import { AlertCircle, HelpCircle } from 'lucide-react';
+import { AlertCircle, HelpCircle, MapPinOff } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import ContributionTable from './contribution-table';
 import { ContributionInfos } from './contribution-infos';
 import { usePathname } from 'next/navigation';
@@ -34,7 +35,8 @@ export function ContributionContent() {
     useState(false);
   const [openContributionInfos, setOpenContributionInfos] = useState(false);
 
-  const { fairteiler, tutorial, user } = useContribution();
+  const { fairteiler, tutorial, user, locationStatus, isScanVerified } =
+    useContribution();
   const fairteilerWithMembers = fairteiler as FairteilerWithMembers;
 
   // Get current user's member record
@@ -126,6 +128,11 @@ export function ContributionContent() {
             </Button>
           </div>
         </div>
+        {isUserContext &&
+          !isScanVerified &&
+          (locationStatus === 'too-far' ||
+            locationStatus === 'denied' ||
+            locationStatus === 'error') && <NotAtFairteilerNotice />}
         <ContributionForm config={defaultConfig()}>
           <div>
             <ContributionTable />
@@ -142,6 +149,20 @@ export function ContributionContent() {
         setOpen={setOpenContributionInfos}
       />
     </>
+  );
+}
+
+function NotAtFairteilerNotice() {
+  return (
+    <Alert className='bg-card'>
+      <MapPinOff className='size-4' />
+      <AlertTitle>Bist du am Fairteiler?</AlertTitle>
+      <AlertDescription>
+        Beiträge werden nur gespeichert, wenn bestätigt ist, dass du vor Ort
+        bist. Scanne dazu den QR-Code am Fairteiler oder erlaube den
+        Standortzugriff in deinem Browser.
+      </AlertDescription>
+    </Alert>
   );
 }
 
