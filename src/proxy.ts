@@ -82,17 +82,17 @@ export function proxy(request: NextRequest) {
   }
 
   // Handle other specific redirects if the user is authenticated
-  if (request.url === `${process.env.NEXT_PUBLIC_ENV_URL}/hub`) {
+  if (pathname === '/hub') {
     return NextResponse.redirect(new URL('/hub/user/dashboard', request.url));
   }
-  if (request.url === `${process.env.NEXT_PUBLIC_ENV_URL}/hub/fairteiler`) {
+  if (pathname === '/hub/fairteiler') {
     // Guests should go to contribution, others to dashboard
     const redirectPath = isGuest
       ? '/hub/fairteiler/contribution'
       : '/hub/fairteiler/dashboard';
     return NextResponse.redirect(new URL(redirectPath, request.url));
   }
-  if (request.url === `${process.env.NEXT_PUBLIC_ENV_URL}/hub/user`) {
+  if (pathname === '/hub/user') {
     return NextResponse.redirect(new URL('/hub/user/dashboard', request.url));
   }
 
