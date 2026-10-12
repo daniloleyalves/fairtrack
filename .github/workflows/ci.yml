@@ -184,6 +184,12 @@ jobs:
       TINYMCE_KEY: ${{ secrets.TINYMCE_KEY }}
       NEXT_PUBLIC_MAPBOX_TOKEN: ${{ secrets.NEXT_PUBLIC_MAPBOX_TOKEN }}
     needs: [build]
+    # Skipped for pushes to dev and PRs into dev to keep feedback fast;
+    # still runs for master (incl. batch PRs dev -> master), the weekly
+    # schedule, and manual runs (workflow_dispatch, also on dev).
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.base_ref != 'dev' && github.ref != 'refs/heads/dev')
     # strategy:
     #   matrix:
     #     browser: [chrome, firefox, edge]
