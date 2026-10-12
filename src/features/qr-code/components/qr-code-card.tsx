@@ -39,10 +39,6 @@ import { downloadBlob, renderQrPoster } from '../lib/qr-poster';
 
 const NO_GUEST = 'none';
 
-function getBaseUrl() {
-  return process.env.NEXT_PUBLIC_ENV_URL ?? window.location.origin;
-}
-
 /**
  * Owner card for the QR codes printed at the fairteiler. Scanning one lets
  * people contribute with their own account or, if linked, the guest access
@@ -157,7 +153,11 @@ function QrCodeRow({
   const [preview, setPreview] = useState<string | null>(null);
   const [label, setLabel] = useState(qrCode.label ?? '');
   const [confirmRevoke, setConfirmRevoke] = useState(false);
-  const url = qrCodeUrl(qrCode.token, getBaseUrl());
+  // The host the owner is on, so preview deployments print preview codes.
+  const url = qrCodeUrl(
+    qrCode.token,
+    typeof window === 'undefined' ? 'http://localhost' : window.location.origin,
+  );
 
   useEffect(() => {
     let cancelled = false;
