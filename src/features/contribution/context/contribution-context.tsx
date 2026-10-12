@@ -50,10 +50,8 @@ export interface ContributionContextValue {
   user: User | null;
   locationStatus: LocationStatus;
   coordinates: Coordinates | null;
-  /** Reported accuracy of `coordinates`, in meters. */
   accuracy: number | null;
   isLocationVerified: boolean;
-  /** This browser scanned the fairteiler's QR code recently. */
   isScanVerified: boolean;
   error: string | null;
   requestLocation: () => void;

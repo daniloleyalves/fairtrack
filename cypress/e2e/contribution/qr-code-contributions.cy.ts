@@ -85,7 +85,6 @@ describe('QR Code Contribution Flow E2E', () => {
                 cy.clearCookies();
                 cy.visit(`/q/${token}`);
 
-                // No guest access view is linked, so only own accounts.
                 cy.contains('Als Gast fortfahren').should('not.exist');
                 cy.get('a[href^="/sign-in?callbackUrl"]').click();
                 cy.fillTwoStepLoginForm({

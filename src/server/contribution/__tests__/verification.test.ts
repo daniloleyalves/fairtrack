@@ -20,7 +20,6 @@ vi.mock('../../qr-code/scan-proof', () => ({
 const fairteiler = { id: 'fairteiler-1', geoLat: '48.0', geoLng: '9.0' };
 const foodsaver = { id: 'user-1', role: 'user' };
 const atFairteiler = { latitude: 48.0, longitude: 9.0, accuracy: 10 };
-// ~1.1 km north of the fairteiler.
 const farAway = { latitude: 48.01, longitude: 9.0, accuracy: 10 };
 
 function member(role: 'employee' | 'disabled') {

@@ -1,6 +1,5 @@
 import QRCode from 'qrcode';
 
-// A4 portrait at 150 dpi, enough for a sharp print.
 const POSTER_WIDTH = 1240;
 const POSTER_HEIGHT = 1754;
 const QR_SIZE = 900;
@@ -34,7 +33,6 @@ function loadImage(src: string) {
   });
 }
 
-/** Renders a printable poster with the fairteiler's QR code as a PNG. */
 export async function renderQrPoster({
   url,
   fairteilerName,

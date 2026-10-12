@@ -16,10 +16,6 @@ export interface ContributorLocation {
 export const NOT_VERIFIED_MESSAGE =
   'Wir konnten nicht bestätigen, dass du am Fairteiler bist. Scanne den QR-Code am Fairteiler oder erlaube den Standortzugriff in deinem Browser.';
 
-/**
- * Whether this browser holds a valid scan proof for the fairteiler, from a
- * code that has not been revoked since it was scanned.
- */
 export async function hasValidScanProof(fairteilerId: string) {
   const proof = await readScanProof();
   if (proof?.fairteilerId !== fairteilerId) return false;
@@ -28,15 +24,6 @@ export async function hasValidScanProof(fairteilerId: string) {
   return qrCode?.fairteilerId === fairteilerId;
 }
 
-/**
- * Works out how a contribution by a signed-in user is verified as happening
- * at the fairteiler, or throws if it cannot be verified.
- *
- * - Platform admins and active fairteiler members (owners, members, staff
- *   and signed-in access views) are trusted: `staff`.
- * - Otherwise a recent QR scan at this fairteiler: `qr`.
- * - Otherwise a location reading at the fairteiler: `location`.
- */
 export async function resolveContributionVerification({
   fairteiler,
   user,

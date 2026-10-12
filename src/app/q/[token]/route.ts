@@ -8,11 +8,6 @@ import {
 } from '@/server/qr-code/scan-proof';
 import { SCAN_PATH } from '@/server/qr-code/constants';
 
-/**
- * Target of the QR code printed at a fairteiler. Records the scan in a
- * short-lived signed cookie and moves on to the page where people choose how
- * to contribute, so the token itself never shows up in the address bar.
- */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ token: string }> },

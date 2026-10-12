@@ -13,7 +13,6 @@ export interface FairteilerQrCodeListItem {
   guestAccessView: { id: string; name: string } | null;
 }
 
-/** Active QR codes of the active fairteiler. */
 export async function getQrCodes(): Promise<FairteilerQrCodeListItem[]> {
   const session = await loadAuthenticatedSession(await headers());
   const fairteilerId = session.session.activeOrganizationId;

@@ -92,7 +92,6 @@ export interface vContribution {
   fairteilerName: string;
 }
 
-/** How a contribution was verified as happening at the fairteiler. */
 export type VerificationMethod =
   (typeof verificationMethodEnum.enumValues)[number];
 

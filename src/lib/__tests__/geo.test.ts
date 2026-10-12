@@ -66,7 +66,6 @@ describe('isWithinRadius', () => {
 
 describe('isAtLocation', () => {
   const origin = { latitude: 0, longitude: 0 };
-  // ~44.5 m north of the origin.
   const fortyFiveMetersAway = { latitude: 0.0004, longitude: 0 };
 
   it('accepts a reading inside the default 20 m radius', () => {
@@ -81,7 +80,6 @@ describe('isAtLocation', () => {
   });
 
   it('caps how much inaccuracy is forgiven', () => {
-    // 20 m + capped 30 m = 50 m, so ~55.6 m stays too far however vague.
     const fiftyFiveMetersAway = { latitude: 0.0005, longitude: 0 };
     expect(MAX_ACCURACY_TOLERANCE).toBe(30);
     expect(isAtLocation(fiftyFiveMetersAway, origin, 500)).toBe(false);

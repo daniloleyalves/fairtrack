@@ -25,10 +25,6 @@ interface QrGuestContributionProps {
   };
 }
 
-/**
- * Retteformular for people contributing through a fairteiler's guest access
- * view after scanning its QR code, without signing in.
- */
 export function QrGuestContribution({ initialData }: QrGuestContributionProps) {
   const { fairteiler } = initialData;
 

@@ -2,19 +2,12 @@ import 'server-only';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { cookies } from 'next/headers';
 
-/**
- * A scan proof is a short-lived, signed cookie set when someone opens a
- * fairteiler's QR code. It shows that this browser was at the fairteiler
- * recently, which verifies contributions made through either an own account
- * or the fairteiler's guest access view.
- */
 export const SCAN_PROOF_COOKIE = 'fairtrack_qr_scan';
 export const SCAN_PROOF_TTL_SECONDS = 30 * 60;
 
 export interface ScanProof {
   fairteilerId: string;
   qrCodeId: string;
-  /** Expiry as a Unix timestamp in milliseconds. */
   exp: number;
 }
 
@@ -48,7 +41,6 @@ export function encodeScanProof(
   return `${payload}.${sign(payload, secret)}`;
 }
 
-/** Returns the proof if the signature is valid and it has not expired. */
 export function decodeScanProof(
   value: string | undefined,
   now: number = Date.now(),
@@ -90,7 +82,6 @@ export const scanProofCookieOptions = {
   maxAge: SCAN_PROOF_TTL_SECONDS,
 };
 
-/** Reads the current request's scan proof, if any. */
 export async function readScanProof(): Promise<ScanProof | null> {
   const cookieStore = await cookies();
   return decodeScanProof(cookieStore.get(SCAN_PROOF_COOKIE)?.value);

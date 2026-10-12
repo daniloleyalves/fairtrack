@@ -816,10 +816,6 @@ export const foodRelations = relations(food, ({ one, many }) => ({
   checkins: many(checkin),
 }));
 
-// How a contribution was confirmed to have happened at the fairteiler:
-// a scanned QR code, the contributor's location, or a fairteiler member
-// (owner, staff or a signed-in access view). Null for contributions made
-// before verification existed.
 export const verificationMethodEnum = pgEnum('verification_method', [
   'qr',
   'location',
@@ -915,9 +911,6 @@ export const contributionVersionHistoryRelations = relations(
   }),
 );
 
-// QR codes printed at a fairteiler. Scanning one proves the person is at the
-// fairteiler. The token is printed on a public poster, so it is not a secret
-// and is stored as is; revoking a code is how a leaked poster is retired.
 export const fairteilerQrCode = pgTable(
   'fairteiler_qr_code',
   {
@@ -929,8 +922,6 @@ export const fairteilerQrCode = pgTable(
       .references(() => fairteiler.id, { onDelete: 'cascade' }),
     token: text('token').notNull(),
     label: text('label'),
-    // Guest access view people can contribute through after scanning,
-    // without signing in. Null means only own accounts are offered.
     guestAccessViewId: text('guest_access_view_id').references(() => user.id, {
       onDelete: 'set null',
     }),

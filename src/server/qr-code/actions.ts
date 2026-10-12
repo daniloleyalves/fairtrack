@@ -20,7 +20,6 @@ async function assertCanManageQrCodes() {
   }
 }
 
-/** Only guest access views of this fairteiler can be offered after a scan. */
 async function assertGuestAccessView(
   fairteilerId: string,
   guestAccessViewId: string | null,

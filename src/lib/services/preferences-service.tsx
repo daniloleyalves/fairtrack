@@ -141,10 +141,6 @@ export function UserPreferencesProvider({
   );
 }
 
-/**
- * Preferences for visitors without an account (the QR guest flow): defaults,
- * kept in memory for the visit and never saved.
- */
 export function GuestPreferencesProvider({
   children,
 }: {

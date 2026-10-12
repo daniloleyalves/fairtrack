@@ -6,12 +6,10 @@ import { db } from '../db/drizzle';
 import { fairteilerQrCode } from '../db/schema';
 import { handleDatabaseError } from '../error-handling';
 
-/** 22 URL-safe characters, short enough to keep the printed QR code simple. */
 export function generateQrToken() {
   return randomBytes(16).toString('base64url');
 }
 
-/** An active (not revoked) code by its printed token, with its fairteiler. */
 export async function loadActiveQrCodeByToken(token: string) {
   const [error, data] = await attempt(
     db.query.fairteilerQrCode.findFirst({

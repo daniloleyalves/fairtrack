@@ -107,8 +107,6 @@ export const completeOnboardingAction = authedAction
     await loadAuthenticatedSession(await headers(), true);
     revalidatePath('/hub');
 
-    // Someone who registered after scanning a fairteiler's QR code goes
-    // straight on to contribute there.
     let redirectTo = '/hub/user/dashboard';
     const scanProof = await readScanProof();
     if (scanProof) {

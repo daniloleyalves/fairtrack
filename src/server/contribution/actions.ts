@@ -125,11 +125,6 @@ export const submitContributionAction = authedAction
     return { redirectTo: successRedirect };
   });
 
-/**
- * Contribution through a fairteiler's guest access view after scanning its QR
- * code. No sign-in: the signed scan proof is the authorisation, and the
- * check-in is recorded under the guest access view linked to that code.
- */
 export const submitQrGuestContributionAction = action
   .inputSchema(contributionFormSchema)
   .action(async ({ parsedInput }) => {

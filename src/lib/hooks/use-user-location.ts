@@ -13,7 +13,6 @@ function debugLog(message: string, data?: unknown) {
 
 export interface LocationState {
   coordinates: Coordinates | null;
-  /** Reported accuracy of `coordinates`, in meters. */
   accuracy: number | null;
   error: string | null;
   loading: boolean;

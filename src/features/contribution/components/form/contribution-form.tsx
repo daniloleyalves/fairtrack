@@ -39,7 +39,6 @@ export function ContributionForm({
   children: React.ReactNode;
   defaultValues?: DefaultValues<ContributionFormValues>;
   config: ContributionFormConfig;
-  /** Defaults to the signed-in submission; the QR guest flow swaps it. */
   submitAction?: typeof submitContributionAction;
 }) {
   const queryClient = useQueryClient();
@@ -97,8 +96,6 @@ export function ContributionForm({
         revalidatePaths: config.revalidatePaths,
         context: config.context,
         submitAsAccessViewId: config.submitAsAccessViewId,
-        // The server uses this to verify the contribution happens at the
-        // fairteiler when no QR code was scanned.
         location: coordinates ? { ...coordinates, accuracy } : null,
       },
     };
