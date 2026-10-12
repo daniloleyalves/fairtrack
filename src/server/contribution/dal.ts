@@ -22,6 +22,7 @@ import {
   fairteiler,
   food,
   invitation,
+  member,
   user,
   vContributions,
 } from '../db/schema';
@@ -287,10 +288,18 @@ export async function loadContributions({
       contributorEmail: vContributions.userEmail,
       contributorImage: vContributions.userImage,
       contributorIsAnonymous: vContributions.userIsAnonymous,
+      contributorRole: member.role,
       fairteilerId: vContributions.fairteilerId,
       fairteilerName: vContributions.fairteilerName,
     })
     .from(vContributions)
+    .leftJoin(
+      member,
+      and(
+        eq(member.userId, vContributions.userId),
+        eq(member.organizationId, vContributions.fairteilerId),
+      ),
+    )
     .orderBy(desc(vContributions.contributionDate));
 
   const queryWithConditions = conditions.length
