@@ -137,13 +137,6 @@ export async function banUserAndRevokeSessions(userId: string, reason: string) {
   if (error) handleDatabaseError(error, 'banUserAndRevokeSessions');
 }
 
-/**
- * Server-authority counterpart to better-auth's admin-gated
- * `setUserPassword` endpoint: replaces the user's credential password and
- * deletes their sessions so devices signed in with the old password are
- * logged out. Callers must authorize the operation themselves (e.g. via an
- * organization-level permission check).
- */
 export async function setPasswordAndRevokeSessions(
   userId: string,
   newPassword: string,
