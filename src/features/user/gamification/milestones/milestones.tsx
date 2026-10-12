@@ -15,8 +15,6 @@ export function Milestones({
 }: {
   milestoneData: MilestoneData | null;
 }) {
-  // Only the most recent milestone is shown; earlier ones are listed in its
-  // tooltip so the widget keeps a fixed size as milestones accumulate.
   const latestAchieved = milestoneData?.achieved.at(-1);
 
   return (
