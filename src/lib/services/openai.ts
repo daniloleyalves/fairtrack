@@ -1,15 +1,17 @@
 import 'server-only';
 import OpenAI from 'openai';
+import { getVercelOidcToken } from '@vercel/oidc';
 import { z } from 'zod';
 
 const AI_GATEWAY_BASE_URL = 'https://ai-gateway.vercel.sh/v1';
 const aiGatewayApiKey = process.env.AI_GATEWAY_API_KEY;
+const useAiGateway = Boolean(aiGatewayApiKey ?? process.env.VERCEL);
 
 function createClient(): OpenAI | null {
   if (process.env.NEXT_PUBLIC_ENV === 'testing') return null;
-  if (aiGatewayApiKey) {
+  if (useAiGateway) {
     return new OpenAI({
-      apiKey: aiGatewayApiKey,
+      apiKey: aiGatewayApiKey ?? (() => getVercelOidcToken()),
       baseURL: AI_GATEWAY_BASE_URL,
     });
   }
@@ -18,7 +20,7 @@ function createClient(): OpenAI | null {
 
 export const openai = createClient();
 
-const defaultModel = aiGatewayApiKey
+const defaultModel = useAiGateway
   ? 'openai/gpt-4.1-mini'
   : 'gpt-4.1-mini-2025-04-14';
 
