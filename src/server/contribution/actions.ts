@@ -19,19 +19,12 @@ import {
   ValidationError,
 } from '../error-handling';
 import { AuthError } from '../api-helpers';
-import { action, authedAction, fairteilerAction } from '../_lib/safe-action';
+import { authedAction, fairteilerAction } from '../_lib/safe-action';
 import { vContribution } from '../db/db-types';
 import {
   loadFairteilerById,
   loadFairteilerMembership,
 } from '../fairteiler/dal';
-import { loadActiveQrCodeById } from '../qr-code/dal';
-import { readScanProof } from '../qr-code/scan-proof';
-import {
-  QR_GUEST_MAX_ITEMS,
-  QR_GUEST_MAX_TOTAL_QUANTITY,
-  SCAN_GUEST_SUCCESS_PATH,
-} from '../qr-code/constants';
 import { assertContributionVerified } from './verification';
 import { checkPermissionOnServer } from '@/lib/auth/auth';
 import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
@@ -102,6 +95,7 @@ export const submitContributionAction = authedAction
     await assertContributionVerified({
       fairteiler,
       user: ctx.session.user,
+      qrGuestSession: !!ctx.session.session.qrCodeId,
       location: parsedInput.config.location,
     });
 
@@ -152,62 +146,6 @@ export const submitContributionAction = authedAction
     }
 
     return { redirectTo: successRedirect };
-  });
-
-export const submitQrGuestContributionAction = action
-  .inputSchema(contributionFormSchema)
-  .action(async ({ parsedInput }) => {
-    const { fairteilerId } = parsedInput.config;
-    const scanAgainMessage =
-      'Bitte scanne den QR-Code am Fairteiler erneut, um als Gast beizutragen.';
-
-    const proof = await readScanProof();
-    if (proof?.fairteilerId !== fairteilerId) {
-      throw new PermissionError(scanAgainMessage);
-    }
-
-    const qrCode = await loadActiveQrCodeById(proof.qrCodeId);
-    if (
-      qrCode?.fairteilerId !== fairteilerId ||
-      qrCode.fairteiler.disabled ||
-      !qrCode.guestAccessViewId
-    ) {
-      throw new PermissionError(scanAgainMessage);
-    }
-
-    const membership = await loadFairteilerMembership(
-      fairteilerId,
-      qrCode.guestAccessViewId,
-    );
-    if (membership?.role !== MemberRolesEnum.GUEST) {
-      throw new PermissionError(
-        'Für diesen Fairteiler ist gerade kein Gastzugang eingerichtet.',
-      );
-    }
-
-    const { contributions } = parsedInput;
-    if (contributions.length <= 0) {
-      throw new ValidationError('Keine Einträge gefunden.');
-    }
-    const totalQuantity = contributions.reduce((sum, c) => sum + c.quantity, 0);
-    if (
-      contributions.length > QR_GUEST_MAX_ITEMS ||
-      totalQuantity > QR_GUEST_MAX_TOTAL_QUANTITY
-    ) {
-      throw new ValidationError(
-        `Als Gast kannst du bis zu ${QR_GUEST_MAX_ITEMS} Einträge und ${QR_GUEST_MAX_TOTAL_QUANTITY} kg auf einmal eintragen.`,
-      );
-    }
-
-    await checkinContribution(
-      fairteilerId,
-      qrCode.guestAccessViewId,
-      contributions,
-    );
-
-    updateTag(PUBLIC_TOTAL_QUANTITY_TAG);
-
-    return { redirectTo: SCAN_GUEST_SUCCESS_PATH };
   });
 
 export const editContributionAction = fairteilerAction

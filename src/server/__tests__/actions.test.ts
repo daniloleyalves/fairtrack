@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { headers } from 'next/headers';
 import {
   submitContributionAction,
-  submitQrGuestContributionAction,
   editContributionAction,
   exportContributionsAction,
 } from '../contribution/actions';
@@ -1231,108 +1230,49 @@ describe('QR and location verification', () => {
     });
   });
 
-  describe('submitQrGuestContributionAction', () => {
-    const guestInput = {
-      contributions: [contribution],
-      config: { fairteilerId: mockFairteiler.id },
+  describe('submitContributionAction in a QR guest session', () => {
+    const qrGuestSession = {
+      ...mockSession,
+      session: { ...mockSession.session, qrCodeId: 'qr-1' },
+      user: { ...mockSession.user, id: 'guest-view-1', role: 'user' },
     };
 
-    it('records the contribution under the linked guest access view', async () => {
-      vi.mocked(readScanProof).mockResolvedValue(validProof);
-      vi.mocked(qrCodeDal.loadActiveQrCodeById).mockResolvedValue(
-        activeQrCode(),
+    beforeEach(() => {
+      vi.mocked(loadAuthenticatedSession).mockResolvedValue(
+        qrGuestSession as typeof foodsaverSession,
       );
       vi.mocked(fairteilerDal.loadFairteilerMembership).mockResolvedValue(
         guestMembership('guest'),
       );
+    });
 
-      const result = await submitQrGuestContributionAction(guestInput);
+    it('records the contribution under the guest access view while the scan is valid', async () => {
+      vi.mocked(readScanProof).mockResolvedValue(validProof);
+      vi.mocked(qrCodeDal.loadActiveQrCodeById).mockResolvedValue(
+        activeQrCode(),
+      );
 
-      expect(result?.data).toEqual({ redirectTo: '/scan/danke' });
+      const result = await submitContributionAction({
+        contributions: [contribution],
+        config: { fairteilerId: mockFairteiler.id },
+      });
+
+      expect(result?.serverError).toBeUndefined();
       expect(dal.checkinContribution).toHaveBeenCalledWith(
         mockFairteiler.id,
         'guest-view-1',
         [contribution],
+        undefined,
       );
-      expect(loadAuthenticatedSession).not.toHaveBeenCalled();
     });
 
-    it('allows several submissions within one scan', async () => {
-      vi.mocked(readScanProof).mockResolvedValue(validProof);
-      vi.mocked(qrCodeDal.loadActiveQrCodeById).mockResolvedValue(
-        activeQrCode(),
-      );
-      vi.mocked(fairteilerDal.loadFairteilerMembership).mockResolvedValue(
-        guestMembership('guest'),
-      );
-
-      await submitQrGuestContributionAction(guestInput);
-      await submitQrGuestContributionAction(guestInput);
-
-      expect(dal.checkinContribution).toHaveBeenCalledTimes(2);
-    });
-
-    it('rejects without a scan', async () => {
-      const result = await submitQrGuestContributionAction(guestInput);
-
-      expect(result?.serverError).toContain('scanne');
-      expect(dal.checkinContribution).not.toHaveBeenCalled();
-    });
-
-    it('rejects a scan from another fairteiler', async () => {
-      vi.mocked(readScanProof).mockResolvedValue({
-        ...validProof,
-        fairteilerId: 'fairteiler-2',
+    it('does not count the guest membership as staff once the scan expired', async () => {
+      const result = await submitContributionAction({
+        contributions: [contribution],
+        config: { fairteilerId: mockFairteiler.id },
       });
 
-      const result = await submitQrGuestContributionAction(guestInput);
-
-      expect(result?.serverError).toContain('scanne');
-      expect(dal.checkinContribution).not.toHaveBeenCalled();
-    });
-
-    it('rejects when the code offers no guest access view', async () => {
-      vi.mocked(readScanProof).mockResolvedValue(validProof);
-      vi.mocked(qrCodeDal.loadActiveQrCodeById).mockResolvedValue(
-        activeQrCode({ guestAccessViewId: null }),
-      );
-
-      const result = await submitQrGuestContributionAction(guestInput);
-
-      expect(result?.serverError).toBeDefined();
-      expect(dal.checkinContribution).not.toHaveBeenCalled();
-    });
-
-    it('rejects when the linked account is no longer a guest', async () => {
-      vi.mocked(readScanProof).mockResolvedValue(validProof);
-      vi.mocked(qrCodeDal.loadActiveQrCodeById).mockResolvedValue(
-        activeQrCode(),
-      );
-      vi.mocked(fairteilerDal.loadFairteilerMembership).mockResolvedValue(
-        guestMembership('employee'),
-      );
-
-      const result = await submitQrGuestContributionAction(guestInput);
-
-      expect(result?.serverError).toContain('Gastzugang');
-      expect(dal.checkinContribution).not.toHaveBeenCalled();
-    });
-
-    it('rejects a submission above the guest limits', async () => {
-      vi.mocked(readScanProof).mockResolvedValue(validProof);
-      vi.mocked(qrCodeDal.loadActiveQrCodeById).mockResolvedValue(
-        activeQrCode(),
-      );
-      vi.mocked(fairteilerDal.loadFairteilerMembership).mockResolvedValue(
-        guestMembership('guest'),
-      );
-
-      const result = await submitQrGuestContributionAction({
-        ...guestInput,
-        contributions: [{ ...contribution, quantity: 250 }],
-      });
-
-      expect(result?.serverError).toContain('200 kg');
+      expect(result?.serverError).toContain('QR-Code');
       expect(dal.checkinContribution).not.toHaveBeenCalled();
     });
   });

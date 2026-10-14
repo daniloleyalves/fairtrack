@@ -302,6 +302,13 @@
       "when": 1791993686496,
       "tag": "0042_drop_verified_via",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1791994958575,
+      "tag": "0043_qr_guest_sessions",
+      "breakpoints": true
     }
   ]
 }

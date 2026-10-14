@@ -36,12 +36,10 @@ export function ContributionForm({
   children,
   defaultValues,
   config,
-  submitAction = submitContributionAction,
 }: {
   children: React.ReactNode;
   defaultValues?: DefaultValues<ContributionFormValues>;
   config: ContributionFormConfig;
-  submitAction?: typeof submitContributionAction;
 }) {
   const queryClient = useQueryClient();
   const { coordinates, accuracy } = useContribution();
@@ -57,7 +55,7 @@ export function ContributionForm({
     submitContribution.reset();
   });
 
-  const submitContribution = useFormAction(submitAction, form, {
+  const submitContribution = useFormAction(submitContributionAction, form, {
     successMessage: 'Lebensmittel erfolgreich beigetragen!',
     onSuccess: (data) => {
       void queryClient.invalidateQueries({

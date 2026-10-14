@@ -51,6 +51,7 @@ export async function getSession(
     session: {
       activeOrganizationId: result.session.activeOrganizationId,
       userId: result.session.userId,
+      qrCodeId: result.session.qrCodeId ?? null,
     },
     user: {
       id: result.user.id,

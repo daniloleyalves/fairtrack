@@ -98,6 +98,7 @@ describe('DTO Layer', () => {
           session: {
             activeOrganizationId: mockSession.session.activeOrganizationId,
             userId: mockSession.session.userId,
+            qrCodeId: null,
           },
           user: {
             id: mockSession.user.id,

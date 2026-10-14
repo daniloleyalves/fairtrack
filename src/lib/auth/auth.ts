@@ -35,6 +35,7 @@ import {
 } from '@/lib/services/resend/invite-member';
 import { updateUserSecureStatus } from '@server/user/dal';
 import { handleAuthApiError } from './on-api-error';
+import { qrGuestPlugin } from './qr-guest-plugin';
 
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
@@ -163,6 +164,7 @@ export const auth = betterAuth({
         }
       },
     }),
+    qrGuestPlugin(),
     nextCookies(),
   ],
   emailAndPassword: {

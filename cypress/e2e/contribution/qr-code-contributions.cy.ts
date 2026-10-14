@@ -48,13 +48,18 @@ describe('QR Code Contribution Flow E2E', () => {
             cy.url().should('match', /\/scan$/);
             cy.contains('QR Fairteiler').should('be.visible');
             cy.contains('Mit meinem Konto beitragen').should('be.visible');
-            cy.contains('a', 'Als Gast fortfahren').click();
+            cy.contains('button', 'Als Gast fortfahren').click();
 
-            cy.url().should('include', '/scan/gast');
+            cy.url({ timeout: 15000 }).should(
+              'include',
+              '/hub/fairteiler/contribution',
+            );
             fillAndSubmitOneContribution();
 
-            cy.url({ timeout: 15000 }).should('include', '/scan/danke');
-            cy.contains('Danke fürs Retten!').should('be.visible');
+            cy.url({ timeout: 15000 }).should(
+              'include',
+              '/hub/fairteiler/contribution/success',
+            );
 
             cy.task('getCheckinsByFairteiler', fairteiler.id).then(
               (checkins) => {
