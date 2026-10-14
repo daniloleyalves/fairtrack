@@ -28,7 +28,7 @@ describe('Milestones', () => {
     expect(screen.getByText('250')).toBeInTheDocument();
     expect(screen.queryByText('10')).not.toBeInTheDocument();
     expect(screen.queryByText('25')).not.toBeInTheDocument();
-    expect(screen.getByText('50')).toBeInTheDocument();
+    expect(screen.getAllByText('50')).toHaveLength(3);
     expect(
       screen.getByRole('button', { name: '3 frühere Meilensteine' }),
     ).toBeInTheDocument();

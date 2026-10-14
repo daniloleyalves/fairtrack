@@ -97,6 +97,7 @@ const STACK_OFFSET_PX = 14;
 
 function MilestoneStack({ milestones }: { milestones: MilestoneDisplay[] }) {
   const layers = milestones.slice(-3);
+  const top = layers[layers.length - 1];
 
   return (
     <div
@@ -110,7 +111,8 @@ function MilestoneStack({ milestones }: { milestones: MilestoneDisplay[] }) {
           style={{ left: i * STACK_OFFSET_PX }}
         >
           <MilestoneBadge
-            quantity={i === layers.length - 1 ? milestone.quantity : undefined}
+            quantity={top.quantity}
+            hideLabel={milestone !== top}
             achieved
           />
         </div>
@@ -122,11 +124,13 @@ function MilestoneStack({ milestones }: { milestones: MilestoneDisplay[] }) {
 function MilestoneBadge({
   quantity,
   achieved = false,
+  hideLabel = false,
 }: {
-  quantity?: number;
+  quantity: number;
   achieved?: boolean;
+  hideLabel?: boolean;
 }) {
-  const digits = String(quantity ?? '').length;
+  const digits = String(quantity).length;
 
   return (
     <div className='relative'>
@@ -145,7 +149,9 @@ function MilestoneBadge({
           digits <= 2 ? 'text-lg' : digits === 3 ? 'text-xs' : 'text-[10px]',
         )}
       >
-        {quantity}
+        <span className={cn(hideLabel && 'invisible')} aria-hidden={hideLabel}>
+          {quantity}
+        </span>
       </div>
     </div>
   );
