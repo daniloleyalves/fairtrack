@@ -88,6 +88,8 @@ export interface vContribution {
   contributorImage: string | null;
   contributorEmail: string | null;
   verifiedVia?: VerificationMethod | null;
+  contributorIsAnonymous?: boolean | null;
+  contributorRole?: MemberRoles | null;
   fairteilerId: string;
   fairteilerName: string;
 }
