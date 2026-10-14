@@ -16,7 +16,7 @@ const achieved = (quantity: number) => ({
 });
 
 describe('Milestones', () => {
-  it('shows only the latest achieved milestone and the next one', () => {
+  it('shows earlier milestones as one stack before the latest and next', () => {
     const data: MilestoneData = {
       achieved: [10, 25, 50, 100].map(achieved),
       nextMilestone: { id: 'm-250', quantity: 250, isAchieved: false },
@@ -29,6 +29,32 @@ describe('Milestones', () => {
     expect(screen.queryByText('10')).not.toBeInTheDocument();
     expect(screen.queryByText('25')).not.toBeInTheDocument();
     expect(screen.queryByText('50')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '3 frühere Meilensteine' }),
+    ).toBeInTheDocument();
+  });
+
+  it('caps the stack at three layers', () => {
+    const data: MilestoneData = {
+      achieved: [10, 25, 50, 100, 250, 500].map(achieved),
+      nextMilestone: { id: 'm-1000', quantity: 1000, isAchieved: false },
+    };
+
+    render(<Milestones milestoneData={data} />);
+
+    expect(screen.getAllByAltText('Raupe')).toHaveLength(5);
+  });
+
+  it('shows no stack with a single achieved milestone', () => {
+    const data: MilestoneData = {
+      achieved: [10].map(achieved),
+      nextMilestone: { id: 'm-25', quantity: 25, isAchieved: false },
+    };
+
+    render(<Milestones milestoneData={data} />);
+
+    expect(screen.getAllByAltText('Raupe')).toHaveLength(2);
+    expect(screen.queryByRole('button', { name: /frühere/ })).toBeNull();
   });
 
   it('omits the next badge once every milestone is achieved', () => {
@@ -39,7 +65,7 @@ describe('Milestones', () => {
 
     render(<Milestones milestoneData={data} />);
 
-    expect(screen.getAllByAltText('Raupe')).toHaveLength(1);
+    expect(screen.getAllByAltText('Raupe')).toHaveLength(2);
     expect(screen.getByText('1000')).toBeInTheDocument();
   });
 

@@ -4,7 +4,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { MilestoneData } from './milestone-utils';
+import { MilestoneData, MilestoneDisplay } from './milestone-utils';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { formatDate } from 'date-fns';
@@ -16,6 +16,7 @@ export function Milestones({
   milestoneData: MilestoneData | null;
 }) {
   const latestAchieved = milestoneData?.achieved.at(-1);
+  const earlierAchieved = milestoneData?.achieved.slice(0, -1) ?? [];
 
   return (
     <>
@@ -32,6 +33,20 @@ export function Milestones({
             </span>
           </div>
           <div className='mt-4 flex items-center justify-center gap-2 md:flex-col md:gap-0'>
+            {earlierAchieved.length > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger
+                    aria-label={`${earlierAchieved.length} frühere Meilensteine`}
+                  >
+                    <MilestoneStack count={earlierAchieved.length} />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <AchievementList milestones={earlierAchieved} />
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             {latestAchieved && (
               <TooltipProvider>
                 <Tooltip>
@@ -42,12 +57,7 @@ export function Milestones({
                     />
                   </TooltipTrigger>
                   <TooltipContent>
-                    {[...milestoneData.achieved].reverse().map((milestone) => (
-                      <div key={milestone.id}>
-                        {milestone.quantity} Abgaben:{' '}
-                        {formatDate(milestone.achievedAt ?? '', 'dd.MM.yyyy')}
-                      </div>
-                    ))}
+                    <AchievementList milestones={[latestAchieved]} />
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -71,6 +81,33 @@ export function Milestones({
         </div>
       )}
     </>
+  );
+}
+
+function AchievementList({ milestones }: { milestones: MilestoneDisplay[] }) {
+  return [...milestones].reverse().map((milestone) => (
+    <div key={milestone.id}>
+      {milestone.quantity} Abgaben:{' '}
+      {formatDate(milestone.achievedAt ?? '', 'dd.MM.yyyy')}
+    </div>
+  ));
+}
+
+function MilestoneStack({ count }: { count: number }) {
+  const layers = Math.min(count, 3);
+
+  return (
+    <div className='relative size-14'>
+      {Array.from({ length: layers }, (_, i) => (
+        <Image
+          key={i}
+          src={ImageAssets.raupe}
+          alt='Raupe'
+          className='absolute size-12 object-contain'
+          style={{ left: i * 4, top: (layers - 1 - i) * 4 }}
+        />
+      ))}
+    </div>
   );
 }
 
