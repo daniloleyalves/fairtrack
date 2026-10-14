@@ -24,6 +24,23 @@ function stubLocation(
   cy.stub(win.navigator.geolocation, 'clearWatch');
 }
 
+function expectSuccessPage(path = '/hub/user/contribution/success') {
+  cy.get('body', { timeout: 15000 }).should(($body) => {
+    const current = $body[0].ownerDocument.location.pathname;
+    if (!current.includes(path)) {
+      const toasts = $body.find('[data-sonner-toast]').text();
+      const invalid = $body
+        .find('[aria-invalid="true"]')
+        .map((_, el) => el.getAttribute('data-cy') ?? el.getAttribute('name'))
+        .get()
+        .join(', ');
+      throw new Error(
+        `Expected ${path} after submitting, still on ${current}. Toasts: "${toasts}". Invalid fields: "${invalid}".`,
+      );
+    }
+  });
+}
+
 describe('Location Verified Contribution E2E', () => {
   beforeEach(() => {
     cy.cleanDatabase();
@@ -52,6 +69,7 @@ describe('Location Verified Contribution E2E', () => {
           cy
             .createTestUser({ ...existingUser, isFirstLogin: false })
             .then((foodsaver) => {
+              cy.task('createTestUserPreferences', foodsaver.id);
               cy.visit(
                 `/sign-in?callbackUrl=${encodeURIComponent(contributionPath)}`,
               );
@@ -85,11 +103,7 @@ describe('Location Verified Contribution E2E', () => {
     openUserContributionPage(FAIRTEILER_LOCATION).then(
       ({ fairteiler, foodsaver }) => {
         fillAndSubmitOneContribution();
-
-        cy.url({ timeout: 15000 }).should(
-          'include',
-          '/hub/user/contribution/success',
-        );
+        expectSuccessPage();
         cy.task('getCheckinsByFairteiler', fairteiler.id).then((checkins) => {
           expect(checkins as LocatedCheckin[]).to.have.length(1);
           expect((checkins as LocatedCheckin[])[0].userId).to.equal(

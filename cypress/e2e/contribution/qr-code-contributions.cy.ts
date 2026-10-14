@@ -4,20 +4,38 @@ type Checkin = { userId: string };
 
 const SCAN_COOKIE = 'fairtrack_qr_scan';
 
+function expectPathAfterSubmit(path: string) {
+  cy.get('body', { timeout: 15000 }).should(($body) => {
+    const current = $body[0].ownerDocument.location.pathname;
+    if (!current.includes(path)) {
+      const toasts = $body.find('[data-sonner-toast]').text();
+      const invalid = $body
+        .find('[aria-invalid="true"]')
+        .map((_, el) => el.getAttribute('data-cy') ?? el.getAttribute('name'))
+        .get()
+        .join(', ');
+      throw new Error(
+        `Expected ${path} after submitting, still on ${current}. Toasts: "${toasts}". Invalid fields: "${invalid}".`,
+      );
+    }
+  });
+}
+
 describe('QR Code Contribution Flow E2E', () => {
   beforeEach(() => {
     cy.cleanDatabase();
     cy.seedBasicTestData();
   });
 
-  function fillAndSubmitOneContribution() {
+  function fillAndSubmitOneContribution(expectedPath: string) {
     cy.contains('Retteformular').should('be.visible');
     cy.switchContributionMode('fast');
     cy.fixture('contributions').then((contributions) => {
       cy.addContributionRow();
       cy.fillContributionRow(0, contributions.fastModeContributions[0]);
-      cy.submitContributions();
+      cy.get('button[type="submit"]').contains('Absenden').click();
     });
+    expectPathAfterSubmit(expectedPath);
   }
 
   it('lets a visitor contribute through the guest access view after scanning', () => {
@@ -55,9 +73,7 @@ describe('QR Code Contribution Flow E2E', () => {
 
             cy.url().should('include', '/scan/gast');
             cy.getCookie(SCAN_COOKIE).should('exist');
-            fillAndSubmitOneContribution();
-
-            cy.url({ timeout: 15000 }).should('include', '/scan/danke');
+            fillAndSubmitOneContribution('/scan/danke');
             cy.contains('Super!').should('be.visible');
 
             cy.task('getCheckinsByFairteiler', fairteiler.id).then(
@@ -80,6 +96,7 @@ describe('QR Code Contribution Flow E2E', () => {
         cy.fixture('users').then(({ existingUser }) => {
           cy.createTestUser({ ...existingUser, isFirstLogin: false }).then(
             (foodsaver) => {
+              cy.task('createTestUserPreferences', foodsaver.id);
               cy.task('createTestQrCode', {
                 fairteilerId: fairteiler.id,
               }).then((qrCode) => {
@@ -102,12 +119,7 @@ describe('QR Code Contribution Flow E2E', () => {
                 );
                 cy.getCookie(SCAN_COOKIE).should('exist');
                 cy.contains('QR-Code gescannt').should('be.visible');
-                fillAndSubmitOneContribution();
-
-                cy.url({ timeout: 15000 }).should(
-                  'include',
-                  '/hub/user/contribution/success',
-                );
+                fillAndSubmitOneContribution('/hub/user/contribution/success');
 
                 cy.task('getCheckinsByFairteiler', fairteiler.id).then(
                   (checkins) => {
