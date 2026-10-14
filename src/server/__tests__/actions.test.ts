@@ -2,9 +2,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { headers } from 'next/headers';
 import {
   submitContributionAction,
+  submitQrGuestContributionAction,
   editContributionAction,
   exportContributionsAction,
 } from '../contribution/actions';
+import * as qrCodeDal from '../qr-code/dal';
+import { readScanProof } from '../qr-code/scan-proof';
 import {
   suggestNewOriginAction,
   addFairteilerOriginAction,
@@ -63,6 +66,15 @@ vi.mock('../fairteiler/dal', () => ({
   addFairteilerCompany: vi.fn(),
   removeFairteilerCompany: vi.fn(),
   loadFairteilerMembership: vi.fn(),
+  loadFairteilerById: vi.fn(),
+}));
+
+vi.mock('../qr-code/dal', () => ({
+  loadActiveQrCodeById: vi.fn(),
+}));
+
+vi.mock('../qr-code/scan-proof', () => ({
+  readScanProof: vi.fn(),
 }));
 
 vi.mock('../tutorial/dal', () => ({
@@ -103,6 +115,9 @@ describe('Server Actions', () => {
       error: null,
     });
     vi.mocked(loadAuthenticatedSession).mockResolvedValue(mockSession);
+    vi.mocked(fairteilerDal.loadFairteilerById).mockResolvedValue(
+      mockFairteiler,
+    );
   });
 
   describe('Origin Management Actions', () => {
@@ -1106,6 +1121,219 @@ describe('Server Actions', () => {
           field: 'quantity',
         });
       });
+    });
+  });
+});
+
+describe('QR and location verification', () => {
+  const contribution = {
+    id: 'contrib-1',
+    foodId: '550e8400-e29b-41d4-a716-446655440000',
+    quantity: 5,
+    title: 'Test Food',
+    originId: '550e8400-e29b-41d4-a716-446655440001',
+    categoryId: '550e8400-e29b-41d4-a716-446655440002',
+    companyId: null,
+    company: null,
+    allergens: null,
+    comment: null,
+  };
+  const foodsaverSession = {
+    ...mockSession,
+    user: { ...mockSession.user, id: 'foodsaver-1', role: 'user' },
+  };
+  const validProof = {
+    fairteilerId: mockFairteiler.id,
+    qrCodeId: 'qr-1',
+    exp: Date.now() + 60_000,
+  };
+  const activeQrCode = (overrides: Record<string, unknown> = {}) =>
+    ({
+      id: 'qr-1',
+      fairteilerId: mockFairteiler.id,
+      guestAccessViewId: 'guest-view-1',
+      fairteiler: mockFairteiler,
+      ...overrides,
+    }) as unknown as Awaited<ReturnType<typeof qrCodeDal.loadActiveQrCodeById>>;
+  const guestMembership = (role: 'guest' | 'employee') => ({
+    id: 'member-guest',
+    organizationId: mockFairteiler.id,
+    userId: 'guest-view-1',
+    role,
+    createdAt: new Date(),
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(headers).mockResolvedValue(new Headers());
+    vi.mocked(loadAuthenticatedSession).mockResolvedValue(foodsaverSession);
+    vi.mocked(fairteilerDal.loadFairteilerById).mockResolvedValue(
+      mockFairteiler,
+    );
+    vi.mocked(fairteilerDal.loadFairteilerMembership).mockResolvedValue(
+      undefined,
+    );
+    vi.mocked(readScanProof).mockResolvedValue(null);
+    vi.mocked(qrCodeDal.loadActiveQrCodeById).mockResolvedValue(undefined);
+    vi.mocked(dal.checkinContribution).mockResolvedValue([]);
+  });
+
+  describe('submitContributionAction for a foodsaver', () => {
+    it('records a contribution made after scanning the QR code', async () => {
+      vi.mocked(readScanProof).mockResolvedValue(validProof);
+      vi.mocked(qrCodeDal.loadActiveQrCodeById).mockResolvedValue(
+        activeQrCode(),
+      );
+
+      const result = await submitContributionAction({
+        contributions: [contribution],
+        config: { fairteilerId: mockFairteiler.id },
+      });
+
+      expect(result?.serverError).toBeUndefined();
+      expect(dal.checkinContribution).toHaveBeenCalledWith(
+        mockFairteiler.id,
+        'foodsaver-1',
+        [contribution],
+        undefined,
+      );
+    });
+
+    it('records a contribution made at the fairteiler location', async () => {
+      const result = await submitContributionAction({
+        contributions: [contribution],
+        config: {
+          fairteilerId: mockFairteiler.id,
+          location: { latitude: 48.0, longitude: 9.0, accuracy: 8 },
+        },
+      });
+
+      expect(result?.serverError).toBeUndefined();
+      expect(dal.checkinContribution).toHaveBeenCalledWith(
+        mockFairteiler.id,
+        'foodsaver-1',
+        [contribution],
+        undefined,
+      );
+    });
+
+    it('rejects a contribution that is neither scanned nor located', async () => {
+      const result = await submitContributionAction({
+        contributions: [contribution],
+        config: {
+          fairteilerId: mockFairteiler.id,
+          location: { latitude: 48.5, longitude: 9.0, accuracy: 8 },
+        },
+      });
+
+      expect(result?.serverError).toContain('QR-Code');
+      expect(dal.checkinContribution).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('submitQrGuestContributionAction', () => {
+    const guestInput = {
+      contributions: [contribution],
+      config: { fairteilerId: mockFairteiler.id },
+    };
+
+    it('records the contribution under the linked guest access view', async () => {
+      vi.mocked(readScanProof).mockResolvedValue(validProof);
+      vi.mocked(qrCodeDal.loadActiveQrCodeById).mockResolvedValue(
+        activeQrCode(),
+      );
+      vi.mocked(fairteilerDal.loadFairteilerMembership).mockResolvedValue(
+        guestMembership('guest'),
+      );
+
+      const result = await submitQrGuestContributionAction(guestInput);
+
+      expect(result?.data).toEqual({ redirectTo: '/scan/danke' });
+      expect(dal.checkinContribution).toHaveBeenCalledWith(
+        mockFairteiler.id,
+        'guest-view-1',
+        [contribution],
+      );
+      expect(loadAuthenticatedSession).not.toHaveBeenCalled();
+    });
+
+    it('allows several submissions within one scan', async () => {
+      vi.mocked(readScanProof).mockResolvedValue(validProof);
+      vi.mocked(qrCodeDal.loadActiveQrCodeById).mockResolvedValue(
+        activeQrCode(),
+      );
+      vi.mocked(fairteilerDal.loadFairteilerMembership).mockResolvedValue(
+        guestMembership('guest'),
+      );
+
+      await submitQrGuestContributionAction(guestInput);
+      await submitQrGuestContributionAction(guestInput);
+
+      expect(dal.checkinContribution).toHaveBeenCalledTimes(2);
+    });
+
+    it('rejects without a scan', async () => {
+      const result = await submitQrGuestContributionAction(guestInput);
+
+      expect(result?.serverError).toContain('scanne');
+      expect(dal.checkinContribution).not.toHaveBeenCalled();
+    });
+
+    it('rejects a scan from another fairteiler', async () => {
+      vi.mocked(readScanProof).mockResolvedValue({
+        ...validProof,
+        fairteilerId: 'fairteiler-2',
+      });
+
+      const result = await submitQrGuestContributionAction(guestInput);
+
+      expect(result?.serverError).toContain('scanne');
+      expect(dal.checkinContribution).not.toHaveBeenCalled();
+    });
+
+    it('rejects when the code offers no guest access view', async () => {
+      vi.mocked(readScanProof).mockResolvedValue(validProof);
+      vi.mocked(qrCodeDal.loadActiveQrCodeById).mockResolvedValue(
+        activeQrCode({ guestAccessViewId: null }),
+      );
+
+      const result = await submitQrGuestContributionAction(guestInput);
+
+      expect(result?.serverError).toBeDefined();
+      expect(dal.checkinContribution).not.toHaveBeenCalled();
+    });
+
+    it('rejects when the linked account is no longer a guest', async () => {
+      vi.mocked(readScanProof).mockResolvedValue(validProof);
+      vi.mocked(qrCodeDal.loadActiveQrCodeById).mockResolvedValue(
+        activeQrCode(),
+      );
+      vi.mocked(fairteilerDal.loadFairteilerMembership).mockResolvedValue(
+        guestMembership('employee'),
+      );
+
+      const result = await submitQrGuestContributionAction(guestInput);
+
+      expect(result?.serverError).toContain('Gastzugang');
+      expect(dal.checkinContribution).not.toHaveBeenCalled();
+    });
+
+    it('rejects a submission above the guest limits', async () => {
+      vi.mocked(readScanProof).mockResolvedValue(validProof);
+      vi.mocked(qrCodeDal.loadActiveQrCodeById).mockResolvedValue(
+        activeQrCode(),
+      );
+      vi.mocked(fairteilerDal.loadFairteilerMembership).mockResolvedValue(
+        guestMembership('guest'),
+      );
+
+      const result = await submitQrGuestContributionAction({
+        ...guestInput,
+        contributions: [{ ...contribution, quantity: 250 }],
+      });
+
+      expect(result?.serverError).toContain('200 kg');
+      expect(dal.checkinContribution).not.toHaveBeenCalled();
     });
   });
 });
