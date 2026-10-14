@@ -15,8 +15,7 @@ export function Milestones({
 }: {
   milestoneData: MilestoneData | null;
 }) {
-  const latestAchieved = milestoneData?.achieved.at(-1);
-  const earlierAchieved = milestoneData?.achieved.slice(0, -1) ?? [];
+  const achieved = milestoneData?.achieved ?? [];
 
   return (
     <>
@@ -33,31 +32,16 @@ export function Milestones({
             </span>
           </div>
           <div className='mt-4 flex items-center justify-center gap-2 md:flex-col md:gap-0'>
-            {earlierAchieved.length > 0 && (
+            {achieved.length > 0 && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger
-                    aria-label={`${earlierAchieved.length} frühere Meilensteine`}
+                    aria-label={`${achieved.length} erreichte Meilensteine`}
                   >
-                    <MilestoneStack milestones={earlierAchieved} />
+                    <MilestoneStack milestones={achieved} />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <AchievementList milestones={earlierAchieved} />
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            {latestAchieved && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <MilestoneBadge
-                      quantity={latestAchieved.quantity}
-                      achieved
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <AchievementList milestones={[latestAchieved]} />
+                    <AchievementList milestones={achieved} />
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

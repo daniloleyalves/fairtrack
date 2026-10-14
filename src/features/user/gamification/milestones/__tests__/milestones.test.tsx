@@ -16,7 +16,7 @@ const achieved = (quantity: number) => ({
 });
 
 describe('Milestones', () => {
-  it('stacks earlier milestones with the highest on top', () => {
+  it('stacks achieved milestones with the latest on top, then the next', () => {
     const data: MilestoneData = {
       achieved: [10, 25, 50, 100].map(achieved),
       nextMilestone: { id: 'm-250', quantity: 250, isAchieved: false },
@@ -24,14 +24,14 @@ describe('Milestones', () => {
 
     render(<Milestones milestoneData={data} />);
 
-    expect(screen.getByText('100')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '4 erreichte Meilensteine' }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText('100')).toHaveLength(3);
     expect(screen.getByText('250')).toBeInTheDocument();
     expect(screen.queryByText('10')).not.toBeInTheDocument();
     expect(screen.queryByText('25')).not.toBeInTheDocument();
-    expect(screen.getAllByText('50')).toHaveLength(3);
-    expect(
-      screen.getByRole('button', { name: '3 frühere Meilensteine' }),
-    ).toBeInTheDocument();
+    expect(screen.queryByText('50')).not.toBeInTheDocument();
   });
 
   it('caps the stack at three layers', () => {
@@ -42,10 +42,10 @@ describe('Milestones', () => {
 
     render(<Milestones milestoneData={data} />);
 
-    expect(screen.getAllByAltText('Raupe')).toHaveLength(5);
+    expect(screen.getAllByAltText('Raupe')).toHaveLength(4);
   });
 
-  it('shows no stack with a single achieved milestone', () => {
+  it('shows a single badge with one achieved milestone', () => {
     const data: MilestoneData = {
       achieved: [10].map(achieved),
       nextMilestone: { id: 'm-25', quantity: 25, isAchieved: false },
@@ -54,7 +54,7 @@ describe('Milestones', () => {
     render(<Milestones milestoneData={data} />);
 
     expect(screen.getAllByAltText('Raupe')).toHaveLength(2);
-    expect(screen.queryByRole('button', { name: /frühere/ })).toBeNull();
+    expect(screen.getByText('10')).toBeInTheDocument();
   });
 
   it('omits the next badge once every milestone is achieved', () => {
@@ -66,7 +66,7 @@ describe('Milestones', () => {
     render(<Milestones milestoneData={data} />);
 
     expect(screen.getAllByAltText('Raupe')).toHaveLength(2);
-    expect(screen.getByText('1000')).toBeInTheDocument();
+    expect(screen.getAllByText('1000')).toHaveLength(2);
   });
 
   it('shows only the next milestone before any is achieved', () => {
