@@ -1,6 +1,7 @@
 'use client';
 
 import { ContributionInfoModal } from '@/features/fairteiler/contribution-info-modal';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -27,6 +28,46 @@ import { useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { HistoryEditModal } from './components/history-edit-modal';
 import { HistoryVersionHistory } from './components/history-version-history';
+
+export type ContributorAccessType = 'guest' | 'employee' | 'disabled' | 'user';
+
+export const contributorAccessLabels: Record<ContributorAccessType, string> = {
+  guest: 'Gastzugang',
+  employee: 'Mitarbeiterzugang',
+  disabled: 'Deaktivierter Zugang',
+  user: 'Persönliches Konto',
+};
+
+export function getContributorAccessType(
+  item: vContribution,
+): ContributorAccessType {
+  switch (item.contributorRole) {
+    case 'guest':
+    case 'employee':
+    case 'disabled':
+      return item.contributorRole;
+    default:
+      return 'user';
+  }
+}
+
+export const ANONYMOUS_CONTRIBUTOR_KEY = 'anonymous';
+
+export function getContributorKey(item: vContribution) {
+  return item.contributorIsAnonymous
+    ? ANONYMOUS_CONTRIBUTOR_KEY
+    : item.contributorId;
+}
+
+export function getContributorLabel(item: vContribution) {
+  return item.contributorName ?? 'Unbekannt';
+}
+
+const arrayIncludesFilter = (
+  row: Row<vContribution>,
+  id: string,
+  value: string[],
+) => value.includes(row.getValue(id));
 
 export const columns: ColumnDef<vContribution>[] = [
   {
@@ -105,6 +146,31 @@ export const columns: ColumnDef<vContribution>[] = [
     filterFn: (row, id, value: string) => {
       return value.includes(row.getValue(id));
     },
+  },
+  {
+    id: 'contributor',
+    header: 'Beitragende:r',
+    accessorFn: getContributorKey,
+    cell: ({ row }) => {
+      const accessType = getContributorAccessType(row.original);
+      return (
+        <div className='flex min-w-[140px] flex-col items-start gap-1'>
+          <span>{getContributorLabel(row.original)}</span>
+          {accessType !== 'user' && (
+            <Badge variant='secondary'>
+              {contributorAccessLabels[accessType]}
+            </Badge>
+          )}
+        </div>
+      );
+    },
+    filterFn: arrayIncludesFilter,
+  },
+  {
+    id: 'access',
+    header: 'Zugang',
+    accessorFn: getContributorAccessType,
+    filterFn: arrayIncludesFilter,
   },
   {
     id: 'quantity',

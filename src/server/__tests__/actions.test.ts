@@ -849,6 +849,7 @@ describe('Server Actions', () => {
             contributorImage: null,
             contributorEmail: 'test@example.com',
             contributorIsAnonymous: false,
+            contributorRole: null,
             fairteilerId: 'fairteiler-1',
             fairteilerName: 'Test Fairteiler',
           },
