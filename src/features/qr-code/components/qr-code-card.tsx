@@ -122,9 +122,8 @@ function QrCodeCardTitle() {
       <div>
         <CardTitle>QR-Codes am Fairteiler</CardTitle>
         <CardDescription>
-          Für Fairteiler ohne Personal vor Ort: Wer den QR-Code scannt, trägt
-          mit dem eigenen Konto oder als Gast bei, und der Beitrag gilt als vor
-          Ort bestätigt.
+          Ein Scan bestätigt 30 Minuten lang, dass man vor Ort ist, und
+          ermöglicht Beiträge mit eigenem Konto oder, falls aktiviert, als Gast.
         </CardDescription>
       </div>
     </div>
