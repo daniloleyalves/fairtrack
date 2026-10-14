@@ -93,10 +93,12 @@ describe('Location Verified Contribution E2E', () => {
   function fillAndSubmitOneContribution() {
     cy.switchContributionMode('fast');
     cy.fixture('contributions').then((contributions) => {
+      // The user form re-renders its rows shortly after loading.
+      cy.wait(1000);
       cy.addContributionRow();
-      cy.get('table tbody tr').its('length').as('rowCount');
-      cy.get('table tbody tr').then(($rows) => {
-        for (let index = 0; index < $rows.length; index++) {
+      cy.get('[data-cy^="quantity-incrementer-"]').its('length').as('rowCount');
+      cy.get<number>('@rowCount').then((rowCount) => {
+        for (let index = 0; index < rowCount; index++) {
           cy.fillContributionRow(index, contributions.fastModeContributions[0]);
         }
       });
