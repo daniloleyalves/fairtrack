@@ -6,6 +6,7 @@ import {
   desc,
   eq,
   gte,
+  inArray,
   lte,
   sql,
   sum,
@@ -49,6 +50,7 @@ export async function checkinContribution(
   userId: string,
   payload: ContributionItem[],
   verifiedVia: VerificationMethod,
+  createdAt?: Date,
 ) {
   const insertedFoods = [];
 
@@ -76,6 +78,7 @@ export async function checkinContribution(
         fairteilerId: fairteilerId,
         quantity: c.quantity,
         verifiedVia,
+        ...(createdAt && { createdAt }),
       });
 
       insertedFoods.push(newFood);
@@ -93,9 +96,19 @@ export async function loadCheckinsWithinTimeframe(
   const [error, data] = await attempt(
     db.query.checkin.findMany({
       where: and(
-        gte(checkin.createdAt, options.from),
-        lte(checkin.createdAt, options.to),
         eq(checkin.userId, userId),
+        inArray(
+          checkin.foodId,
+          db
+            .select({ id: food.id })
+            .from(food)
+            .where(
+              and(
+                gte(food.createdAt, options.from),
+                lte(food.createdAt, options.to),
+              ),
+            ),
+        ),
       ),
       orderBy: [desc(checkin.createdAt)],
       with: { food: { with: { category: true } } },

@@ -24,10 +24,15 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 
 - QR codes for unattended fairteilers: owners create and print them under Präferenzen. After scanning, people contribute with their own account (sign-in or sign-up continues straight to the form) or, if the owner linked one, through a guest access view without signing in.
 - Every contribution now records how it was confirmed at the fairteiler (QR code, location or team on site), shown as "Bestätigt durch" in the history.
+- Owners, members and employees can record a contribution for an earlier day (up to 365 days back) from the fairteiler Retteformular, so a backlog no longer lands as one spike on the day it is typed in.
 
 ### Changed
 
 - Foodsavers contributing with their own account must either have scanned the fairteiler's QR code or share a location at the fairteiler. The location check now runs on the server instead of only showing a hint. Requires migration `0041_qr_codes_and_verification`.
+
+### Fixed
+
+- Dashboard milestones no longer pile up as more are reached: achieved milestones form one horizontal stack of caterpillars and medals topped by the latest (hover lists each with its date), followed by the next milestone, and 3–4 digit milestones (100+) fit their badge.
 
 ## [1.1.0] - 2026-07-12
 

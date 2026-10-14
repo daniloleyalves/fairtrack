@@ -59,6 +59,11 @@ export const contributionFormSchema = z.object({
       })
       .nullable()
       .optional(),
+    contributionDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Ungültiges Datum' })
+      .nullable()
+      .optional(),
   }),
 });
 

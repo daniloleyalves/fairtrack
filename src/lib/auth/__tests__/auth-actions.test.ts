@@ -81,6 +81,7 @@ interface MockBlobResult {
   contentType: string;
   contentDisposition: string;
   downloadUrl: string;
+  etag: string;
 }
 
 interface MockSignOutResult {
@@ -255,6 +256,7 @@ describe('Authentication Actions', () => {
         contentType: 'image/jpeg',
         contentDisposition: 'inline',
         downloadUrl: 'https://blob.vercel-storage.com/new-thumbnail.jpg',
+        etag: '"mock-etag"',
       };
       vi.mocked(put).mockResolvedValue(mockBlobResult);
       vi.mocked(del).mockResolvedValue(undefined);
@@ -1080,6 +1082,7 @@ describe('Authentication Actions', () => {
           contentType: 'image/jpeg',
           contentDisposition: 'inline',
           downloadUrl: 'https://blob.vercel-storage.com/large-thumbnail.jpg',
+          etag: '"mock-etag"',
         };
         vi.mocked(put).mockResolvedValue(mockBlobResult);
         vi.mocked(del).mockResolvedValue(undefined);
@@ -1131,6 +1134,7 @@ describe('Authentication Actions', () => {
           contentType: 'image/jpeg',
           contentDisposition: 'inline',
           downloadUrl: 'https://blob.vercel-storage.com/new-thumbnail.jpg',
+          etag: '"mock-etag"',
         };
         vi.mocked(put).mockResolvedValue(mockBlobResult);
         vi.mocked(del).mockRejectedValue(new Error('Delete failed'));
