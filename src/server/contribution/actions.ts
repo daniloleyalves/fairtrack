@@ -27,11 +27,7 @@ import {
 } from '../fairteiler/dal';
 import { loadActiveQrCodeById } from '../qr-code/dal';
 import { readScanProof } from '../qr-code/scan-proof';
-import {
-  QR_GUEST_MAX_ITEMS,
-  QR_GUEST_MAX_TOTAL_QUANTITY,
-  SCAN_GUEST_SUCCESS_PATH,
-} from '../qr-code/constants';
+import { SCAN_GUEST_SUCCESS_PATH } from '../qr-code/constants';
 import { assertContributionVerified } from './verification';
 import { checkPermissionOnServer } from '@/lib/auth/auth';
 import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
@@ -188,15 +184,6 @@ export const submitQrGuestContributionAction = action
     const { contributions } = parsedInput;
     if (contributions.length <= 0) {
       throw new ValidationError('Keine Einträge gefunden.');
-    }
-    const totalQuantity = contributions.reduce((sum, c) => sum + c.quantity, 0);
-    if (
-      contributions.length > QR_GUEST_MAX_ITEMS ||
-      totalQuantity > QR_GUEST_MAX_TOTAL_QUANTITY
-    ) {
-      throw new ValidationError(
-        `Als Gast kannst du bis zu ${QR_GUEST_MAX_ITEMS} Einträge und ${QR_GUEST_MAX_TOTAL_QUANTITY} kg auf einmal eintragen.`,
-      );
     }
 
     await checkinContribution(
