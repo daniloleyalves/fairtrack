@@ -30,6 +30,7 @@ import { AccessViewSelector } from './access-view-selector';
 import { ContributionDatePicker } from './contribution-date-picker';
 import { BACKDATE_ROLES } from '../lib/contribution-date';
 import { useSubmissionSelection } from '../hooks/use-submission-selection';
+import { SCAN_GUEST_SUCCESS_PATH, SCAN_PATH } from '@/server/qr-code/constants';
 
 export function ContributionContent() {
   const isMobile = useIsMobile();
@@ -59,7 +60,8 @@ export function ContributionContent() {
     useSubmissionSelection(fairteiler.id);
 
   const pathname = usePathname();
-  const isUserContext = pathname.includes('/hub/user/');
+  const isGuestContext = pathname.startsWith(SCAN_PATH);
+  const isUserContext = isGuestContext || pathname.includes('/hub/user/');
 
   const canBackdate =
     !isUserContext &&
@@ -69,7 +71,13 @@ export function ContributionContent() {
   // const isFairteilerContext = pathname.includes('/hub/fairteiler/');
 
   const defaultConfig = () => {
-    if (isUserContext) {
+    if (isGuestContext) {
+      return {
+        fairteilerId: fairteiler.id,
+        successRedirect: SCAN_GUEST_SUCCESS_PATH,
+        context: 'guest' as const,
+      };
+    } else if (isUserContext) {
       return {
         fairteilerId: fairteiler.id,
         successRedirect: '/hub/user/contribution/success',

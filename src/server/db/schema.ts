@@ -129,9 +129,6 @@ export const session = authSchema.table('session', {
     .references(() => user.id, { onDelete: 'cascade' }),
   impersonatedBy: text('impersonated_by'),
   activeOrganizationId: text('active_organization_id'),
-  qrCodeId: text('qr_code_id').references(() => fairteilerQrCode.id, {
-    onDelete: 'cascade',
-  }),
 });
 
 export const account = authSchema.table(

@@ -20,10 +20,12 @@ import {
 } from '@components/ui/card';
 import { Skeleton } from '@components/ui/skeleton';
 import { loadScanContext } from '@/server/qr-code/scan-context';
-import { userContributionPath } from '@/server/qr-code/constants';
+import {
+  SCAN_GUEST_PATH,
+  userContributionPath,
+} from '@/server/qr-code/constants';
 import { getSession } from '@/server/user/queries';
 import { ScanInvalid } from '@/features/qr-code/components/scan-invalid';
-import { QrGuestButton } from '@/features/qr-code/components/qr-guest-button';
 
 export default function ScanPage() {
   return (
@@ -42,8 +44,7 @@ async function ScanChoice() {
     return <ScanInvalid />;
   }
 
-  const currentSession = await getSession(await headers());
-  const session = currentSession?.session.qrCodeId ? null : currentSession;
+  const session = await getSession(await headers());
   const contributionPath = userContributionPath(scan.fairteiler.slug);
   const signInPath = `/sign-in?callbackUrl=${encodeURIComponent(contributionPath)}`;
 
@@ -122,7 +123,7 @@ async function ScanChoice() {
         </CardContent>
       </Card>
 
-      {scan.guestAccessViewId && !session && (
+      {scan.guestAccessViewId && (
         <Card>
           <CardHeader>
             <div className='flex items-center gap-3'>
@@ -138,7 +139,12 @@ async function ScanChoice() {
             </div>
           </CardHeader>
           <CardContent>
-            <QrGuestButton />
+            <Button asChild variant='outline' className='w-full'>
+              <Link href={SCAN_GUEST_PATH}>
+                Als Gast fortfahren
+                <ArrowRight className='size-4' />
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       )}

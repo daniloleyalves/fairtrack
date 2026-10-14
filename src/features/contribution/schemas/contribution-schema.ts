@@ -49,7 +49,7 @@ export const contributionFormSchema = z.object({
     fairteilerId: z.string(),
     successRedirect: z.string().optional(),
     revalidatePaths: z.array(z.string()).optional(),
-    context: z.enum(['fairteiler', 'user', 'admin']).optional(),
+    context: z.enum(['fairteiler', 'user', 'admin', 'guest']).optional(),
     submitAsAccessViewId: z.string().nullable().optional(),
     location: z
       .object({

@@ -2,13 +2,12 @@
 
 import { headers } from 'next/headers';
 import { z } from 'zod';
-import { action, fairteilerAction } from '../_lib/safe-action';
+import { fairteilerAction } from '../_lib/safe-action';
 import { NotFoundError, PermissionError } from '../error-handling';
 import { loadFairteilerMembership } from '../fairteiler/dal';
-import { auth, checkPermissionOnServer } from '@/lib/auth/auth';
+import { checkPermissionOnServer } from '@/lib/auth/auth';
 import { MemberRolesEnum } from '@/lib/auth/auth-permissions';
 import { insertQrCode, revokeQrCode, updateQrCode } from './dal';
-import { FAIRTEILER_CONTRIBUTION_PATH } from './constants';
 
 async function assertCanManageQrCodes() {
   const permissionResult = await checkPermissionOnServer(await headers(), {
@@ -83,8 +82,3 @@ export const revokeQrCodeAction = fairteilerAction
     if (!revoked) throw new NotFoundError('QR-Code');
     return { id: revoked.id };
   });
-
-export const startQrGuestSessionAction = action.action(async () => {
-  await auth.api.signInQrGuest({ headers: await headers() });
-  return { redirectTo: FAIRTEILER_CONTRIBUTION_PATH };
-});

@@ -27,18 +27,14 @@ export async function assertContributionVerified({
   fairteiler,
   user,
   location,
-  qrGuestSession = false,
 }: {
   fairteiler: { id: string; geoLat: string; geoLng: string };
   user: { id: string; role?: string | null };
   location?: ContributorLocation | null;
-  qrGuestSession?: boolean;
 }): Promise<void> {
   if (user.role === 'admin') return;
 
-  const membership = qrGuestSession
-    ? null
-    : await loadFairteilerMembership(fairteiler.id, user.id);
+  const membership = await loadFairteilerMembership(fairteiler.id, user.id);
   if (
     membership &&
     (membership.role as MemberRolesEnum) !== MemberRolesEnum.DISABLED

@@ -309,6 +309,13 @@
       "when": 1791994958575,
       "tag": "0043_qr_guest_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1792007688459,
+      "tag": "0044_drop_qr_guest_sessions",
+      "breakpoints": true
     }
   ]
 }

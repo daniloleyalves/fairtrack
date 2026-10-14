@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useRef,
+  useState,
   type ReactNode,
 } from 'react';
 import { z } from 'zod';
@@ -131,6 +132,31 @@ export function UserPreferencesProvider({
     isLoading,
     error,
     updatePreference,
+  };
+
+  return (
+    <UserPreferencesContext.Provider value={value}>
+      {children}
+    </UserPreferencesContext.Provider>
+  );
+}
+
+export function GuestPreferencesProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const [preferences, setPreferences] =
+    useState<ClientPreferences>(DEFAULT_PREFERENCES);
+
+  const value: UserPreferencesContextType = {
+    preferences,
+    isLoading: false,
+    error: null,
+    updatePreference: (key, value) => {
+      setPreferences((current) => ({ ...current, [key]: value }));
+      return Promise.resolve();
+    },
   };
 
   return (
