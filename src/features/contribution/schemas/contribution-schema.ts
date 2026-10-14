@@ -51,6 +51,11 @@ export const contributionFormSchema = z.object({
     revalidatePaths: z.array(z.string()).optional(),
     context: z.enum(['fairteiler', 'user', 'admin']).optional(),
     submitAsAccessViewId: z.string().nullable().optional(),
+    contributionDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Ungültiges Datum' })
+      .nullable()
+      .optional(),
   }),
 });
 

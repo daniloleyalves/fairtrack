@@ -20,6 +20,10 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 
 ## [Unreleased]
 
+### Added
+
+- Owners, members and employees can record a contribution for an earlier day (up to 365 days back) from the fairteiler Retteformular, so a backlog no longer lands as one spike on the day it is typed in.
+
 ## [1.1.0] - 2026-07-12
 
 ### Added

@@ -28,6 +28,12 @@ import {
   ACCESS_VIEW_ROLES,
   MemberRolesEnum,
 } from '@/lib/auth/auth-permissions';
+import {
+  BACKDATE_ROLES,
+  isAllowedContributionDay,
+  MAX_BACKDATE_DAYS,
+  resolveContributionTimestamp,
+} from '@features/contribution/lib/contribution-date';
 
 export const submitContributionAction = authedAction
   .inputSchema(contributionFormSchema)
@@ -75,10 +81,34 @@ export const submitContributionAction = authedAction
       contributingUserId = parsedInput.config.submitAsAccessViewId;
     }
 
+    const createdAt = resolveContributionTimestamp(
+      parsedInput.config.contributionDate,
+    );
+
+    if (createdAt) {
+      if (!isAllowedContributionDay(parsedInput.config.contributionDate!)) {
+        throw new ValidationError(
+          `Das Datum darf nicht in der Zukunft oder mehr als ${MAX_BACKDATE_DAYS} Tage zurück liegen.`,
+        );
+      }
+
+      const ownMembership = await loadFairteilerMembership(
+        parsedInput.config.fairteilerId,
+        ctx.session.user.id,
+      );
+
+      if (!ownMembership || !BACKDATE_ROLES.has(ownMembership.role)) {
+        throw new PermissionError(
+          'Nur Inhaber:innen, Mitglieder und Mitarbeitende dürfen Beiträge nachträglich eintragen.',
+        );
+      }
+    }
+
     await checkinContribution(
       parsedInput.config.fairteilerId,
       contributingUserId,
       parsedInput.contributions,
+      createdAt,
     );
 
     updateTag(PUBLIC_TOTAL_QUANTITY_TAG);

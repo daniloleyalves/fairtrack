@@ -26,6 +26,8 @@ import {
   MemberRolesEnum,
 } from '@/lib/auth/auth-permissions';
 import { AccessViewSelector } from './access-view-selector';
+import { ContributionDatePicker } from './contribution-date-picker';
+import { BACKDATE_ROLES } from '../lib/contribution-date';
 import { useSubmissionSelection } from '../hooks/use-submission-selection';
 
 export function ContributionContent() {
@@ -56,6 +58,12 @@ export function ContributionContent() {
 
   const pathname = usePathname();
   const isUserContext = pathname.includes('/hub/user/');
+
+  const canBackdate =
+    !isUserContext &&
+    !!currentMemberRecord &&
+    BACKDATE_ROLES.has(currentMemberRecord.role);
+  const [contributionDate, setContributionDate] = useState<string | null>(null);
   // const isFairteilerContext = pathname.includes('/hub/fairteiler/');
 
   const defaultConfig = () => {
@@ -74,6 +82,7 @@ export function ContributionContent() {
         revalidatePaths: ['/hub/fairteiler/dashboard'],
         context: 'fairteiler' as const,
         submitAsAccessViewId: isOwner ? selectedAccessViewId : undefined,
+        contributionDate: canBackdate ? contributionDate : undefined,
       };
     }
   };
@@ -93,6 +102,13 @@ export function ContributionContent() {
                 accessViews={accessViews}
                 selectedAccessViewId={selectedAccessViewId}
                 onSelectionChange={setSelectedAccessViewId}
+              />
+            )}
+
+            {canBackdate && (
+              <ContributionDatePicker
+                value={contributionDate}
+                onChange={setContributionDate}
               />
             )}
 
