@@ -39,11 +39,15 @@ export function UserDashboardGridSkeleton() {
 
       {/* Distribution Charts */}
       <div className='order-3 col-span-12 w-full md:order-2 md:col-span-10 lg:col-span-7'>
-        <Card className='h-full flex-col justify-between gap-4 rounded-lg bg-white p-4'>
-          <Skeleton variant='onCard' className='h-36 w-full rounded-md' />
+        <Card className='h-full flex-col gap-4 rounded-lg bg-white px-4 md:gap-0 md:py-2'>
+          <div className='h-[263px] py-2 xs:h-[135px]'>
+            <Skeleton variant='onCard' className='size-full rounded-md' />
+          </div>
           <div className='hidden h-px w-full bg-border md:block' />
           <div className='h-full w-px bg-border md:hidden' />
-          <Skeleton variant='onCard' className='h-36 w-full rounded-md' />
+          <div className='h-[263px] py-2 xs:h-[135px]'>
+            <Skeleton variant='onCard' className='size-full rounded-md' />
+          </div>
         </Card>
       </div>
 
