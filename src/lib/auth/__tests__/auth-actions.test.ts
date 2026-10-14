@@ -8,6 +8,7 @@ import {
   updateMemberRoleAction,
   inviteMemberAction,
   disableAccessViewAction,
+  resetAccessViewPasswordAction,
 } from '../auth-actions';
 import { auth, checkPermissionOnServer } from '../auth';
 import { getActiveFairteiler } from '@server/fairteiler/queries';
@@ -20,6 +21,7 @@ import { NotFoundError } from '@/server/error-handling';
 import {
   banUserAndRevokeSessions,
   loadAuthenticatedSession,
+  setPasswordAndRevokeSessions,
 } from '@server/user/dal';
 import { mockSession } from '@/__tests__/mocks/server-only';
 
@@ -59,6 +61,7 @@ vi.mock('@server/user/dal', () => ({
   banUserAndRevokeSessions: vi.fn(),
   loadAuthenticatedSession: vi.fn(),
   loadUserByEmail: vi.fn(),
+  setPasswordAndRevokeSessions: vi.fn(),
   validateResetPasswordToken: vi.fn(),
 }));
 
@@ -781,6 +784,124 @@ describe('Authentication Actions', () => {
           },
         });
       }
+    });
+  });
+
+  describe('resetAccessViewPasswordAction', () => {
+    beforeEach(() => {
+      vi.mocked(checkPermissionOnServer).mockResolvedValue({
+        success: true,
+        error: null,
+      });
+      vi.mocked(loadMemberById).mockResolvedValue({
+        id: 'member-123',
+        userId: 'user-123',
+        organizationId: 'fairteiler-123',
+        role: MemberRolesEnum.GUEST,
+        createdAt: new Date(),
+      });
+      vi.mocked(setPasswordAndRevokeSessions).mockResolvedValue(true);
+    });
+
+    it('should set a new password and return it once', async () => {
+      const result = await resetAccessViewPasswordAction({
+        userId: 'user-123',
+        memberId: 'member-123',
+      });
+
+      expect(result?.serverError).toBeUndefined();
+      expect(checkPermissionOnServer).toHaveBeenCalledWith(mockHeaders, {
+        member: ['update'],
+      });
+      expect(loadMemberById).toHaveBeenCalledWith(
+        'member-123',
+        'fairteiler-123',
+      );
+      const newPassword = vi.mocked(setPasswordAndRevokeSessions).mock
+        .calls[0][1];
+      expect(setPasswordAndRevokeSessions).toHaveBeenCalledWith(
+        'user-123',
+        expect.stringMatching(/^[a-zA-Z0-9]{8}$/),
+      );
+      expect(result?.data).toEqual({ password: newPassword });
+    });
+
+    it('should reject callers without the member update permission', async () => {
+      vi.mocked(checkPermissionOnServer).mockResolvedValue({
+        success: false,
+        error: null,
+      });
+
+      const result = await resetAccessViewPasswordAction({
+        userId: 'user-123',
+        memberId: 'member-123',
+      });
+
+      expect(result?.serverError).toBe(
+        'Permission denied: Du bist nicht befugt User zu aktualisieren',
+      );
+      expect(setPasswordAndRevokeSessions).not.toHaveBeenCalled();
+    });
+
+    it('should reject members that do not belong to the active fairteiler', async () => {
+      vi.mocked(loadMemberById).mockResolvedValue(undefined);
+
+      const result = await resetAccessViewPasswordAction({
+        userId: 'user-123',
+        memberId: 'member-123',
+      });
+
+      expect(result?.serverError).toBe(
+        'Permission denied: Das ausgewählte Zugangsprofil gehört nicht zu diesem Fairteiler.',
+      );
+      expect(setPasswordAndRevokeSessions).not.toHaveBeenCalled();
+    });
+
+    it('should reject when the userId does not match the member record', async () => {
+      const result = await resetAccessViewPasswordAction({
+        userId: 'other-user',
+        memberId: 'member-123',
+      });
+
+      expect(result?.serverError).toBe(
+        'Permission denied: Das ausgewählte Zugangsprofil gehört nicht zu diesem Fairteiler.',
+      );
+      expect(setPasswordAndRevokeSessions).not.toHaveBeenCalled();
+    });
+
+    it.each([MemberRolesEnum.MEMBER, MemberRolesEnum.DISABLED])(
+      'should reject members with role %s',
+      async (role) => {
+        vi.mocked(loadMemberById).mockResolvedValue({
+          id: 'member-123',
+          userId: 'user-123',
+          organizationId: 'fairteiler-123',
+          role,
+          createdAt: new Date(),
+        });
+
+        const result = await resetAccessViewPasswordAction({
+          userId: 'user-123',
+          memberId: 'member-123',
+        });
+
+        expect(result?.serverError).toBe(
+          'Permission denied: Das ausgewählte Zugangsprofil gehört nicht zu diesem Fairteiler.',
+        );
+        expect(setPasswordAndRevokeSessions).not.toHaveBeenCalled();
+      },
+    );
+
+    it('should fail when the access view has no credential account', async () => {
+      vi.mocked(setPasswordAndRevokeSessions).mockResolvedValue(false);
+
+      const result = await resetAccessViewPasswordAction({
+        userId: 'user-123',
+        memberId: 'member-123',
+      });
+
+      expect(result?.serverError).toBeDefined();
+      expect(result?.data).toBeUndefined();
     });
   });
 
