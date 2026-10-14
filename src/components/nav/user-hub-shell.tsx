@@ -1,11 +1,10 @@
 import { Dock } from '@/components/ui/dock';
 import { DockButton } from '@/components/ui/dock-button';
-import { Separator } from '@/components/ui/separator';
+import { FairteilerDockButton } from './fairteiler-dock-button';
 
 // The onboarding gate lives in `src/proxy.ts`, so this shell stays static
 // and can prerender its PPR shell. The middleware guarantees any request that
-// reaches here is authenticated and past onboarding, so the dock renders
-// unconditionally.
+// reaches here is authenticated and past onboarding.
 export function UserHubShell({
   children,
   nav,
@@ -29,8 +28,7 @@ export function UserHubShell({
           <DockButton href='/hub/user/history' icon='History' />
           <DockButton href='/hub/user/feedback' icon='MessageCircle' />
           <DockButton href='/hub/user/settings' icon='Settings2' />
-          <Separator orientation='vertical' />
-          <DockButton href='/hub/fairteiler/dashboard' icon='Coffee' />
+          <FairteilerDockButton />
         </Dock>
       </div>
     </main>
