@@ -24,6 +24,10 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 
 - Owners, members and employees can record a contribution for an earlier day (up to 365 days back) from the fairteiler Retteformular, so a backlog no longer lands as one spike on the day it is typed in.
 
+### Fixed
+
+- Dashboard milestones no longer pile up as more are reached: achieved milestones form one horizontal stack of caterpillars and medals topped by the latest (hover lists each with its date), followed by the next milestone, and 3–4 digit milestones (100+) fit their badge.
+
 ## [1.1.0] - 2026-07-12
 
 ### Added
