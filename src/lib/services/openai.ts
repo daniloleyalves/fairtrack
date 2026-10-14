@@ -2,10 +2,25 @@ import 'server-only';
 import OpenAI from 'openai';
 import { z } from 'zod';
 
-export const openai =
-  process.env.NEXT_PUBLIC_ENV !== 'testing'
-    ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-    : null;
+const AI_GATEWAY_BASE_URL = 'https://ai-gateway.vercel.sh/v1';
+const aiGatewayApiKey = process.env.AI_GATEWAY_API_KEY;
+
+function createClient(): OpenAI | null {
+  if (process.env.NEXT_PUBLIC_ENV === 'testing') return null;
+  if (aiGatewayApiKey) {
+    return new OpenAI({
+      apiKey: aiGatewayApiKey,
+      baseURL: AI_GATEWAY_BASE_URL,
+    });
+  }
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
+
+export const openai = createClient();
+
+const defaultModel = aiGatewayApiKey
+  ? 'openai/gpt-4.1-mini'
+  : 'gpt-4.1-mini-2025-04-14';
 
 export const userFeedbackDataSchema = z.object({
   recentContributions: z.array(
@@ -118,7 +133,7 @@ export async function generatePersonalizedFeedbackStream(
 
   try {
     const completion = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL ?? 'gpt-4.1-mini-2025-04-14',
+      model: process.env.OPENAI_MODEL ?? defaultModel,
       messages: [
         {
           role: 'system',
