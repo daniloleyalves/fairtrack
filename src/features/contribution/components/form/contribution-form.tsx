@@ -13,6 +13,7 @@ import { useFormAction } from '@/lib/hooks/use-form-action';
 import { usePendingRedirect } from '@/lib/hooks/use-pending-redirect';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { userKeys } from '@/server/user/query-keys';
+import { contributionKeys } from '@/server/contribution/query-keys';
 import { useQueryClient } from '@tanstack/react-query';
 
 const ContributionFormPendingContext = createContext(false);
@@ -60,6 +61,12 @@ export function ContributionForm({
       });
       void queryClient.invalidateQueries({
         queryKey: userKeys.dashboard().queryKey,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: userKeys.contributions().queryKey.slice(0, 2),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: contributionKeys.all().queryKey,
       });
 
       const redirectTo = data?.redirectTo;
