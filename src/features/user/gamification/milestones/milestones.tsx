@@ -39,7 +39,7 @@ export function Milestones({
                   <TooltipTrigger
                     aria-label={`${earlierAchieved.length} frühere Meilensteine`}
                   >
-                    <MilestoneStack count={earlierAchieved.length} />
+                    <MilestoneStack milestones={earlierAchieved} />
                   </TooltipTrigger>
                   <TooltipContent>
                     <AchievementList milestones={earlierAchieved} />
@@ -50,7 +50,7 @@ export function Milestones({
             {latestAchieved && (
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger className='relative'>
+                  <TooltipTrigger>
                     <MilestoneBadge
                       quantity={latestAchieved.quantity}
                       achieved
@@ -65,7 +65,7 @@ export function Milestones({
             {milestoneData.nextMilestone && (
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger className='relative'>
+                  <TooltipTrigger>
                     <MilestoneBadge
                       quantity={milestoneData.nextMilestone.quantity}
                     />
@@ -93,19 +93,27 @@ function AchievementList({ milestones }: { milestones: MilestoneDisplay[] }) {
   ));
 }
 
-function MilestoneStack({ count }: { count: number }) {
-  const layers = Math.min(count, 3);
+const STACK_OFFSET_PX = 14;
+
+function MilestoneStack({ milestones }: { milestones: MilestoneDisplay[] }) {
+  const layers = milestones.slice(-3);
 
   return (
-    <div className='relative size-14'>
-      {Array.from({ length: layers }, (_, i) => (
-        <Image
-          key={i}
-          src={ImageAssets.raupe}
-          alt='Raupe'
-          className='absolute size-12 object-contain'
-          style={{ left: i * 4, top: (layers - 1 - i) * 4 }}
-        />
+    <div
+      className='relative h-14'
+      style={{ width: 56 + (layers.length - 1) * STACK_OFFSET_PX }}
+    >
+      {layers.map((milestone, i) => (
+        <div
+          key={milestone.id}
+          className='absolute top-0'
+          style={{ left: i * STACK_OFFSET_PX }}
+        >
+          <MilestoneBadge
+            quantity={i === layers.length - 1 ? milestone.quantity : undefined}
+            achieved
+          />
+        </div>
       ))}
     </div>
   );
@@ -115,13 +123,13 @@ function MilestoneBadge({
   quantity,
   achieved = false,
 }: {
-  quantity: number;
+  quantity?: number;
   achieved?: boolean;
 }) {
-  const digits = String(quantity).length;
+  const digits = String(quantity ?? '').length;
 
   return (
-    <>
+    <div className='relative'>
       <Image
         src={ImageAssets.raupe}
         alt='Raupe'
@@ -132,13 +140,13 @@ function MilestoneBadge({
       />
       <div
         className={cn(
-          'absolute top-1/2 left-1/2 z-10 flex h-6 min-w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full px-1 font-bold text-white',
+          'absolute top-1/2 left-1/2 z-10 flex h-6 min-w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full px-1 font-bold text-white ring-2 ring-white',
           achieved ? 'bg-yellow-400' : 'bg-gray-400/80',
           digits <= 2 ? 'text-lg' : digits === 3 ? 'text-xs' : 'text-[10px]',
         )}
       >
         {quantity}
       </div>
-    </>
+    </div>
   );
 }

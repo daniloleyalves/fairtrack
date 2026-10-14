@@ -16,7 +16,7 @@ const achieved = (quantity: number) => ({
 });
 
 describe('Milestones', () => {
-  it('shows earlier milestones as one stack before the latest and next', () => {
+  it('stacks earlier milestones with the highest on top', () => {
     const data: MilestoneData = {
       achieved: [10, 25, 50, 100].map(achieved),
       nextMilestone: { id: 'm-250', quantity: 250, isAchieved: false },
@@ -28,7 +28,7 @@ describe('Milestones', () => {
     expect(screen.getByText('250')).toBeInTheDocument();
     expect(screen.queryByText('10')).not.toBeInTheDocument();
     expect(screen.queryByText('25')).not.toBeInTheDocument();
-    expect(screen.queryByText('50')).not.toBeInTheDocument();
+    expect(screen.getByText('50')).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: '3 frühere Meilensteine' }),
     ).toBeInTheDocument();
