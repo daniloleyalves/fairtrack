@@ -15,6 +15,8 @@ import {
 import { Skeleton } from '@components/ui/skeleton';
 import { siteConfig } from '@/lib/config/site-config';
 import { getRecentCheckinsWithinLastMinute } from '@server/contribution/queries';
+import { getActiveMembership } from '@server/fairteiler/queries';
+import { MemberRolesEnum } from '@/lib/auth/auth-permissions';
 import {
   AlertTriangle,
   ArrowRight,
@@ -59,11 +61,16 @@ async function ContributionResult({
     searchParams.submitAsUserId,
   );
 
+  const membership = await getActiveMembership(nextHeaders).catch(() => null);
+  const hasDashboard = membership?.role !== MemberRolesEnum.GUEST;
+
   if (recentCheckins.length === 0) {
-    return <NotFoundDisplay />;
+    return <NotFoundDisplay hasDashboard={hasDashboard} />;
   }
 
-  return <SuccessDisplay checkins={recentCheckins} />;
+  return (
+    <SuccessDisplay checkins={recentCheckins} hasDashboard={hasDashboard} />
+  );
 }
 
 // --- 3. Reusable Layout Component ---
@@ -94,7 +101,13 @@ function ResultCardLayout({
 
 // --- 4. Specific UI Components ---
 
-function SuccessDisplay({ checkins }: { checkins: RecentCheckin[] }) {
+function SuccessDisplay({
+  checkins,
+  hasDashboard,
+}: {
+  checkins: RecentCheckin[];
+  hasDashboard: boolean;
+}) {
   return (
     <ResultCardLayout
       icon={<CheckCircle className='size-16 text-primary' />}
@@ -108,12 +121,14 @@ function SuccessDisplay({ checkins }: { checkins: RecentCheckin[] }) {
             Formular erneut ausfüllen
           </Link>
         </Button>
-        <Button asChild variant='outline' className='w-full' size='lg'>
-          <Link href='/hub/fairteiler/dashboard'>
-            <ArrowRight className='mr-2 size-4' />
-            Weiter zum Dashboard
-          </Link>
-        </Button>
+        {hasDashboard && (
+          <Button asChild variant='outline' className='w-full' size='lg'>
+            <Link href='/hub/fairteiler/dashboard'>
+              <ArrowRight className='mr-2 size-4' />
+              Weiter zum Dashboard
+            </Link>
+          </Button>
+        )}
       </div>
 
       <Accordion type='single' collapsible className='mt-4 w-full'>
@@ -154,7 +169,7 @@ function SuccessDisplay({ checkins }: { checkins: RecentCheckin[] }) {
   );
 }
 
-function NotFoundDisplay() {
+function NotFoundDisplay({ hasDashboard }: { hasDashboard: boolean }) {
   return (
     <ResultCardLayout
       icon={<AlertTriangle className='size-16 text-yellow-500' />}
@@ -168,12 +183,14 @@ function NotFoundDisplay() {
             Erneut versuchen
           </Link>
         </Button>
-        <Button asChild variant='outline' className='w-full' size='lg'>
-          <Link href='/hub/fairteiler/dashboard'>
-            <ArrowRight className='mr-2 size-4' />
-            Weiter zum Dashboard
-          </Link>
-        </Button>
+        {hasDashboard && (
+          <Button asChild variant='outline' className='w-full' size='lg'>
+            <Link href='/hub/fairteiler/dashboard'>
+              <ArrowRight className='mr-2 size-4' />
+              Weiter zum Dashboard
+            </Link>
+          </Button>
+        )}
       </div>
       <CardFooter className='mt-6 w-full justify-center gap-2 border-t px-0 pt-4 text-sm text-muted-foreground'>
         <span>Hilfe benötigt?</span>
