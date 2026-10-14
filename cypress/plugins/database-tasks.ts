@@ -317,7 +317,7 @@ export const databaseTasks = {
     try {
       const preferences = await testDb
         .insert(schema.userPreferences)
-        .values({ userId })
+        .values({ userId, formTableView: 'fast' })
         .onConflictDoNothing()
         .returning();
 

@@ -32,7 +32,12 @@ describe('QR Code Contribution Flow E2E', () => {
     cy.switchContributionMode('fast');
     cy.fixture('contributions').then((contributions) => {
       cy.addContributionRow();
-      cy.fillContributionRow(0, contributions.fastModeContributions[0]);
+      cy.get('table tbody tr').its('length').as('rowCount');
+      cy.get('table tbody tr').then(($rows) => {
+        for (let index = 0; index < $rows.length; index++) {
+          cy.fillContributionRow(index, contributions.fastModeContributions[0]);
+        }
+      });
       cy.get('button[type="submit"]').contains('Absenden').click();
     });
     expectPathAfterSubmit(expectedPath);
@@ -78,8 +83,12 @@ describe('QR Code Contribution Flow E2E', () => {
 
             cy.task('getCheckinsByFairteiler', fairteiler.id).then(
               (checkins) => {
-                expect(checkins as Checkin[]).to.have.length(1);
-                expect((checkins as Checkin[])[0].userId).to.equal(guest.id);
+                cy.get<number>('@rowCount').then((rowCount) => {
+                  expect(checkins as Checkin[]).to.have.length(rowCount);
+                });
+                (checkins as Checkin[]).forEach((checkin) =>
+                  expect(checkin.userId).to.equal(guest.id),
+                );
               },
             );
           });
@@ -123,9 +132,11 @@ describe('QR Code Contribution Flow E2E', () => {
 
                 cy.task('getCheckinsByFairteiler', fairteiler.id).then(
                   (checkins) => {
-                    expect(checkins as Checkin[]).to.have.length(1);
-                    expect((checkins as Checkin[])[0].userId).to.equal(
-                      foodsaver.id,
+                    cy.get<number>('@rowCount').then((rowCount) => {
+                      expect(checkins as Checkin[]).to.have.length(rowCount);
+                    });
+                    (checkins as Checkin[]).forEach((checkin) =>
+                      expect(checkin.userId).to.equal(foodsaver.id),
                     );
                   },
                 );

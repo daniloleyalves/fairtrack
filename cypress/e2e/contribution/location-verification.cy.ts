@@ -94,7 +94,12 @@ describe('Location Verified Contribution E2E', () => {
     cy.switchContributionMode('fast');
     cy.fixture('contributions').then((contributions) => {
       cy.addContributionRow();
-      cy.fillContributionRow(0, contributions.fastModeContributions[0]);
+      cy.get('table tbody tr').its('length').as('rowCount');
+      cy.get('table tbody tr').then(($rows) => {
+        for (let index = 0; index < $rows.length; index++) {
+          cy.fillContributionRow(index, contributions.fastModeContributions[0]);
+        }
+      });
       cy.get('button[type="submit"]').contains('Absenden').click();
     });
   }
@@ -105,9 +110,11 @@ describe('Location Verified Contribution E2E', () => {
         fillAndSubmitOneContribution();
         expectSuccessPage();
         cy.task('getCheckinsByFairteiler', fairteiler.id).then((checkins) => {
-          expect(checkins as LocatedCheckin[]).to.have.length(1);
-          expect((checkins as LocatedCheckin[])[0].userId).to.equal(
-            foodsaver.id,
+          cy.get<number>('@rowCount').then((rowCount) => {
+            expect(checkins as LocatedCheckin[]).to.have.length(rowCount);
+          });
+          (checkins as LocatedCheckin[]).forEach((checkin) =>
+            expect(checkin.userId).to.equal(foodsaver.id),
           );
         });
       },
