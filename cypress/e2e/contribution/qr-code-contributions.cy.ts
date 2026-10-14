@@ -31,13 +31,15 @@ describe('QR Code Contribution Flow E2E', () => {
     cy.contains('Retteformular').should('be.visible');
     cy.switchContributionMode('fast');
     cy.fixture('contributions').then((contributions) => {
-      // The user form re-renders its rows shortly after loading.
-      cy.wait(1000);
       cy.addContributionRow();
       cy.get('[data-cy^="quantity-incrementer-"]').its('length').as('rowCount');
       cy.get<number>('@rowCount').then((rowCount) => {
         for (let index = 0; index < rowCount; index++) {
-          cy.fillContributionRow(index, contributions.fastModeContributions[0]);
+          cy.fillContributionRow(
+            index,
+            contributions.fastModeContributions[0],
+            { blur: true },
+          );
         }
       });
       cy.get('button[type="submit"]').contains('Absenden').click();
