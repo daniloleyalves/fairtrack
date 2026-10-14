@@ -77,7 +77,7 @@ function AchievementList({ milestones }: { milestones: MilestoneDisplay[] }) {
   ));
 }
 
-const STACK_OFFSET_PX = 14;
+const STACK_OFFSET_PX = 8;
 
 function MilestoneStack({ milestones }: { milestones: MilestoneDisplay[] }) {
   const layers = milestones.slice(-3);

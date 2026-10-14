@@ -19,15 +19,20 @@ export function UserDashboardGridSkeleton() {
 
       {/* Milestones */}
       <div className='order-2 col-span-12 md:order-3 md:col-span-2 lg:col-span-1'>
-        <Card className='h-full p-4'>
-          <Skeleton variant='onCard' className='h-6 rounded-md' />
-          <div className='mt-4 space-y-3'>
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className='flex flex-col items-center gap-2'>
-                <Skeleton variant='onCard' className='size-8 rounded-full' />
-                <Skeleton variant='onCard' className='h-4 w-full rounded-md' />
-              </div>
-            ))}
+        <Card className='h-full items-center gap-0 px-2 py-4'>
+          <Skeleton variant='onCard' className='h-4 w-20 rounded-md' />
+          <Skeleton variant='onCard' className='mt-2 h-3 w-14 rounded-md' />
+          <div className='mt-4 flex items-center justify-center gap-2 md:flex-col'>
+            <div className='flex'>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton
+                  key={i}
+                  variant='onCard'
+                  className='-ml-10 size-12 rounded-full border-2 border-white first:ml-0'
+                />
+              ))}
+            </div>
+            <Skeleton variant='onCard' className='size-12 rounded-full' />
           </div>
         </Card>
       </div>
