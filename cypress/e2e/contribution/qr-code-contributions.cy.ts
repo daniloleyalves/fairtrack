@@ -29,7 +29,12 @@ describe('QR Code Contribution Flow E2E', () => {
 
   function fillAndSubmitOneContribution(expectedPath: string) {
     cy.contains('Retteformular').should('be.visible');
-    cy.switchContributionMode('fast');
+    // Fast mode comes from the test user's preferences once they load.
+    cy.get('button[id="tableView-mode"]').should(
+      'have.attr',
+      'data-state',
+      'checked',
+    );
     cy.fixture('contributions').then((contributions) => {
       cy.addContributionRow();
       cy.get('[data-cy^="quantity-incrementer-"]').its('length').as('rowCount');
