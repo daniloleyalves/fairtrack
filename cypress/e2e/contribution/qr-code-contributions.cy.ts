@@ -2,6 +2,8 @@
 
 type Checkin = { userId: string };
 
+const SCAN_COOKIE = 'fairtrack_qr_scan';
+
 describe('QR Code Contribution Flow E2E', () => {
   beforeEach(() => {
     cy.cleanDatabase();
@@ -44,6 +46,7 @@ describe('QR Code Contribution Flow E2E', () => {
 
             cy.clearCookies();
             cy.visit(`/q/${token}`);
+            cy.getCookie(SCAN_COOKIE).should('exist');
 
             cy.url().should('match', /\/scan$/);
             cy.contains('QR Fairteiler').should('be.visible');
@@ -51,6 +54,7 @@ describe('QR Code Contribution Flow E2E', () => {
             cy.contains('a', 'Als Gast fortfahren').click();
 
             cy.url().should('include', '/scan/gast');
+            cy.getCookie(SCAN_COOKIE).should('exist');
             fillAndSubmitOneContribution();
 
             cy.url({ timeout: 15000 }).should('include', '/scan/danke');
@@ -83,6 +87,7 @@ describe('QR Code Contribution Flow E2E', () => {
 
                 cy.clearCookies();
                 cy.visit(`/q/${token}`);
+                cy.getCookie(SCAN_COOKIE).should('exist');
 
                 cy.contains('Als Gast fortfahren').should('not.exist');
                 cy.get('a[href^="/sign-in?callbackUrl"]').click();
@@ -95,6 +100,7 @@ describe('QR Code Contribution Flow E2E', () => {
                   'include',
                   `/hub/user/contribution?fairteilerSlug=${slug}`,
                 );
+                cy.getCookie(SCAN_COOKIE).should('exist');
                 cy.contains('QR-Code gescannt').should('be.visible');
                 fillAndSubmitOneContribution();
 
