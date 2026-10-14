@@ -37,12 +37,14 @@ export function AccessViewTableActions({ member }: { member: Member }) {
 }
 
 function ResetPasswordAction({ member }: { member: Member }) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [newPassword, setNewPassword] = useState<string | null>(null);
   const resetPassword = useFormAction(
     resetAccessViewPasswordAction,
     undefined,
     {
       onSuccess: (data) => {
+        setConfirmOpen(false);
         if (data) setNewPassword(data.password);
       },
     },
@@ -62,6 +64,8 @@ function ResetPasswordAction({ member }: { member: Member }) {
         <Tooltip>
           <TooltipTrigger asChild>
             <ConfirmModal
+              open={confirmOpen}
+              onOpenChange={setConfirmOpen}
               title='Passwort zurücksetzen?'
               description='Es wird ein neues Passwort erzeugt. Das alte Passwort ist danach ungültig und alle Geräte, die mit diesem Profil angemeldet sind, werden abgemeldet.'
               actionTitle='Zurücksetzen'
