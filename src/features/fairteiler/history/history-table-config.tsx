@@ -16,7 +16,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { formatNumber } from '@/lib/utils';
-import { VerificationMethod, vContribution } from '@/server/db/db-types';
+import { vContribution } from '@/server/db/db-types';
 import { getVersionHistoryByCheckinId } from '@/server/contribution/queries';
 import { contributionKeys } from '@/server/contribution/query-keys';
 import { useQueryClient } from '@tanstack/react-query';
@@ -28,12 +28,6 @@ import { useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { HistoryEditModal } from './components/history-edit-modal';
 import { HistoryVersionHistory } from './components/history-version-history';
-
-export const verificationLabels: Record<VerificationMethod, string> = {
-  qr: 'QR-Code',
-  location: 'Standort',
-  staff: 'Team vor Ort',
-};
 
 export type ContributorAccessType = 'guest' | 'employee' | 'disabled' | 'user';
 
@@ -177,19 +171,6 @@ export const columns: ColumnDef<vContribution>[] = [
     header: 'Zugang',
     accessorFn: getContributorAccessType,
     filterFn: arrayIncludesFilter,
-  },
-  {
-    id: 'verification',
-    header: 'Bestätigt durch',
-    accessorFn: (row) => row.verifiedVia ?? null,
-    cell: ({ row }) => {
-      const verifiedVia = row.original.verifiedVia;
-      return (
-        <span className='text-muted-foreground'>
-          {verifiedVia ? verificationLabels[verifiedVia] : '–'}
-        </span>
-      );
-    },
   },
   {
     id: 'quantity',

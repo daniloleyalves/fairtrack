@@ -17,7 +17,6 @@ import { attempt } from '@/lib/attempt';
 import { defaultDateRange } from '@/lib/config/site-config';
 import type { ContributionItem } from '@features/contribution/models/contribution';
 import { db } from '../db/drizzle';
-import type { VerificationMethod } from '../db/db-types';
 import {
   checkin,
   contributionVersionHistory,
@@ -49,7 +48,6 @@ export async function checkinContribution(
   fairteilerId: string,
   userId: string,
   payload: ContributionItem[],
-  verifiedVia: VerificationMethod,
   createdAt?: Date,
 ) {
   const insertedFoods = [];
@@ -77,7 +75,6 @@ export async function checkinContribution(
         foodId: c.foodId,
         fairteilerId: fairteilerId,
         quantity: c.quantity,
-        verifiedVia,
         ...(createdAt && { createdAt }),
       });
 
@@ -304,7 +301,6 @@ export async function loadContributions({
       contributorEmail: vContributions.userEmail,
       contributorImage: vContributions.userImage,
       contributorIsAnonymous: vContributions.userIsAnonymous,
-      verifiedVia: vContributions.verifiedVia,
       contributorRole: member.role,
       fairteilerId: vContributions.fairteilerId,
       fairteilerName: vContributions.fairteilerName,

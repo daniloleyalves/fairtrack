@@ -32,7 +32,7 @@ import {
   QR_GUEST_MAX_TOTAL_QUANTITY,
   SCAN_GUEST_SUCCESS_PATH,
 } from '../qr-code/constants';
-import { resolveContributionVerification } from './verification';
+import { assertContributionVerified } from './verification';
 import { checkPermissionOnServer } from '@/lib/auth/auth';
 import { ANONYMOUS_USER_NAME } from '@/lib/auth/auth-helpers';
 import {
@@ -99,7 +99,7 @@ export const submitContributionAction = authedAction
       throw new NotFoundError('fairteiler');
     }
 
-    const verifiedVia = await resolveContributionVerification({
+    await assertContributionVerified({
       fairteiler,
       user: ctx.session.user,
       location: parsedInput.config.location,
@@ -132,7 +132,6 @@ export const submitContributionAction = authedAction
       parsedInput.config.fairteilerId,
       contributingUserId,
       parsedInput.contributions,
-      verifiedVia,
       createdAt,
     );
 
@@ -204,7 +203,6 @@ export const submitQrGuestContributionAction = action
       fairteilerId,
       qrCode.guestAccessViewId,
       contributions,
-      'qr',
     );
 
     updateTag(PUBLIC_TOTAL_QUANTITY_TAG);

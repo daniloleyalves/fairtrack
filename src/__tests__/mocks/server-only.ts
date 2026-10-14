@@ -201,7 +201,6 @@ export const mockCheckins = [
     foodId: 'food-789',
     quantity: 2.0,
     shelfLife: new Date('2023-09-15T12:00:00Z'),
-    verifiedVia: null,
     createdAt: new Date('2023-09-01T09:30:00Z'),
     food: {
       id: 'food-123',
@@ -231,7 +230,6 @@ export const mockCheckins = [
     foodId: 'food-123',
     quantity: 5.0,
     shelfLife: new Date('2023-09-15T12:00:00Z'),
-    verifiedVia: null,
     createdAt: new Date('2023-09-01T09:30:00Z'),
     food: {
       id: 'food-234',
@@ -277,7 +275,6 @@ export const mockContributions = {
       contributorEmail: 'alice@example.com',
       contributorImage: 'https://example.com/avatar.png',
       contributorIsAnonymous: false,
-      verifiedVia: null,
       contributorRole: null,
       fairteilerId: 'fairteiler-456',
       fairteilerName: 'Community Fridge Berlin',
@@ -301,7 +298,6 @@ export const mockContributions = {
       contributorEmail: 'bob@example.com',
       contributorImage: 'https://example.com/avatar2.png',
       contributorIsAnonymous: false,
-      verifiedVia: null,
       contributorRole: null,
       fairteilerId: 'fairteiler-456',
       fairteilerName: 'Community Fridge Berlin',

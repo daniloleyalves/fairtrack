@@ -160,7 +160,6 @@ export function HistoryTable({
         ...prev,
         company: false,
         origin: false,
-        verification: false,
         contributor: false,
       }));
     } else {
@@ -168,7 +167,6 @@ export function HistoryTable({
         ...prev,
         company: true,
         origin: true,
-        verification: true,
         contributor: true,
       }));
     }

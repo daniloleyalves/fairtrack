@@ -98,7 +98,7 @@ async function ScanChoice() {
             </li>
           </ul>
           {session ? (
-            <Button asChild size='lg'>
+            <Button asChild>
               <Link href={contributionPath}>
                 Weiter als {session.user.firstName ?? session.user.name}
                 <ArrowRight className='size-4' />
@@ -106,10 +106,10 @@ async function ScanChoice() {
             </Button>
           ) : (
             <div className='flex flex-col gap-2 sm:flex-row'>
-              <Button asChild size='lg' className='flex-1'>
+              <Button asChild className='sm:flex-1'>
                 <Link href={signInPath}>Anmelden</Link>
               </Button>
-              <Button asChild size='lg' variant='outline' className='flex-1'>
+              <Button asChild variant='outline' className='sm:flex-1'>
                 <Link href='/sign-up'>Kostenlos registrieren</Link>
               </Button>
             </div>
@@ -139,7 +139,7 @@ async function ScanChoice() {
             </div>
           </CardHeader>
           <CardContent>
-            <Button asChild size='lg' variant='outline' className='w-full'>
+            <Button asChild variant='outline' className='w-full'>
               <Link href={SCAN_GUEST_PATH}>
                 Als Gast fortfahren
                 <ArrowRight className='size-4' />

@@ -5,7 +5,6 @@ import { loadFairteilerMembership } from '../fairteiler/dal';
 import { loadActiveQrCodeById } from '../qr-code/dal';
 import { readScanProof } from '../qr-code/scan-proof';
 import { ValidationError } from '../error-handling';
-import type { VerificationMethod } from '../db/db-types';
 
 export interface ContributorLocation {
   latitude: number;
@@ -24,7 +23,7 @@ export async function hasValidScanProof(fairteilerId: string) {
   return qrCode?.fairteilerId === fairteilerId;
 }
 
-export async function resolveContributionVerification({
+export async function assertContributionVerified({
   fairteiler,
   user,
   location,
@@ -32,18 +31,18 @@ export async function resolveContributionVerification({
   fairteiler: { id: string; geoLat: string; geoLng: string };
   user: { id: string; role?: string | null };
   location?: ContributorLocation | null;
-}): Promise<VerificationMethod> {
-  if (user.role === 'admin') return 'staff';
+}): Promise<void> {
+  if (user.role === 'admin') return;
 
   const membership = await loadFairteilerMembership(fairteiler.id, user.id);
   if (
     membership &&
     (membership.role as MemberRolesEnum) !== MemberRolesEnum.DISABLED
   ) {
-    return 'staff';
+    return;
   }
 
-  if (await hasValidScanProof(fairteiler.id)) return 'qr';
+  if (await hasValidScanProof(fairteiler.id)) return;
 
   if (location) {
     const target = {
@@ -55,7 +54,7 @@ export async function resolveContributionVerification({
       Number.isFinite(target.longitude) &&
       isAtLocation(location, target, location.accuracy)
     ) {
-      return 'location';
+      return;
     }
   }
 

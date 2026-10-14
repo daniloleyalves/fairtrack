@@ -9,6 +9,7 @@ import { Separator } from '@components/ui/separator';
 import { Settings } from 'lucide-react';
 import { FairteilerDisableSkeleton } from '@/features/fairteiler/preferences/components/fairteiler-disable-wrapper';
 import { CatalogSelectionSkeleton } from '@/features/fairteiler/preferences/components/catalog-selection-skeleton';
+import { QrCodeCardSkeleton } from '@/features/qr-code/components/qr-code-card';
 import { TutorialCardSkeleton } from '@/features/fairteiler/tutorial/components/tutorial-card-skeleton';
 
 export default function FairteilerPreferencesLoading() {
@@ -30,6 +31,7 @@ export default function FairteilerPreferencesLoading() {
       </div>
 
       <FairteilerDisableSkeleton />
+      <QrCodeCardSkeleton />
       <TutorialCardSkeleton />
 
       <Card className='h-max'>

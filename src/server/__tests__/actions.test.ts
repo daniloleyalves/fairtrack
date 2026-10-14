@@ -453,7 +453,6 @@ describe('Server Actions', () => {
           mockFairteiler.id,
           'user-123',
           mockContributionData.contributions,
-          'staff',
           undefined,
         );
         expect(result?.data).toEqual({
@@ -495,7 +494,6 @@ describe('Server Actions', () => {
             'fairteiler-123',
             'user-123',
             mockContributionData.contributions,
-            'staff',
             new Date('2026-10-05T12:00:00Z'),
           );
         });
@@ -508,7 +506,6 @@ describe('Server Actions', () => {
             'fairteiler-123',
             'user-123',
             mockContributionData.contributions,
-            'staff',
             undefined,
           );
         });
@@ -587,7 +584,6 @@ describe('Server Actions', () => {
           'fairteiler-123',
           'access-view-user-9',
           submitAsData.contributions,
-          'staff',
           undefined,
         );
         expect(result?.data?.redirectTo).toContain(
@@ -881,7 +877,6 @@ describe('Server Actions', () => {
           mockFairteiler.id,
           'user-123',
           largeContributionsArray,
-          'staff',
           undefined,
         );
         expect(result?.data).toEqual({
@@ -958,7 +953,6 @@ describe('Server Actions', () => {
             contributorImage: null,
             contributorEmail: 'test@example.com',
             contributorIsAnonymous: false,
-            verifiedVia: null,
             contributorRole: null,
             fairteilerId: 'fairteiler-1',
             fairteilerName: 'Test Fairteiler',
@@ -1201,7 +1195,6 @@ describe('QR and location verification', () => {
         mockFairteiler.id,
         'foodsaver-1',
         [contribution],
-        'qr',
         undefined,
       );
     });
@@ -1220,7 +1213,6 @@ describe('QR and location verification', () => {
         mockFairteiler.id,
         'foodsaver-1',
         [contribution],
-        'location',
         undefined,
       );
     });
@@ -1261,7 +1253,6 @@ describe('QR and location verification', () => {
         mockFairteiler.id,
         'guest-view-1',
         [contribution],
-        'qr',
       );
       expect(loadAuthenticatedSession).not.toHaveBeenCalled();
     });

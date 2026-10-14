@@ -23,7 +23,6 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 ### Added
 
 - QR codes for unattended fairteilers: owners create and print them under Präferenzen. After scanning, people contribute with their own account (sign-in or sign-up continues straight to the form) or, if the owner linked one, through a guest access view without signing in.
-- Every contribution now records how it was confirmed at the fairteiler (QR code, location or team on site), shown as "Bestätigt durch" in the history.
 - Owners, members and employees can record a contribution for an earlier day (up to 365 days back) from the fairteiler Retteformular, so a backlog no longer lands as one spike on the day it is typed in.
 
 ### Changed

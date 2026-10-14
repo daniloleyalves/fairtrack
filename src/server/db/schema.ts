@@ -816,12 +816,6 @@ export const foodRelations = relations(food, ({ one, many }) => ({
   checkins: many(checkin),
 }));
 
-export const verificationMethodEnum = pgEnum('verification_method', [
-  'qr',
-  'location',
-  'staff',
-]);
-
 export const checkin = pgTable(
   'checkin',
   {
@@ -841,7 +835,6 @@ export const checkin = pgTable(
       .references(() => food.id, { onDelete: 'cascade' }),
     quantity: real('quantity').notNull(),
     shelfLife: timestamp('shelf_life', { withTimezone: true }),
-    verifiedVia: verificationMethodEnum('verified_via'),
     createdAt: timestamp('created_at')
       .notNull()
       .default(sql`now()`),
@@ -957,7 +950,6 @@ export const vContributions = pgView('v_contributions', {
   userId: text('user_id').notNull(),
   quantity: real('quantity').notNull(),
   shelfLife: timestamp('shelf_life', { withTimezone: true }),
-  verifiedVia: verificationMethodEnum('verified_via'),
   foodId: text('food_id'),
   foodTitle: text('food_title'),
   foodCool: boolean('food_cool'),
@@ -989,7 +981,6 @@ export const vContributions = pgView('v_contributions', {
         c.user_id AS user_id,
         c.quantity AS quantity,
         c.shelf_life AS shelf_life,
-        c.verified_via AS verified_via,
         f.id AS food_id,
         f.title AS food_title,
         f.cool AS food_cool,

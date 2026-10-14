@@ -14,13 +14,8 @@ import {
   CardTitle,
 } from '@ui/card';
 import { Input } from '@ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@ui/select';
+import { Checkbox } from '@ui/checkbox';
+import { Label } from '@ui/label';
 import { Skeleton } from '@ui/skeleton';
 import { ConfirmModal } from '@/components/confirm-modal';
 import { invokeAction } from '@/lib/hooks/use-form-action';
@@ -36,8 +31,6 @@ import { getQrCodes, FairteilerQrCodeListItem } from '@/server/qr-code/queries';
 import { qrCodeKeys } from '@/server/qr-code/query-keys';
 import { qrCodeUrl } from '@/server/qr-code/constants';
 import { downloadBlob, renderQrPoster } from '../lib/qr-poster';
-
-const NO_GUEST = 'none';
 
 export function QrCodeCard() {
   const queryClient = useQueryClient();
@@ -64,7 +57,7 @@ export function QrCodeCard() {
     mutationFn: () =>
       invokeAction(createQrCodeAction, {
         label: null,
-        guestAccessViewId: guestAccessViews[0]?.id ?? null,
+        guestAccessViewId: null,
       }),
     onSuccess: () => toast.success('QR-Code erstellt!'),
     onError: (error) => toast.error(error.message),
@@ -72,7 +65,7 @@ export function QrCodeCard() {
   });
 
   if (qrCodesQuery.isPending || fairteilerQuery.isPending) {
-    return <Skeleton className='h-40 w-full rounded-xl bg-secondary' />;
+    return <QrCodeCardSkeleton />;
   }
   if (qrCodesQuery.error) throw qrCodesQuery.error;
   if (fairteilerQuery.error) throw fairteilerQuery.error;
@@ -82,19 +75,7 @@ export function QrCodeCard() {
   return (
     <Card>
       <CardHeader className='flex flex-col justify-between gap-4 sm:flex-row'>
-        <div className='flex flex-col gap-3 xs:flex-row'>
-          <div className='flex size-10 min-w-10 items-center justify-center rounded-lg bg-primary/10'>
-            <QrCode className='size-5 text-primary' />
-          </div>
-          <div>
-            <CardTitle>QR-Codes am Fairteiler</CardTitle>
-            <CardDescription>
-              Für Fairteiler ohne Personal vor Ort: Wer den QR-Code scannt,
-              trägt mit dem eigenen Konto oder über deinen Gastzugang bei, und
-              der Beitrag gilt als vor Ort bestätigt.
-            </CardDescription>
-          </div>
-        </div>
+        <QrCodeCardTitle />
         <Button
           onClick={() => create.mutate()}
           disabled={create.isPending}
@@ -128,6 +109,35 @@ export function QrCodeCard() {
           )}
         </CardContent>
       )}
+    </Card>
+  );
+}
+
+function QrCodeCardTitle() {
+  return (
+    <div className='flex flex-col gap-3 xs:flex-row'>
+      <div className='flex size-10 min-w-10 items-center justify-center rounded-lg bg-primary/10'>
+        <QrCode className='size-5 text-primary' />
+      </div>
+      <div>
+        <CardTitle>QR-Codes am Fairteiler</CardTitle>
+        <CardDescription>
+          Für Fairteiler ohne Personal vor Ort: Wer den QR-Code scannt, trägt
+          mit dem eigenen Konto oder als Gast bei, und der Beitrag gilt als vor
+          Ort bestätigt.
+        </CardDescription>
+      </div>
+    </div>
+  );
+}
+
+export function QrCodeCardSkeleton() {
+  return (
+    <Card>
+      <CardHeader className='flex flex-col justify-between gap-4 sm:flex-row'>
+        <QrCodeCardTitle />
+        <Skeleton className='h-9 w-40 self-start rounded-md bg-secondary' />
+      </CardHeader>
     </Card>
   );
 }
@@ -218,28 +228,26 @@ function QrCodeRow({
           onChange={(event) => setLabel(event.target.value)}
           onBlur={saveLabel}
         />
-        <Select
-          value={guestAccessViewId ?? NO_GUEST}
-          onValueChange={(value) =>
-            update.mutate({
-              label: qrCode.label,
-              guestAccessViewId: value === NO_GUEST ? null : value,
-            })
-          }
-          disabled={update.isPending}
-        >
-          <SelectTrigger aria-label='Gastzugang nach dem Scannen'>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={NO_GUEST}>Nur mit eigenem Konto</SelectItem>
-            {guestAccessViews.map((guest) => (
-              <SelectItem key={guest.id} value={guest.id}>
-                Auch als Gast: {guest.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className='flex items-center gap-2'>
+          <Checkbox
+            id={`qr-guest-${qrCode.id}`}
+            checked={guestAccessViewId !== null}
+            onCheckedChange={(checked) =>
+              update.mutate({
+                label: qrCode.label,
+                guestAccessViewId:
+                  checked === true ? (guestAccessViews[0]?.id ?? null) : null,
+              })
+            }
+            disabled={
+              update.isPending ||
+              (guestAccessViewId === null && guestAccessViews.length === 0)
+            }
+          />
+          <Label htmlFor={`qr-guest-${qrCode.id}`}>
+            Beiträge als Gast ermöglichen
+          </Label>
+        </div>
         <div className='flex flex-wrap gap-2'>
           <Button
             size='sm'

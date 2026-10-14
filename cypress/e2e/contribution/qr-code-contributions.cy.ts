@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-type Checkin = { userId: string; verifiedVia: string | null };
+type Checkin = { userId: string };
 
 describe('QR Code Contribution Flow E2E', () => {
   beforeEach(() => {
@@ -60,7 +60,6 @@ describe('QR Code Contribution Flow E2E', () => {
               (checkins) => {
                 expect(checkins as Checkin[]).to.have.length(1);
                 expect((checkins as Checkin[])[0].userId).to.equal(guest.id);
-                expect((checkins as Checkin[])[0].verifiedVia).to.equal('qr');
               },
             );
           });
@@ -109,9 +108,6 @@ describe('QR Code Contribution Flow E2E', () => {
                     expect(checkins as Checkin[]).to.have.length(1);
                     expect((checkins as Checkin[])[0].userId).to.equal(
                       foodsaver.id,
-                    );
-                    expect((checkins as Checkin[])[0].verifiedVia).to.equal(
-                      'qr',
                     );
                   },
                 );

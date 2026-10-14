@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   NOT_VERIFIED_MESSAGE,
-  resolveContributionVerification,
+  assertContributionVerified,
 } from '../verification';
 import { loadFairteilerMembership } from '../../fairteiler/dal';
 import { loadActiveQrCodeById } from '../../qr-code/dal';
@@ -38,7 +38,7 @@ function activeQrCode(fairteilerId = fairteiler.id) {
   >;
 }
 
-describe('resolveContributionVerification', () => {
+describe('assertContributionVerified', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(loadFairteilerMembership).mockResolvedValue(undefined);
@@ -48,24 +48,24 @@ describe('resolveContributionVerification', () => {
 
   it('trusts platform admins', async () => {
     await expect(
-      resolveContributionVerification({
+      assertContributionVerified({
         fairteiler,
         user: { id: 'admin-1', role: 'admin' },
       }),
-    ).resolves.toBe('staff');
+    ).resolves.toBeUndefined();
   });
 
   it('trusts active members of the fairteiler', async () => {
     vi.mocked(loadFairteilerMembership).mockResolvedValue(member('employee'));
     await expect(
-      resolveContributionVerification({ fairteiler, user: foodsaver }),
-    ).resolves.toBe('staff');
+      assertContributionVerified({ fairteiler, user: foodsaver }),
+    ).resolves.toBeUndefined();
   });
 
   it('does not trust disabled access views', async () => {
     vi.mocked(loadFairteilerMembership).mockResolvedValue(member('disabled'));
     await expect(
-      resolveContributionVerification({ fairteiler, user: foodsaver }),
+      assertContributionVerified({ fairteiler, user: foodsaver }),
     ).rejects.toThrow(NOT_VERIFIED_MESSAGE);
   });
 
@@ -78,8 +78,8 @@ describe('resolveContributionVerification', () => {
     vi.mocked(loadActiveQrCodeById).mockResolvedValue(activeQrCode());
 
     await expect(
-      resolveContributionVerification({ fairteiler, user: foodsaver }),
-    ).resolves.toBe('qr');
+      assertContributionVerified({ fairteiler, user: foodsaver }),
+    ).resolves.toBeUndefined();
   });
 
   it('ignores a scan from another fairteiler', async () => {
@@ -90,7 +90,7 @@ describe('resolveContributionVerification', () => {
     });
 
     await expect(
-      resolveContributionVerification({ fairteiler, user: foodsaver }),
+      assertContributionVerified({ fairteiler, user: foodsaver }),
     ).rejects.toThrow(NOT_VERIFIED_MESSAGE);
     expect(loadActiveQrCodeById).not.toHaveBeenCalled();
   });
@@ -103,23 +103,23 @@ describe('resolveContributionVerification', () => {
     });
 
     await expect(
-      resolveContributionVerification({ fairteiler, user: foodsaver }),
+      assertContributionVerified({ fairteiler, user: foodsaver }),
     ).rejects.toThrow(NOT_VERIFIED_MESSAGE);
   });
 
   it('accepts a location at the fairteiler', async () => {
     await expect(
-      resolveContributionVerification({
+      assertContributionVerified({
         fairteiler,
         user: foodsaver,
         location: atFairteiler,
       }),
-    ).resolves.toBe('location');
+    ).resolves.toBeUndefined();
   });
 
   it('rejects a location away from the fairteiler', async () => {
     await expect(
-      resolveContributionVerification({
+      assertContributionVerified({
         fairteiler,
         user: foodsaver,
         location: farAway,
@@ -129,7 +129,7 @@ describe('resolveContributionVerification', () => {
 
   it('rejects when there is neither a scan nor a location', async () => {
     await expect(
-      resolveContributionVerification({
+      assertContributionVerified({
         fairteiler,
         user: foodsaver,
         location: null,
@@ -146,11 +146,11 @@ describe('resolveContributionVerification', () => {
     vi.mocked(loadActiveQrCodeById).mockResolvedValue(activeQrCode());
 
     await expect(
-      resolveContributionVerification({
+      assertContributionVerified({
         fairteiler,
         user: foodsaver,
         location: atFairteiler,
       }),
-    ).resolves.toBe('qr');
+    ).resolves.toBeUndefined();
   });
 });
