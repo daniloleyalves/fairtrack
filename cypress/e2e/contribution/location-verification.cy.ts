@@ -83,6 +83,9 @@ describe('Location Verified Contribution E2E', () => {
                 onBeforeLoad: (win) => stubLocation(win, coords),
               });
               cy.contains('Retteformular').should('be.visible');
+              // The not-at-fairteiler notice shifts the form once the location
+              // resolves, so wait for it before clicking anything.
+              cy.contains(/Standort OK|Zu weit entfernt/).should('be.visible');
 
               return cy.wrap({ fairteiler, foodsaver });
             }),
