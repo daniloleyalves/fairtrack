@@ -20,13 +20,24 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-10-15
+
 ### Added
 
 - Announcement banners at the top of the fairteiler area and the user hub. Announcements live in the database with an audience, optional roles and fairteiler, and a start/end window; each user can dismiss them. The first one presents the 1.2.0 highlights to fairteiler owners, members and viewers until 2026-12-01.
 
+### Changed
+
+- The history access filter option "Persönliches Konto" is now called "Nutzerkonto".
+- Expected auth errors are reported to Sentry as warnings, and stale-tab `UnrecognizedActionError`s after a deploy are filtered out.
+
+### Fixed
+
+- The fairteiler sidebar no longer crashes when the session has expired or no active fairteiler is set.
+
 ### Deployment notes
 
-- Needs migration `0045_announcements` (new `announcement` and `announcement_dismissal` tables plus the 1.2.0 announcement row).
+- Production needs migration `0045_announcements` before this release goes live: the fairteiler and user hub layouts query the new `announcement` table. It only adds the `announcement` and `announcement_dismissal` tables plus the 1.2.0 announcement row, so the running 1.2.0 code keeps working on the migrated database.
 
 ## [1.2.0] - 2026-10-15
 
@@ -40,7 +51,7 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 
 ### Changed
 
-- Foodsavers contributing with their own account must either have scanned the fairteiler's QR code or share a location at the fairteiler. The location check now runs on the server instead of only showing a hint.
+- A QR scan now counts as on-site proof for contributions with an account, alongside the existing location check, which is now also enforced on the server.
 - Users who skipped onboarding get the default preferences (wizard view, streaks, quests, AI feedback) until they change a setting, instead of a broken Retteformular.
 - The AI feedback after a contribution runs through Vercel AI Gateway, authenticated by the deployment's Vercel OIDC token. `OPENAI_API_KEY` is now only used outside Vercel (local development).
 - Preview and development deployments upload images to a separate non-production Blob store instead of the production store.
