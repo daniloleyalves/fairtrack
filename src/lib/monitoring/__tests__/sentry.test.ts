@@ -105,6 +105,33 @@ describe('sentryBeforeSend', () => {
     expect(sentryBeforeSend(event)).toBeNull();
   });
 
+  it('drops server actions unknown to a newer deployment', () => {
+    const event = errorEvent({
+      exception: {
+        values: [
+          {
+            type: 'UnrecognizedActionError',
+            value:
+              'Server Action "00e85685de69f24611a76e2cfdce9d0a40d783e2e9" was not found on the server.',
+          },
+        ],
+      },
+    });
+
+    expect(sentryBeforeSend(event)).toBeNull();
+  });
+
+  it('reports missing sessions as warnings instead of errors', () => {
+    const event = errorEvent({
+      level: 'error',
+      exception: {
+        values: [{ type: 'AuthError', value: 'Authentication required.' }],
+      },
+    });
+
+    expect(sentryBeforeSend(event)?.level).toBe('warning');
+  });
+
   it.each(['NetworkError: A network error occurred.', 'Load failed'])(
     'drops dropped-request noise: %s',
     (value) => {

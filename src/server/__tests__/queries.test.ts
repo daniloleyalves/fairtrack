@@ -182,6 +182,12 @@ describe('DTO Layer', () => {
           role: 'owner',
         });
       });
+
+      it('should return null when there is no active membership', async () => {
+        vi.mocked(fairteilerDal.loadActiveMembership).mockResolvedValue(null);
+
+        await expect(getActiveMembership(mockHeaders)).resolves.toBeNull();
+      });
     });
   });
 
