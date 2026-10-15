@@ -134,7 +134,7 @@ describe('Contribution History E2E', () => {
           cy.get('table tbody tr').should('have.length', 2);
 
           cy.contains('button', /^\s*Zugang\s*$/).click();
-          cy.get('[role="option"]').contains('Persönliches Konto').click();
+          cy.get('[role="option"]').contains('Nutzerkonto').click();
           cy.get('body').type('{esc}');
 
           cy.get('table tbody tr').should('have.length', 1);
