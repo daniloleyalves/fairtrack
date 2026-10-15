@@ -3,7 +3,8 @@
 import { Button } from '@/components/ui/button';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { ContributionForm } from './form/contribution-form';
-import { AlertCircle, HelpCircle } from 'lucide-react';
+import { AlertCircle, HelpCircle, MapPinOff } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import ContributionTable from './contribution-table';
 import { ContributionInfos } from './contribution-infos';
 import { usePathname } from 'next/navigation';
@@ -26,7 +27,10 @@ import {
   MemberRolesEnum,
 } from '@/lib/auth/auth-permissions';
 import { AccessViewSelector } from './access-view-selector';
+import { ContributionDatePicker } from './contribution-date-picker';
+import { BACKDATE_ROLES } from '../lib/contribution-date';
 import { useSubmissionSelection } from '../hooks/use-submission-selection';
+import { SCAN_GUEST_SUCCESS_PATH, SCAN_PATH } from '@/server/qr-code/constants';
 
 export function ContributionContent() {
   const isMobile = useIsMobile();
@@ -34,7 +38,8 @@ export function ContributionContent() {
     useState(false);
   const [openContributionInfos, setOpenContributionInfos] = useState(false);
 
-  const { fairteiler, tutorial, user } = useContribution();
+  const { fairteiler, tutorial, user, locationStatus, isScanVerified } =
+    useContribution();
   const fairteilerWithMembers = fairteiler as FairteilerWithMembers;
 
   // Get current user's member record
@@ -55,11 +60,24 @@ export function ContributionContent() {
     useSubmissionSelection(fairteiler.id);
 
   const pathname = usePathname();
-  const isUserContext = pathname.includes('/hub/user/');
+  const isGuestContext = pathname.startsWith(SCAN_PATH);
+  const isUserContext = isGuestContext || pathname.includes('/hub/user/');
+
+  const canBackdate =
+    !isUserContext &&
+    !!currentMemberRecord &&
+    BACKDATE_ROLES.has(currentMemberRecord.role);
+  const [contributionDate, setContributionDate] = useState<string | null>(null);
   // const isFairteilerContext = pathname.includes('/hub/fairteiler/');
 
   const defaultConfig = () => {
-    if (isUserContext) {
+    if (isGuestContext) {
+      return {
+        fairteilerId: fairteiler.id,
+        successRedirect: SCAN_GUEST_SUCCESS_PATH,
+        context: 'guest' as const,
+      };
+    } else if (isUserContext) {
       return {
         fairteilerId: fairteiler.id,
         successRedirect: '/hub/user/contribution/success',
@@ -74,6 +92,7 @@ export function ContributionContent() {
         revalidatePaths: ['/hub/fairteiler/dashboard'],
         context: 'fairteiler' as const,
         submitAsAccessViewId: isOwner ? selectedAccessViewId : undefined,
+        contributionDate: canBackdate ? contributionDate : undefined,
       };
     }
   };
@@ -93,6 +112,13 @@ export function ContributionContent() {
                 accessViews={accessViews}
                 selectedAccessViewId={selectedAccessViewId}
                 onSelectionChange={setSelectedAccessViewId}
+              />
+            )}
+
+            {canBackdate && (
+              <ContributionDatePicker
+                value={contributionDate}
+                onChange={setContributionDate}
               />
             )}
 
@@ -126,6 +152,11 @@ export function ContributionContent() {
             </Button>
           </div>
         </div>
+        {isUserContext &&
+          !isScanVerified &&
+          (locationStatus === 'too-far' ||
+            locationStatus === 'denied' ||
+            locationStatus === 'error') && <NotAtFairteilerNotice />}
         <ContributionForm config={defaultConfig()}>
           <div>
             <ContributionTable />
@@ -142,6 +173,20 @@ export function ContributionContent() {
         setOpen={setOpenContributionInfos}
       />
     </>
+  );
+}
+
+function NotAtFairteilerNotice() {
+  return (
+    <Alert className='bg-card'>
+      <MapPinOff className='size-4' />
+      <AlertTitle>Bist du am Fairteiler?</AlertTitle>
+      <AlertDescription>
+        Beiträge werden nur gespeichert, wenn bestätigt ist, dass du vor Ort
+        bist. Scanne dazu den QR-Code am Fairteiler oder erlaube den
+        Standortzugriff in deinem Browser.
+      </AlertDescription>
+    </Alert>
   );
 }
 

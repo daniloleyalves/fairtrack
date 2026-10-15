@@ -4,10 +4,13 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, MapPin } from 'lucide-react';
 import { LocationIndicator } from './location-indicator';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { SCAN_PATH } from '@/server/qr-code/constants';
 import { useContribution } from '../context/contribution-context';
 
 export function ContributionHeader() {
   const { fairteiler } = useContribution();
+  const isGuestContext = usePathname().startsWith(SCAN_PATH);
 
   return (
     <div className='flex items-center gap-3 rounded-b-lg border-b bg-card p-4 sm:gap-4'>
@@ -17,7 +20,7 @@ export function ContributionHeader() {
         size='sm'
         asChild
       >
-        <Link href='/hub/user/fairteiler-finder'>
+        <Link href={isGuestContext ? SCAN_PATH : '/hub/user/fairteiler-finder'}>
           <ArrowLeft className='size-4' />
           <span className='hidden sm:inline'>Zurück</span>
         </Link>

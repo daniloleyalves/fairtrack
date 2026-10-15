@@ -36,4 +36,23 @@ export function isWithinRadius(
 
 export const DEFAULT_PROXIMITY_RADIUS = 20; // meters
 
+export const MAX_ACCURACY_TOLERANCE = 30;
+
+export function isAtLocation(
+  userLocation: Coordinates,
+  targetLocation: Coordinates,
+  accuracy: number | null | undefined,
+  radiusInMeters: number = DEFAULT_PROXIMITY_RADIUS,
+): boolean {
+  const tolerance = Math.min(
+    Math.max(accuracy ?? 0, 0),
+    MAX_ACCURACY_TOLERANCE,
+  );
+  return isWithinRadius(
+    userLocation,
+    targetLocation,
+    radiusInMeters + tolerance,
+  );
+}
+
 export const DEFAULT_FAIRTEILERSLUG_IN_MAP = 'raupe-immersatt';

@@ -76,6 +76,8 @@ export type TestFairteiler = {
   name?: string;
   slug?: string;
   address?: string;
+  geoLat?: string;
+  geoLng?: string;
 };
 
 export type TestInvitation = {

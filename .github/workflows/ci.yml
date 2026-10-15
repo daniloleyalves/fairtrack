@@ -2,9 +2,9 @@ name: Production CI/CD Pipeline
 
 on:
   push:
-    branches: [master]
+    branches: [master, dev]
   pull_request:
-    branches: [master]
+    branches: [master, dev]
   schedule:
     - cron: '0 3 * * 1' # Runs every Monday at 3:00 AM UTC
   workflow_dispatch:
@@ -184,6 +184,9 @@ jobs:
       TINYMCE_KEY: ${{ secrets.TINYMCE_KEY }}
       NEXT_PUBLIC_MAPBOX_TOKEN: ${{ secrets.NEXT_PUBLIC_MAPBOX_TOKEN }}
     needs: [build]
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.base_ref != 'dev' && github.ref != 'refs/heads/dev')
     # strategy:
     #   matrix:
     #     browser: [chrome, firefox, edge]

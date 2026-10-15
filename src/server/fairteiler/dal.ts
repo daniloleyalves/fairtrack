@@ -45,6 +45,17 @@ export async function loadFairteilerBySlug(fairteilerSlug: string) {
   return data;
 }
 
+export async function loadFairteilerById(fairteilerId: string) {
+  const [error, data] = await attempt(
+    db.query.fairteiler.findFirst({
+      where: eq(fairteiler.id, fairteilerId),
+    }),
+  );
+
+  if (error) handleDatabaseError(error, 'loadFairteilerById');
+  return data;
+}
+
 export async function loadFairteilerMembership(
   fairteilerId: string,
   userId: string,

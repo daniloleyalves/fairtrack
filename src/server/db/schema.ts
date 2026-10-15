@@ -904,6 +904,45 @@ export const contributionVersionHistoryRelations = relations(
   }),
 );
 
+export const fairteilerQrCode = pgTable(
+  'fairteiler_qr_code',
+  {
+    id: text('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    fairteilerId: text('fairteiler_id')
+      .notNull()
+      .references(() => fairteiler.id, { onDelete: 'cascade' }),
+    token: text('token').notNull(),
+    label: text('label'),
+    guestAccessViewId: text('guest_access_view_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at')
+      .notNull()
+      .default(sql`now()`),
+    revokedAt: timestamp('revoked_at'),
+  },
+  (table) => [
+    uniqueIndex('fairteiler_qr_code_token_idx').on(table.token),
+    index('fairteiler_qr_code_fairteiler_id_idx').on(table.fairteilerId),
+  ],
+);
+
+export const fairteilerQrCodeRelations = relations(
+  fairteilerQrCode,
+  ({ one }) => ({
+    fairteiler: one(fairteiler, {
+      fields: [fairteilerQrCode.fairteilerId],
+      references: [fairteiler.id],
+    }),
+    guestAccessView: one(user, {
+      fields: [fairteilerQrCode.guestAccessViewId],
+      references: [user.id],
+    }),
+  }),
+);
+
 export const vContributions = pgView('v_contributions', {
   checkinId: text('checkin_id').notNull(),
   fairteilerId: text('fairteiler_id').notNull(),

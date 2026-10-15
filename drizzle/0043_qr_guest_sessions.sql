@@ -1,0 +1,2 @@
+ALTER TABLE "auth"."session" ADD COLUMN "qr_code_id" text;--> statement-breakpoint
+ALTER TABLE "auth"."session" ADD CONSTRAINT "session_qr_code_id_fairteiler_qr_code_id_fk" FOREIGN KEY ("qr_code_id") REFERENCES "public"."fairteiler_qr_code"("id") ON DELETE cascade ON UPDATE no action;

@@ -86,6 +86,7 @@ export async function getContributions(options?: {
           contributorName: null,
           contributorEmail: null,
           contributorImage: null,
+          contributorRole: null,
         };
       }
 

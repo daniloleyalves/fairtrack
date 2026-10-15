@@ -49,8 +49,21 @@ export const contributionFormSchema = z.object({
     fairteilerId: z.string(),
     successRedirect: z.string().optional(),
     revalidatePaths: z.array(z.string()).optional(),
-    context: z.enum(['fairteiler', 'user', 'admin']).optional(),
+    context: z.enum(['fairteiler', 'user', 'admin', 'guest']).optional(),
     submitAsAccessViewId: z.string().nullable().optional(),
+    location: z
+      .object({
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+        accuracy: z.number().nonnegative().nullable().optional(),
+      })
+      .nullable()
+      .optional(),
+    contributionDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Ungültiges Datum' })
+      .nullable()
+      .optional(),
   }),
 });
 

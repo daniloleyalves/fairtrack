@@ -288,6 +288,34 @@
       "when": 1779468896646,
       "tag": "0040_clear_bcrypt_hashes",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1791838417490,
+      "tag": "0041_qr_codes_and_verification",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1791993686496,
+      "tag": "0042_drop_verified_via",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1791994958575,
+      "tag": "0043_qr_guest_sessions",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1792007688459,
+      "tag": "0044_drop_qr_guest_sessions",
+      "breakpoints": true
     }
   ]
 }

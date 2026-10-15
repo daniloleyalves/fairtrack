@@ -135,6 +135,54 @@ describe('Access View Management E2E', () => {
     });
   });
 
+  it('should reset the password of an access view', () => {
+    const readCredential = (label: string) =>
+      cy
+        .contains('label', label)
+        .parent()
+        .find('span.font-mono')
+        .invoke('text');
+
+    cy.setupUserWithFairteiler({ role: 'owner' }).then(() => {
+      cy.navigateToMembers();
+
+      cy.get('button').contains('Zugangsprofil anlegen').click();
+      cy.get('input[name="name"]').type('Test Employee');
+      cy.get('button[value="employee"]').click();
+      cy.get('button[type="submit"]').contains('Zugangsprofil anlegen').click();
+      cy.contains('Neues Zugangsprofil').should('be.visible', {
+        timeout: 10000,
+      });
+
+      readCredential('E-Mail:').then((email) => {
+        readCredential('Passwort:').then((oldPassword) => {
+          cy.get('button').contains('Fertig').click();
+
+          cy.get('button:has(svg.lucide-key-round)').click();
+          cy.contains('Passwort zurücksetzen?').should('be.visible');
+          cy.get('button').contains('Zurücksetzen').click();
+
+          cy.contains('Neues Passwort', { timeout: 10000 }).should(
+            'be.visible',
+          );
+          readCredential('E-Mail:').should('equal', email);
+          readCredential('Passwort:').then((newPassword) => {
+            expect(newPassword).to.have.length.greaterThan(0);
+            expect(newPassword).not.to.equal(oldPassword);
+
+            cy.get('button').contains('Fertig').click();
+            cy.contains('Neues Passwort').should('not.exist');
+
+            cy.clearCookies();
+            cy.visit('/sign-in');
+            cy.fillTwoStepLoginForm({ email, password: newPassword });
+            cy.url({ timeout: 15000 }).should('include', '/hub/');
+          });
+        });
+      });
+    });
+  });
+
   it('should prevent non-owners from managing access views', () => {
     // Setup user with fairteiler as member (not owner)
     cy.setupUserWithFairteiler({ role: 'member' }).then(() => {

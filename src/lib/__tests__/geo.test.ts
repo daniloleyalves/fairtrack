@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { calculateDistance, isWithinRadius } from '../geo';
+import {
+  calculateDistance,
+  isAtLocation,
+  isWithinRadius,
+  MAX_ACCURACY_TOLERANCE,
+} from '../geo';
 
 const berlin = { latitude: 52.52, longitude: 13.405 };
 const munich = { latitude: 48.1372, longitude: 11.5754 };
@@ -56,5 +61,32 @@ describe('isWithinRadius', () => {
 
   it('returns true for identical points regardless of radius', () => {
     expect(isWithinRadius(berlin, berlin, 0)).toBe(true);
+  });
+});
+
+describe('isAtLocation', () => {
+  const origin = { latitude: 0, longitude: 0 };
+  const fortyFiveMetersAway = { latitude: 0.0004, longitude: 0 };
+
+  it('accepts a reading inside the default 20 m radius', () => {
+    expect(isAtLocation({ latitude: 0.0001, longitude: 0 }, origin, 0)).toBe(
+      true,
+    );
+  });
+
+  it('widens the radius by the reported accuracy', () => {
+    expect(isAtLocation(fortyFiveMetersAway, origin, 5)).toBe(false);
+    expect(isAtLocation(fortyFiveMetersAway, origin, 25)).toBe(true);
+  });
+
+  it('caps how much inaccuracy is forgiven', () => {
+    const fiftyFiveMetersAway = { latitude: 0.0005, longitude: 0 };
+    expect(MAX_ACCURACY_TOLERANCE).toBe(30);
+    expect(isAtLocation(fiftyFiveMetersAway, origin, 500)).toBe(false);
+  });
+
+  it('treats missing or negative accuracy as exact', () => {
+    expect(isAtLocation(fortyFiveMetersAway, origin, null)).toBe(false);
+    expect(isAtLocation(fortyFiveMetersAway, origin, -100)).toBe(false);
   });
 });

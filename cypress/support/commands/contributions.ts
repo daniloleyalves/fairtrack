@@ -25,6 +25,7 @@ declare global {
       fillContributionRow(
         index: number,
         data: Partial<ContributionItem>,
+        options?: { blur?: boolean },
       ): Chainable<void>;
 
       /**
@@ -165,26 +166,38 @@ Cypress.Commands.add('addContributionRow', () => {
 // Fill contribution row in fastmode
 Cypress.Commands.add(
   'fillContributionRow',
-  (index: number, data: Partial<ContributionItem>) => {
+  (
+    index: number,
+    data: Partial<ContributionItem>,
+    options: { blur?: boolean } = {},
+  ) => {
+    // A click on the body centre can land on the "+" button of short forms.
+    const dismiss = () =>
+      options.blur
+        ? cy
+            .document()
+            .then((doc) => (doc.activeElement as HTMLElement | null)?.blur())
+        : cy.get('body').click();
+
     // Fill category
     if (data.categoryId) {
       cy.get(`[data-cy="category-select-${index}"]`).click();
       cy.get('div[role="option"]').first().click();
-      cy.get('body').click();
+      dismiss();
     }
 
     // Fill origin
     if (data.originId) {
       cy.get(`[data-cy="origin-select-${index}"]`).click();
       cy.get('div[role="option"]').first().click();
-      cy.get('body').click();
+      dismiss();
     }
 
     // // Fill company
     if (data.companyId) {
       cy.get(`[data-cy="company-select-${index}"]`).click();
       cy.get('div[role="option"]').first().click();
-      cy.get('body').click();
+      dismiss();
     }
 
     // Fill quantity
@@ -192,7 +205,7 @@ Cypress.Commands.add(
       cy.get(`[data-cy="quantity-incrementer-${index}"]`).type(
         data.quantity.toString(),
       );
-      cy.get('body').click();
+      dismiss();
     }
   },
 );
