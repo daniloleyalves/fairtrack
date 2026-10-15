@@ -47,10 +47,10 @@ describe('Location Verified Contribution E2E', () => {
     cy.seedBasicTestData();
   });
 
-  function openUserContributionPage(coords: {
-    latitude: number;
-    longitude: number;
-  }) {
+  function openUserContributionPage(
+    coords: { latitude: number; longitude: number },
+    { withPreferences = true } = {},
+  ) {
     const slug = `location-fairteiler-${Date.now()}`;
     const contributionPath = `/hub/user/contribution?fairteilerSlug=${slug}`;
 
@@ -69,7 +69,9 @@ describe('Location Verified Contribution E2E', () => {
           cy
             .createTestUser({ ...existingUser, isFirstLogin: false })
             .then((foodsaver) => {
-              cy.task('createTestUserPreferences', foodsaver.id);
+              if (withPreferences) {
+                cy.task('createTestUserPreferences', foodsaver.id);
+              }
               cy.visit(
                 `/sign-in?callbackUrl=${encodeURIComponent(contributionPath)}`,
               );
@@ -131,6 +133,19 @@ describe('Location Verified Contribution E2E', () => {
         });
       },
     );
+  });
+
+  it('opens the Retteformular for a foodsaver without saved preferences', () => {
+    openUserContributionPage(FAIRTEILER_LOCATION, {
+      withPreferences: false,
+    }).then(() => {
+      cy.contains('Nicht authentifiziert').should('not.exist');
+      cy.get('button[id="tableView-mode"]').should(
+        'have.attr',
+        'data-state',
+        'unchecked',
+      );
+    });
   });
 
   it('rejects a contribution from a foodsaver away from the fairteiler', () => {
