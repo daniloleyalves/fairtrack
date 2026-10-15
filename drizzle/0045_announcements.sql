@@ -30,10 +30,9 @@ INSERT INTO "announcement" ("id", "audience", "roles", "title", "message", "high
 	'fairteiler',
 	ARRAY['owner', 'member', 'viewer']::"member_role"[],
 	'Neu in FairTrack 1.2',
-	'Beiträge mit eigenem Konto brauchen jetzt einen Nachweis vor Ort: einen QR-Scan oder einen geteilten Standort am Fairteiler.',
+	'Highlights: QR-Codes für unbetreute Fairteiler, Gastbeiträge, Beiträge nachtragen, Passwort-Reset für Zugänge und neue Verlaufsfilter.',
 	ARRAY[
 		'QR-Codes für unbetreute Fairteiler: Inhaber:innen erstellen und drucken sie unter Präferenzen. Ein Scan bestätigt 30 Minuten lang, dass man vor Ort ist.',
-		'Beiträge mit eigenem Konto werden nur noch gespeichert, wenn ein QR-Scan oder ein geteilter Standort am Fairteiler vorliegt. Bitte informiert eure Foodsaver:innen.',
 		'Mit „Beiträge als Gast ermöglichen“ am QR-Code können Gäste ohne Anmeldung beitragen. Ihre Beiträge landen beim gewählten Gastzugang.',
 		'Beiträge lassen sich im Retteformular für einen früheren Tag nachtragen, bis zu einem Jahr zurück.',
 		'Inhaber:innen können das Passwort eines Zugangs auf der Mitgliederseite zurücksetzen.',
