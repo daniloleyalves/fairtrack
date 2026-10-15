@@ -18,11 +18,11 @@ describe('Fastmode Contribution Flow E2E', () => {
 
           // Add first contribution
           cy.addContributionRow();
-          cy.fillContributionRow(0, testContribs[0]);
+          cy.fillContributionRow(0, testContribs[0], { blur: true });
 
           // Add second contribution
           cy.addContributionRow();
-          cy.fillContributionRow(1, testContribs[1]);
+          cy.fillContributionRow(1, testContribs[1], { blur: true });
 
           // Verify both contributions appear in table
           cy.verifyContributionInTable(testContribs[0], 0);
@@ -128,7 +128,7 @@ describe('Fastmode Contribution Flow E2E', () => {
           const testContrib = contributions.validContributions[0];
 
           // Fill basic required fields first
-          cy.fillContributionRow(0, testContrib);
+          cy.fillContributionRow(0, testContrib, { blur: true });
 
           // Open optional fields modal
           cy.fillOptionalFields(0, {
@@ -171,14 +171,20 @@ describe('Fastmode Contribution Flow E2E', () => {
         cy.fixture('contributions').then((contributions) => {
           // Add valid contribution
           cy.addContributionRow();
-          cy.fillContributionRow(0, contributions.validContributions[0]);
+          cy.fillContributionRow(0, contributions.validContributions[0], {
+            blur: true,
+          });
 
           // Add invalid contribution
           cy.addContributionRow();
-          cy.fillContributionRow(1, {
-            categoryId: '', // Invalid
-            originId: '', // Invalid
-          });
+          cy.fillContributionRow(
+            1,
+            {
+              categoryId: '', // Invalid
+              originId: '', // Invalid
+            },
+            { blur: true },
+          );
 
           // Try to submit
           cy.get('button[type="submit"]').click();
@@ -189,7 +195,9 @@ describe('Fastmode Contribution Flow E2E', () => {
           cy.verifyValidationError('quantity-incrementer-1');
 
           // Fix the invalid row
-          cy.fillContributionRow(1, contributions.validContributions[1]);
+          cy.fillContributionRow(1, contributions.validContributions[1], {
+            blur: true,
+          });
 
           // Should now be able to submit
           cy.get('button[type="submit"]').should('not.be.disabled');
@@ -214,7 +222,7 @@ describe('Fastmode Contribution Flow E2E', () => {
 
           // Add and fill contribution in fastmode
           cy.addContributionRow();
-          cy.fillContributionRow(0, testContrib);
+          cy.fillContributionRow(0, testContrib, { blur: true });
 
           // Switch to wizard mode
           cy.switchContributionMode('wizard');

@@ -132,7 +132,7 @@ export async function getFairteilerBySlug(fairteilerSlug: string) {
 export async function getActiveMembership(headers: Headers) {
   const membership = await loadActiveMembership(headers);
   if (!membership) {
-    throw new NotFoundError('membership');
+    return null;
   }
 
   return {

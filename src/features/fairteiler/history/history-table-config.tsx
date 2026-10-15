@@ -35,7 +35,7 @@ export const contributorAccessLabels: Record<ContributorAccessType, string> = {
   guest: 'Gastzugang',
   employee: 'Mitarbeiterzugang',
   disabled: 'Deaktivierter Zugang',
-  user: 'Persönliches Konto',
+  user: 'Nutzerkonto',
 };
 
 export function getContributorAccessType(
