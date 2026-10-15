@@ -86,4 +86,62 @@ describe('Contribution History E2E', () => {
       },
     );
   });
+
+  it('should filter contributions by contributor and access type', () => {
+    cy.setupUserWithFairteiler({ role: 'owner', withTestData: true }).then(
+      ({ user, fairteiler }) => {
+        cy.createTestUser({
+          email: `guest-1@${fairteiler.slug}.local`,
+          firstName: 'Gast',
+          lastName: 'Zugang',
+          password: 'SecurePass123',
+          isFirstLogin: false,
+          isAnonymous: false,
+        }).then((guest) => {
+          cy.task('addUserToFairteiler', {
+            userId: guest.id,
+            fairteilerId: fairteiler.id,
+            role: 'guest',
+          });
+          cy.createTestContribution({
+            fairteilerId: fairteiler.id,
+            userId: user.id,
+            title: 'Bananen',
+            quantity: 5,
+          });
+          cy.createTestContribution({
+            fairteilerId: fairteiler.id,
+            userId: guest.id,
+            title: 'Gurken',
+            quantity: 2,
+          });
+
+          cy.navigateToHistory();
+          cy.get('table tbody tr').should('have.length', 2);
+          cy.contains('td', 'Gast Zugang').should('contain', 'Gastzugang');
+
+          cy.contains('button', 'Beitragende:r').click();
+          cy.get('[role="option"]').contains('Gast Zugang').click();
+          cy.get('body').type('{esc}');
+
+          cy.get('table tbody tr').should('have.length', 1);
+          cy.contains('Gurken').should('be.visible');
+          cy.contains('Bananen').should('not.exist');
+
+          cy.contains('button', 'Beitragende:r').click();
+          cy.get('[role="option"]').contains('Filter zurücksetzen').click();
+          cy.get('body').type('{esc}');
+          cy.get('table tbody tr').should('have.length', 2);
+
+          cy.contains('button', /^\s*Zugang\s*$/).click();
+          cy.get('[role="option"]').contains('Persönliches Konto').click();
+          cy.get('body').type('{esc}');
+
+          cy.get('table tbody tr').should('have.length', 1);
+          cy.contains('Bananen').should('be.visible');
+          cy.contains('Gurken').should('not.exist');
+        });
+      },
+    );
+  });
 });

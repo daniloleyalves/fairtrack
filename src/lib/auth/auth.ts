@@ -35,6 +35,7 @@ import {
 } from '@/lib/services/resend/invite-member';
 import { updateUserSecureStatus } from '@server/user/dal';
 import { handleAuthApiError } from './on-api-error';
+import { getVercelPreviewOrigins } from './trusted-origins';
 
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
@@ -236,20 +237,6 @@ export const auth = betterAuth({
     },
   },
 });
-
-/**
- * Vercel serves every preview deployment under its own hostnames (the
- * per-deployment URL and the per-branch URL), but BETTER_AUTH_URL is a single
- * value per Vercel environment. Without trusting those hostnames, sign-in and
- * every other auth POST from a preview fails Better Auth's origin check with
- * INVALID_ORIGIN. Production deployments are unaffected.
- */
-function getVercelPreviewOrigins(): string[] {
-  if (process.env.VERCEL_ENV !== 'preview') return [];
-  return [process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL]
-    .filter((host): host is string => !!host)
-    .map((host) => `https://${host}`);
-}
 
 export async function getActiveOrganizationId(
   userId: string,

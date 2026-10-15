@@ -313,6 +313,21 @@ export const databaseTasks = {
     }
   },
 
+  async createTestUserPreferences(userId: string) {
+    try {
+      const preferences = await testDb
+        .insert(schema.userPreferences)
+        .values({ userId, formTableView: 'fast' })
+        .onConflictDoNothing()
+        .returning();
+
+      return preferences[0] ?? null;
+    } catch (error) {
+      console.error('Create test user preferences failed:', error);
+      throw error;
+    }
+  },
+
   async getCheckinsByFairteiler(fairteilerId: string) {
     try {
       return await testDb.query.checkin.findMany({

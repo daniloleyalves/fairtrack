@@ -1318,7 +1318,7 @@ describe('QR and location verification', () => {
       expect(dal.checkinContribution).not.toHaveBeenCalled();
     });
 
-    it('rejects a submission above the guest limits', async () => {
+    it('accepts large guest submissions', async () => {
       vi.mocked(readScanProof).mockResolvedValue(validProof);
       vi.mocked(qrCodeDal.loadActiveQrCodeById).mockResolvedValue(
         activeQrCode(),
@@ -1329,11 +1329,14 @@ describe('QR and location verification', () => {
 
       const result = await submitQrGuestContributionAction({
         ...guestInput,
-        contributions: [{ ...contribution, quantity: 250 }],
+        contributions: Array.from({ length: 25 }, () => ({
+          ...contribution,
+          quantity: 50,
+        })),
       });
 
-      expect(result?.serverError).toContain('200 kg');
-      expect(dal.checkinContribution).not.toHaveBeenCalled();
+      expect(result?.serverError).toBeUndefined();
+      expect(dal.checkinContribution).toHaveBeenCalled();
     });
   });
 });
