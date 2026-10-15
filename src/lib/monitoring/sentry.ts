@@ -46,6 +46,10 @@ export function sentryTracesSampler(context: {
 
 const NOISE_MESSAGE_PREFIX = 'ResizeObserver loop';
 
+const NOISE_EXCEPTION_TYPES = ['AbortError', 'UnrecognizedActionError'];
+
+const EXPECTED_EXCEPTION_TYPES = ['AuthError'];
+
 const NOISE_MESSAGE_FRAGMENTS = [
   'Failed to find Server Action',
   'NetworkError',
@@ -76,7 +80,8 @@ export function sentryBeforeSend(event: ErrorEvent): ErrorEvent | null {
   const exceptions = event.exception?.values ?? [];
   const isNoise = exceptions.some(
     (exception) =>
-      exception.type === 'AbortError' || isNoiseMessage(exception.value ?? ''),
+      NOISE_EXCEPTION_TYPES.includes(exception.type ?? '') ||
+      isNoiseMessage(exception.value ?? ''),
   );
   if (isNoise || isNoiseMessage(event.message ?? '')) {
     return null;
@@ -84,6 +89,14 @@ export function sentryBeforeSend(event: ErrorEvent): ErrorEvent | null {
 
   if (isInjectedByExtension(event)) {
     return null;
+  }
+
+  if (
+    exceptions.some((exception) =>
+      EXPECTED_EXCEPTION_TYPES.includes(exception.type ?? ''),
+    )
+  ) {
+    event.level = 'warning';
   }
 
   if (event.message) {
