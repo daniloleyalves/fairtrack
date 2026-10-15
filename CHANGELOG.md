@@ -20,6 +20,14 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 
 ## [Unreleased]
 
+### Added
+
+- Announcement banners at the top of the fairteiler area and the user hub. Announcements live in the database with an audience, optional roles and fairteiler, and a start/end window; each user can dismiss them. The first one presents the 1.2.0 highlights to fairteiler owners, members and viewers until 2026-12-01.
+
+### Deployment notes
+
+- Needs migration `0045_announcements` (new `announcement` and `announcement_dismissal` tables plus the 1.2.0 announcement row).
+
 ## [1.2.0] - 2026-10-15
 
 ### Added
