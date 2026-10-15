@@ -1,4 +1,5 @@
 import { Breadcrumbs } from '@components/layout/breadcrumbs';
+import { AnnouncementBanner } from '@features/announcement/components/announcement-banner';
 import { AppSidebar } from '@/components/sidebar/app-sidebar';
 import { Separator } from '@components/ui/separator';
 import {
@@ -46,7 +47,13 @@ function LayoutMain({ children }: { children: React.ReactNode }) {
       {/* Decorative background element */}
       <span className='absolute top-0 h-80 w-full rounded-b-lg bg-primary shadow-md'></span>
       {/* Content container */}
-      <div className='relative z-10 mx-auto max-w-7xl'>{children}</div>
+      <div className='relative z-10 mx-auto max-w-7xl'>
+        <AnnouncementBanner
+          audience='fairteiler'
+          className='mx-2 mt-4 sm:mx-8'
+        />
+        {children}
+      </div>
     </main>
   );
 }
