@@ -209,7 +209,7 @@ function QrCodeRow({
   return (
     <div className='flex flex-col gap-4 rounded-lg border p-4 sm:flex-row'>
       {preview ? (
-        // eslint-disable-next-line @next/next/no-img-element
+        // oxlint-disable-next-line @next/next/no-img-element
         <img
           src={preview}
           alt='QR-Code Vorschau'
