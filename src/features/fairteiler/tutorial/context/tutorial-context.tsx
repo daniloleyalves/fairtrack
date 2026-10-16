@@ -150,10 +150,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
       const previous = queryClient.getQueryData<
         FairteilerTutorialWithSteps | undefined
       >(tutorialKey);
-      queryClient.setQueryData(
-        tutorialKey,
-        data as unknown as FairteilerTutorialWithSteps,
-      );
+      queryClient.setQueryData(tutorialKey, data);
       return { previous };
     },
     onError: (err, _data, context) => {

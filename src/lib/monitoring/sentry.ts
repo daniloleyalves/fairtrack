@@ -70,9 +70,8 @@ function isInjectedByExtension(event: ErrorEvent): boolean {
   const frames = (event.exception?.values ?? []).flatMap(
     (exception) => exception.stacktrace?.frames ?? [],
   );
-  return (
-    frames.length > 0 &&
-    frames.some((frame) => INJECTED_FRAME_PATTERN.test(frame.filename ?? ''))
+  return frames.some((frame) =>
+    INJECTED_FRAME_PATTERN.test(frame.filename ?? ''),
   );
 }
 

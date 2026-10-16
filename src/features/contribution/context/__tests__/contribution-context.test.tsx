@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { render, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -78,7 +78,7 @@ describe('ContributionProvider', () => {
               name: 'Test',
               geoLat: '48.7',
               geoLng: '9.1',
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              // oxlint-disable-next-line @typescript-eslint/no-explicit-any
             } as any,
             origins: [],
             categories: [],
@@ -116,7 +116,7 @@ describe('ContributionProvider', () => {
               name: 'No-Tutorial',
               geoLat: '48.7',
               geoLng: '9.1',
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              // oxlint-disable-next-line @typescript-eslint/no-explicit-any
             } as any,
             origins: [],
             categories: [],
