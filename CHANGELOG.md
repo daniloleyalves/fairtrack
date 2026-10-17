@@ -20,6 +20,20 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-10-17
+
+### Fixed
+
+- Chrome's dropped-connection errors ("Failed to fetch", "network error") from long-open or offline tabs are no longer reported to Sentry, matching the existing filter for Firefox and Safari.
+
+### Changed
+
+- Tooling: Vite+ (`vp check` for format, lint and typecheck, `vp test` for unit tests) replaces ESLint, Prettier, Husky and lint-staged. Development needs Node >=22.18; existing clones run `git config --unset core.hooksPath && pnpm install` once.
+
+### Deployment notes
+
+- No database migrations. `next build` is unchanged, and Vercel builds on Node 24.x.
+
 ## [1.2.1] - 2026-10-15
 
 ### Added
