@@ -20,6 +20,10 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 
 ## [Unreleased]
 
+### Changed
+
+- Hub pages reload themselves after 30 minutes without input, so tablets left open at a fairteiler always run the latest deploy with fresh data. A contribution form with unsaved input is never reloaded, and nothing reloads while offline.
+
 ## [1.2.1] - 2026-10-15
 
 ### Added
