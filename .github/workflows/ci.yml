@@ -46,9 +46,9 @@ jobs:
       - name: Check for outdated dependencies
         run: pnpm outdated --format table | grep -v "next"
 
-  # Linting and code quality
+  # Formatting, linting and type checks
   lint:
-    name: Lint
+    name: Format, Lint & Typecheck
     runs-on: ubuntu-latest
     environment: testing
     env:
@@ -71,8 +71,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint code
-        run: pnpm run lint
+      - name: Check format, lint and types
+        run: pnpm run check
 
   # Unit and integration tests
   test:
@@ -185,8 +185,8 @@ jobs:
       NEXT_PUBLIC_MAPBOX_TOKEN: ${{ secrets.NEXT_PUBLIC_MAPBOX_TOKEN }}
     needs: [build]
     if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.base_ref != 'dev' && github.ref != 'refs/heads/dev')
+      github.event_name == 'workflow_dispatch' || (github.base_ref != 'dev' &&
+      github.ref != 'refs/heads/dev')
     # strategy:
     #   matrix:
     #     browser: [chrome, firefox, edge]

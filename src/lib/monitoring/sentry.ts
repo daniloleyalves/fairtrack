@@ -54,6 +54,8 @@ const NOISE_MESSAGE_FRAGMENTS = [
   'Failed to find Server Action',
   'NetworkError',
   'Load failed',
+  'Failed to fetch',
+  'network error',
 ];
 
 const INJECTED_FRAME_PATTERN =
@@ -70,9 +72,8 @@ function isInjectedByExtension(event: ErrorEvent): boolean {
   const frames = (event.exception?.values ?? []).flatMap(
     (exception) => exception.stacktrace?.frames ?? [],
   );
-  return (
-    frames.length > 0 &&
-    frames.some((frame) => INJECTED_FRAME_PATTERN.test(frame.filename ?? ''))
+  return frames.some((frame) =>
+    INJECTED_FRAME_PATTERN.test(frame.filename ?? ''),
   );
 }
 
