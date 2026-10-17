@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { render, screen } from '@/__tests__/test-utils';
 import { useSession } from '@/lib/auth/auth-hooks';
 import { FairteilerDockButton } from '../fairteiler-dock-button';

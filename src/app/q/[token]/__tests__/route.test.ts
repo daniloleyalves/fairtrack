@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { NextRequest } from 'next/server';
 import { loadActiveQrCodeByToken } from '@/server/qr-code/dal';
 import {

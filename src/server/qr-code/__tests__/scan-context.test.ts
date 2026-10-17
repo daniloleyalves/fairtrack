@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { loadFairteilerMembership } from '../../fairteiler/dal';
 import { loadActiveQrCodeById } from '../dal';
 import { loadScanContext } from '../scan-context';

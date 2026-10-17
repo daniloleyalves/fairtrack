@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { dismissAnnouncementAction } from '../actions';
 import { getVisibleAnnouncements } from '../queries';
 import { insertAnnouncementDismissal, loadVisibleAnnouncements } from '../dal';

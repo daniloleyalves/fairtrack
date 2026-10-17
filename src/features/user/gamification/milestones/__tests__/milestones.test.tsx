@@ -1,10 +1,10 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vite-plus/test';
 import { render, screen } from '@/__tests__/test-utils';
 import { Milestones } from '../milestones';
 import { MilestoneData } from '../milestone-utils';
 
 vi.mock('next/image', () => ({
-  // eslint-disable-next-line @next/next/no-img-element
+  // oxlint-disable-next-line @next/next/no-img-element
   default: ({ alt }: { alt: string }) => <img alt={alt} />,
 }));
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vite-plus/test';
 import { act, render, waitFor } from '@testing-library/react';
 import { FormProvider, useForm, type UseFormReturn } from 'react-hook-form';
 import { Table, TableBody } from '@components/ui/table';

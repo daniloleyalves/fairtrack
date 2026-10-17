@@ -25,7 +25,6 @@ import {
 } from '../contribution/dal';
 import { loadAuthenticatedSession } from '../user/dal';
 import { loadFairteilerTutorialWithSteps } from '../tutorial/dal';
-import { MemberRoles } from '@/lib/auth/auth-permissions';
 import {
   CompanyWithOrigin,
   Fairteiler,
@@ -143,7 +142,7 @@ export async function getActiveMembership(headers: Headers) {
       avatar: membership.user.image,
     },
     fairteilerId: membership.organizationId,
-    role: membership.role as MemberRoles,
+    role: membership.role,
   };
 }
 

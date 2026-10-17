@@ -51,7 +51,7 @@ export function FairteilerTutorialCard() {
   } = useTutorial();
 
   const confirmRemove = async () => {
-    if (!tutorial || !tutorial.id) {
+    if (!tutorial?.id) {
       toast.error(
         'Beim löschen der Anleitung ist ein Fehler unterlaufen. Bitte versuche es erneut.',
       );
