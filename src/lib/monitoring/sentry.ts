@@ -54,6 +54,8 @@ const NOISE_MESSAGE_FRAGMENTS = [
   'Failed to find Server Action',
   'NetworkError',
   'Load failed',
+  'Failed to fetch',
+  'network error',
 ];
 
 const INJECTED_FRAME_PATTERN =
