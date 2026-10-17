@@ -14,6 +14,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import React, { createContext, useContext } from 'react';
 import { DefaultValues, SubmitHandler, useForm } from 'react-hook-form';
 import { useFormAction } from '@/lib/hooks/use-form-action';
+import { useBlockIdleReload } from '@/lib/hooks/use-idle-reload';
 import { usePendingRedirect } from '@/lib/hooks/use-pending-redirect';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { userKeys } from '@/server/user/query-keys';
@@ -94,6 +95,8 @@ export function ContributionForm({
     submitContribution.isPending ||
     submitContribution.hasSucceeded ||
     isRedirectPending;
+
+  useBlockIdleReload(form.formState.isDirty || isPending);
 
   const onSubmit: SubmitHandler<ContributionFormValues> = (
     data: ContributionFormValues,
