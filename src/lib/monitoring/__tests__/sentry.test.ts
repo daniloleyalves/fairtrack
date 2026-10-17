@@ -132,16 +132,18 @@ describe('sentryBeforeSend', () => {
     expect(sentryBeforeSend(event)?.level).toBe('warning');
   });
 
-  it.each(['NetworkError: A network error occurred.', 'Load failed'])(
-    'drops dropped-request noise: %s',
-    (value) => {
-      const event = errorEvent({
-        exception: { values: [{ type: 'Error', value }] },
-      });
+  it.each([
+    'NetworkError: A network error occurred.',
+    'Load failed',
+    'Failed to fetch',
+    'network error',
+  ])('drops dropped-request noise: %s', (value) => {
+    const event = errorEvent({
+      exception: { values: [{ type: 'TypeError', value }] },
+    });
 
-      expect(sentryBeforeSend(event)).toBeNull();
-    },
-  );
+    expect(sentryBeforeSend(event)).toBeNull();
+  });
 
   it.each([
     'chrome-extension://abc/inject.js',
