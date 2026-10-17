@@ -28,6 +28,7 @@ On release: rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and create a new emp
 
 ### Changed
 
+- Hub pages reload themselves after 30 minutes without input, so tablets left open at a fairteiler always run the latest deploy with fresh data. A contribution form with unsaved input is never reloaded, and nothing reloads while offline.
 - Tooling: Vite+ (`vp check` for format, lint and typecheck, `vp test` for unit tests) replaces ESLint, Prettier, Husky and lint-staged. Development needs Node >=22.18; existing clones run `git config --unset core.hooksPath && pnpm install` once.
 
 ### Deployment notes
