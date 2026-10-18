@@ -3,7 +3,7 @@ import * as Sentry from '@sentry/nextjs';
 import { FeedbackNotificationEmail } from './feedback-notification-email';
 import feedbackNotificationTxt from './feedback-notification.txt?raw';
 import { createElement } from 'react';
-import { resend } from '..';
+import { getEmailTransport } from '..';
 
 const categoryLabels = {
   bug: 'Fehler melden',
@@ -88,7 +88,7 @@ export async function sendFeedbackNotification(
     const result = await Sentry.startSpan(
       { name: 'resend.feedback-notification', op: 'http.client' },
       () =>
-        resend.emails.send({
+        getEmailTransport().send({
           from: 'support@fairteiler-tracker.de',
           to: [adminEmail],
           replyTo: data.userEmail,

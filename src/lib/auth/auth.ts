@@ -24,15 +24,7 @@ import {
   user,
   verification,
 } from '@server/db/schema';
-import { resend } from '@/lib/services/resend';
-import {
-  getResetPasswordTemplate,
-  getResetPasswordText,
-} from '@/lib/services/resend/reset-password';
-import {
-  getInviteMemberTemplate,
-  getInviteMemberText,
-} from '@/lib/services/resend/invite-member';
+import { sendInvitationEmail, sendResetPasswordEmail } from './auth-emails';
 import { updateUserSecureStatus } from '@server/user/dal';
 import { handleAuthApiError } from './on-api-error';
 import { getVercelPreviewOrigins } from './trusted-origins';
@@ -136,33 +128,7 @@ export const auth = betterAuth({
         guest,
         disabled,
       },
-      async sendInvitationEmail(data) {
-        if (
-          process.env.NEXT_PUBLIC_ENV === 'testing' ||
-          process.env.NEXT_PUBLIC_ENV === 'demo'
-        ) {
-          console.log('Skipping invitation email in test environment');
-          return;
-        }
-        const inviteLink = `${process.env.NEXT_PUBLIC_ENV_URL}/sign-up?invitationId=${data.id}`;
-        const { error } = await resend.emails.send({
-          from: 'support@fairteiler-tracker.de',
-          to: data.email,
-          subject: 'FairTrack Fairteilereinladung',
-          html: await getInviteMemberTemplate({
-            url: inviteLink,
-            fairteilerName: data.organization.name,
-          }),
-          text: getInviteMemberText({
-            url: inviteLink,
-            fairteilerName: data.organization.name,
-          }),
-        });
-        if (error) {
-          console.error('Failed to send invitation email:', error);
-          throw new Error('Failed to send invitation email');
-        }
-      },
+      sendInvitationEmail,
     }),
     nextCookies(),
   ],
@@ -176,26 +142,7 @@ export const auth = betterAuth({
         console.error('Failed to update user secure status:', error);
       }
     },
-    sendResetPassword: async ({ user, url }) => {
-      if (
-        process.env.NEXT_PUBLIC_ENV === 'testing' ||
-        process.env.NEXT_PUBLIC_ENV === 'demo'
-      ) {
-        console.log('Skipping reset password email in test environment');
-        return;
-      }
-      const { error } = await resend.emails.send({
-        from: 'support@fairteiler-tracker.de',
-        to: user.email,
-        subject: 'FairTrack Passwort zurücksetzen',
-        html: await getResetPasswordTemplate({ url }),
-        text: getResetPasswordText({ url }),
-      });
-      if (error) {
-        console.error('Failed to send reset password email:', error);
-        throw new Error('Failed to send reset password email');
-      }
-    },
+    sendResetPassword: sendResetPasswordEmail,
   },
   user: {
     additionalFields: {
