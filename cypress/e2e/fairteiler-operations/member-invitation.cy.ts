@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+import type { CapturedEmail } from '@/lib/services/resend/capture-transport';
 import type { UsersFixture } from '../../support/types';
 
 describe('Member Invitation E2E', () => {
@@ -47,6 +48,14 @@ describe('Member Invitation E2E', () => {
 
         // Verify modal closed
         cy.get('input[name="email"]').should('not.exist');
+
+        cy.task<CapturedEmail | null>('findCapturedEmail', {
+          to: existingUser.email,
+          subject: 'FairTrack Fairteilereinladung',
+        }).then((email) => {
+          expect(email, 'captured invitation email').to.not.equal(null);
+          expect(email!.text).to.match(/\/sign-up\?invitationId=\S+/);
+        });
       });
     });
   });
