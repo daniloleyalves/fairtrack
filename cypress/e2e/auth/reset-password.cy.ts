@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+import type { CapturedEmail } from '@/lib/services/resend/capture-transport';
 import type { UsersFixture } from '../../support/types';
 
 describe('Password Reset E2E', () => {
@@ -42,6 +43,74 @@ describe('Password Reset E2E', () => {
       // 6. Should show back to login button
       cy.get('a[href="/sign-in"]').should('contain', 'Zurück zur Anmeldung');
     });
+  });
+
+  it('should reset the password through the emailed link', () => {
+    cy.fixture('users').then((users: UsersFixture) => {
+      const { validUser } = users;
+      const newPassword = 'EmailedPass123';
+
+      cy.createTestUser({
+        email: validUser.email,
+        firstName: validUser.firstName || 'Test',
+        lastName: validUser.lastName || 'User',
+        password: validUser.password,
+        isFirstLogin: false,
+        isAnonymous: false,
+      });
+
+      cy.visit('/reset-password');
+      cy.get('input[name="email"]').type(validUser.email);
+      cy.get('button[type="submit"]').click();
+      cy.contains('Anweisungen gesendet').should('be.visible');
+
+      cy.task<CapturedEmail | null>('findCapturedEmail', {
+        to: validUser.email,
+        subject: 'FairTrack Passwort zurücksetzen',
+      }).then((email) => {
+        expect(email, 'captured reset email').to.not.equal(null);
+        const resetLink = email!.links.find((link) =>
+          link.includes('/api/auth/reset-password/'),
+        );
+        expect(resetLink, 'reset link').to.be.a('string');
+        expect(new URL(resetLink!).origin).to.equal(
+          new URL(Cypress.config('baseUrl')!).origin,
+        );
+        expect(email!.text).to.contain(resetLink);
+
+        cy.visit(resetLink!);
+      });
+
+      cy.location('pathname').should('eq', '/reset-password');
+      cy.location('search').should('match', /token=/);
+      cy.contains('Wähle ein neues Passwort').should('be.visible');
+
+      cy.get('input[name="password"]').realClick().realType(newPassword);
+      cy.get('input[name="passwordConfirm"]').realClick().realType(newPassword);
+      cy.get('input[name="password"]').should('have.value', newPassword);
+      cy.get('input[name="passwordConfirm"]').should('have.value', newPassword);
+      cy.get('button[type="submit"]').click();
+      cy.url({ timeout: 10000 }).should('include', '/sign-in');
+
+      cy.visit('/sign-in');
+      cy.fillTwoStepLoginForm({
+        email: validUser.email,
+        password: newPassword,
+      });
+      cy.url({ timeout: 15000 }).should('include', '/hub/user/dashboard');
+    });
+  });
+
+  it('should not send a reset email for an unknown address', () => {
+    cy.visit('/reset-password');
+    cy.get('input[name="email"]').type('nonexistent@example.com');
+    cy.get('button[type="submit"]').click();
+    cy.contains('Anweisungen gesendet').should('be.visible');
+
+    cy.task('findCapturedEmail', { to: 'nonexistent@example.com' }).should(
+      'equal',
+      null,
+    );
   });
 
   it('should handle non-existent email gracefully', () => {

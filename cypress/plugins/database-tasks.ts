@@ -18,6 +18,10 @@ import {
   owner,
   viewer,
 } from '@/lib/auth/auth-permissions';
+import {
+  clearCapturedEmails,
+  readCapturedEmails,
+} from '@/lib/services/resend/capture-transport';
 import dotenv from 'dotenv';
 import { TestUser } from '../support/types';
 
@@ -104,6 +108,7 @@ export const databaseTasks = {
       await testDb.delete(schema.user);
       await testDb.delete(schema.fairteiler);
       await testDb.delete(schema.feedback);
+      clearCapturedEmails();
 
       return null;
     } catch (error) {
@@ -626,5 +631,13 @@ export const databaseTasks = {
       console.error('Get fairteiler by ID failed:', error);
       throw error;
     }
+  },
+
+  findCapturedEmail({ to, subject }: { to: string; subject?: string }) {
+    const matches = readCapturedEmails().filter(
+      (email) =>
+        email.to.includes(to) && (!subject || email.subject === subject),
+    );
+    return matches.at(-1) ?? null;
   },
 };
