@@ -1,4 +1,11 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+} from 'vite-plus/test';
 import { headers } from 'next/headers';
 import {
   getRecentCheckinsWithinLastMinute,
@@ -17,7 +24,7 @@ import {
   getCompaniesByFairteiler,
   getFairteilerDashboardData,
 } from '../fairteiler/queries';
-import { getSession } from '../user/queries';
+import { getSession, getUserPreferences } from '../user/queries';
 import * as dal from '../contribution/dal';
 import * as fairteilerDal from '../fairteiler/dal';
 import * as userDal from '../user/dal';
@@ -63,6 +70,7 @@ vi.mock('../fairteiler/dal', () => ({
 vi.mock('../user/dal', () => ({
   loadAuthenticatedSession: vi.fn(),
   loadSession: vi.fn(),
+  loadUserPreferences: vi.fn(),
 }));
 
 vi.mock('../tutorial/dal', () => ({
@@ -125,6 +133,40 @@ describe('DTO Layer', () => {
       });
     });
 
+    describe('getUserPreferences', () => {
+      it('returns the stored preferences', async () => {
+        const stored = {
+          id: 'pref-1',
+          userId: mockSession.user.id,
+          formTableView: 'fast' as const,
+          enableStreaks: false,
+          enableQuests: true,
+          enableAIFeedback: false,
+        };
+        vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue(
+          mockSession,
+        );
+        vi.mocked(userDal.loadUserPreferences).mockResolvedValue(stored);
+
+        await expect(getUserPreferences()).resolves.toEqual(stored);
+      });
+
+      it('falls back to defaults for users without saved preferences', async () => {
+        vi.mocked(userDal.loadAuthenticatedSession).mockResolvedValue(
+          mockSession,
+        );
+        vi.mocked(userDal.loadUserPreferences).mockResolvedValue(undefined);
+
+        await expect(getUserPreferences()).resolves.toEqual({
+          userId: mockSession.user.id,
+          formTableView: 'wizard',
+          enableStreaks: true,
+          enableQuests: true,
+          enableAIFeedback: true,
+        });
+      });
+    });
+
     describe('getActiveMembership', () => {
       it('should return transformed membership data when DAL returns valid data', async () => {
         vi.mocked(fairteilerDal.loadActiveMembership).mockResolvedValue(
@@ -146,6 +188,12 @@ describe('DTO Layer', () => {
           fairteilerId: 'fairteiler-123',
           role: 'owner',
         });
+      });
+
+      it('should return null when there is no active membership', async () => {
+        vi.mocked(fairteilerDal.loadActiveMembership).mockResolvedValue(null);
+
+        await expect(getActiveMembership(mockHeaders)).resolves.toBeNull();
       });
     });
   });

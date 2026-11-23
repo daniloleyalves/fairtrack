@@ -28,7 +28,14 @@ import {
 } from '@tanstack/react-table';
 import { ReactNode, useEffect, useState } from 'react';
 import { DataFilter } from '../../../statistics/components/data-filter';
-import { columns } from '../history-table-config';
+import {
+  ContributorAccessType,
+  columns,
+  contributorAccessLabels,
+  getContributorAccessType,
+  getContributorKey,
+  getContributorLabel,
+} from '../history-table-config';
 
 interface DataTableProps<TData> {
   data: TData[];
@@ -47,6 +54,7 @@ export function HistoryTable({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     category: false,
+    access: false,
   });
   const [rowSelection, setRowSelection] = useState({});
   const [pagination, setPagination] = useState({
@@ -122,15 +130,45 @@ export function HistoryTable({
       }));
   };
 
+  const contributorOptions = () => {
+    const contributors = new Map<string, string>();
+    data.forEach((item: vContribution) => {
+      contributors.set(getContributorKey(item), getContributorLabel(item));
+    });
+    return Array.from(contributors, ([value, label]) => ({
+      label,
+      value,
+    })).sort((a, b) => a.label.localeCompare(b.label));
+  };
+
+  const accessOptions = () => {
+    const accessTypes = new Set<ContributorAccessType>();
+    data.forEach((item: vContribution) => {
+      accessTypes.add(getContributorAccessType(item));
+    });
+    return (Object.keys(contributorAccessLabels) as ContributorAccessType[])
+      .filter((accessType) => accessTypes.has(accessType))
+      .map((accessType) => ({
+        label: contributorAccessLabels[accessType],
+        value: accessType,
+      }));
+  };
+
   useEffect(() => {
     if (isTablet) {
       setColumnVisibility((prev) => ({
         ...prev,
         company: false,
         origin: false,
+        contributor: false,
       }));
     } else {
-      setColumnVisibility((prev) => ({ ...prev, company: true, origin: true }));
+      setColumnVisibility((prev) => ({
+        ...prev,
+        company: true,
+        origin: true,
+        contributor: true,
+      }));
     }
   }, [isTablet]);
 
@@ -174,6 +212,22 @@ export function HistoryTable({
               column={table.getColumn('company')}
               title='Betrieb'
               options={companyOptions()}
+            />
+          )}
+
+          {table.getColumn('access') && (
+            <DataFilter
+              column={table.getColumn('access')}
+              title='Zugang'
+              options={accessOptions()}
+            />
+          )}
+
+          {table.getColumn('contributor') && (
+            <DataFilter
+              column={table.getColumn('contributor')}
+              title='Beitragende:r'
+              options={contributorOptions()}
             />
           )}
         </div>

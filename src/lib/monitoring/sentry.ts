@@ -46,10 +46,16 @@ export function sentryTracesSampler(context: {
 
 const NOISE_MESSAGE_PREFIX = 'ResizeObserver loop';
 
+const NOISE_EXCEPTION_TYPES = ['AbortError', 'UnrecognizedActionError'];
+
+const EXPECTED_EXCEPTION_TYPES = ['AuthError'];
+
 const NOISE_MESSAGE_FRAGMENTS = [
   'Failed to find Server Action',
   'NetworkError',
   'Load failed',
+  'Failed to fetch',
+  'network error',
 ];
 
 const INJECTED_FRAME_PATTERN =
@@ -66,9 +72,8 @@ function isInjectedByExtension(event: ErrorEvent): boolean {
   const frames = (event.exception?.values ?? []).flatMap(
     (exception) => exception.stacktrace?.frames ?? [],
   );
-  return (
-    frames.length > 0 &&
-    frames.some((frame) => INJECTED_FRAME_PATTERN.test(frame.filename ?? ''))
+  return frames.some((frame) =>
+    INJECTED_FRAME_PATTERN.test(frame.filename ?? ''),
   );
 }
 
@@ -76,7 +81,8 @@ export function sentryBeforeSend(event: ErrorEvent): ErrorEvent | null {
   const exceptions = event.exception?.values ?? [];
   const isNoise = exceptions.some(
     (exception) =>
-      exception.type === 'AbortError' || isNoiseMessage(exception.value ?? ''),
+      NOISE_EXCEPTION_TYPES.includes(exception.type ?? '') ||
+      isNoiseMessage(exception.value ?? ''),
   );
   if (isNoise || isNoiseMessage(event.message ?? '')) {
     return null;
@@ -84,6 +90,14 @@ export function sentryBeforeSend(event: ErrorEvent): ErrorEvent | null {
 
   if (isInjectedByExtension(event)) {
     return null;
+  }
+
+  if (
+    exceptions.some((exception) =>
+      EXPECTED_EXCEPTION_TYPES.includes(exception.type ?? ''),
+    )
+  ) {
+    event.level = 'warning';
   }
 
   if (event.message) {

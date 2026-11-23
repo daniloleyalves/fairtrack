@@ -12,6 +12,7 @@ import {
 import {
   banUserAndRevokeSessions,
   loadUserByEmail,
+  setPasswordAndRevokeSessions,
   validateResetPasswordToken,
 } from '@server/user/dal';
 import { getActiveFairteiler } from '@server/fairteiler/queries';
@@ -30,6 +31,7 @@ import {
   disableAccessViewSchema,
   inviteMemberSchema,
   removeMemberSchema,
+  resetAccessViewPasswordSchema,
 } from '@/features/fairteiler/members/schemas/members-schema';
 import { NotFoundError, PermissionError } from '@/server/error-handling';
 import { handleImageUpload } from '@/server/api-helpers';
@@ -273,6 +275,45 @@ export const disableAccessViewAction = fairteilerAction
     });
     revalidatePath('/hub/fairteiler/members');
     return result;
+  });
+
+export const resetAccessViewPasswordAction = fairteilerAction
+  .inputSchema(resetAccessViewPasswordSchema)
+  .action(async ({ parsedInput, ctx }) => {
+    const permissionResult = await checkPermissionOnServer(await headers(), {
+      member: ['update'],
+    });
+    if (!permissionResult.success) {
+      throw new PermissionError(
+        getErrorMessage('YOU_ARE_NOT_ALLOWED_TO_UPDATE_USERS', 'de'),
+      );
+    }
+
+    const targetMember = await loadMemberById(
+      parsedInput.memberId,
+      ctx.fairteilerId,
+    );
+    const targetRole = targetMember?.role as MemberRolesEnum | undefined;
+    if (
+      !targetMember ||
+      targetMember.userId !== parsedInput.userId ||
+      (targetRole !== MemberRolesEnum.EMPLOYEE &&
+        targetRole !== MemberRolesEnum.GUEST)
+    ) {
+      throw new PermissionError(
+        'Das ausgewählte Zugangsprofil gehört nicht zu diesem Fairteiler.',
+      );
+    }
+
+    const password = generatePassword();
+    const updated = await setPasswordAndRevokeSessions(
+      parsedInput.userId,
+      password,
+    );
+    if (!updated) {
+      throw new NotFoundError('access view credentials');
+    }
+    return { password };
   });
 
 const validateResetTokenSchema = z.object({

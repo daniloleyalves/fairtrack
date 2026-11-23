@@ -18,6 +18,10 @@ import {
   owner,
   viewer,
 } from '@/lib/auth/auth-permissions';
+import {
+  clearCapturedEmails,
+  readCapturedEmails,
+} from '@/lib/services/resend/capture-transport';
 import dotenv from 'dotenv';
 import { TestUser } from '../support/types';
 
@@ -85,6 +89,7 @@ export const databaseTasks = {
   async cleanDatabase() {
     try {
       // Clean up in correct order due to foreign keys
+      await testDb.delete(schema.fairteilerQrCode);
       await testDb.delete(schema.contributionVersionHistory);
       await testDb.delete(schema.checkin);
       await testDb.delete(schema.food);
@@ -103,6 +108,7 @@ export const databaseTasks = {
       await testDb.delete(schema.user);
       await testDb.delete(schema.fairteiler);
       await testDb.delete(schema.feedback);
+      clearCapturedEmails();
 
       return null;
     } catch (error) {
@@ -284,6 +290,56 @@ export const databaseTasks = {
       return checkin[0];
     } catch (error) {
       console.error('Create test contribution failed:', error);
+      throw error;
+    }
+  },
+
+  async createTestQrCode({
+    fairteilerId,
+    guestAccessViewId = null,
+  }: {
+    fairteilerId: string;
+    guestAccessViewId?: string | null;
+  }) {
+    try {
+      const qrCode = await testDb
+        .insert(schema.fairteilerQrCode)
+        .values({
+          fairteilerId,
+          guestAccessViewId,
+          token: `test-qr-${Date.now()}`,
+        })
+        .returning();
+
+      return qrCode[0];
+    } catch (error) {
+      console.error('Create test QR code failed:', error);
+      throw error;
+    }
+  },
+
+  async createTestUserPreferences(userId: string) {
+    try {
+      const preferences = await testDb
+        .insert(schema.userPreferences)
+        .values({ userId, formTableView: 'fast' })
+        .onConflictDoNothing()
+        .returning();
+
+      return preferences[0] ?? null;
+    } catch (error) {
+      console.error('Create test user preferences failed:', error);
+      throw error;
+    }
+  },
+
+  async getCheckinsByFairteiler(fairteilerId: string) {
+    try {
+      return await testDb.query.checkin.findMany({
+        where: eq(schema.checkin.fairteilerId, fairteilerId),
+      });
+    } catch (error) {
+      console.error('Get checkins failed:', error);
       throw error;
     }
   },
@@ -575,5 +631,13 @@ export const databaseTasks = {
       console.error('Get fairteiler by ID failed:', error);
       throw error;
     }
+  },
+
+  findCapturedEmail({ to, subject }: { to: string; subject?: string }) {
+    const matches = readCapturedEmails().filter(
+      (email) =>
+        email.to.includes(to) && (!subject || email.subject === subject),
+    );
+    return matches.at(-1) ?? null;
   },
 };

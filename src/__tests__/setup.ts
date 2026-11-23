@@ -1,7 +1,7 @@
 /* eslint-disable */
 
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 
 // Mock Next.js modules
 vi.mock('next/navigation', () => ({
@@ -38,18 +38,22 @@ vi.mock('next/cache', () => ({
 }));
 
 // Global test utilities
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+global.ResizeObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  };
+});
 
 // Mock IntersectionObserver
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+global.IntersectionObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  };
+});
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {

@@ -6,14 +6,23 @@ import {
   Loader2,
   XCircle,
   MapPin,
+  QrCode,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useContribution } from '../context/contribution-context';
 
 export function LocationIndicator() {
-  const { locationStatus } = useContribution();
+  const { locationStatus, isScanVerified } = useContribution();
 
   const getIndicatorContent = () => {
+    if (isScanVerified) {
+      return {
+        icon: <QrCode className='size-4' />,
+        text: 'QR-Code gescannt',
+        className: 'text-primary',
+      };
+    }
+
     switch (locationStatus) {
       case 'loading':
         return {

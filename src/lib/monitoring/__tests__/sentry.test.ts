@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import type { Breadcrumb, ErrorEvent } from '@sentry/nextjs';
 import {
   scrubEmails,
@@ -105,16 +105,45 @@ describe('sentryBeforeSend', () => {
     expect(sentryBeforeSend(event)).toBeNull();
   });
 
-  it.each(['NetworkError: A network error occurred.', 'Load failed'])(
-    'drops dropped-request noise: %s',
-    (value) => {
-      const event = errorEvent({
-        exception: { values: [{ type: 'Error', value }] },
-      });
+  it('drops server actions unknown to a newer deployment', () => {
+    const event = errorEvent({
+      exception: {
+        values: [
+          {
+            type: 'UnrecognizedActionError',
+            value:
+              'Server Action "00e85685de69f24611a76e2cfdce9d0a40d783e2e9" was not found on the server.',
+          },
+        ],
+      },
+    });
 
-      expect(sentryBeforeSend(event)).toBeNull();
-    },
-  );
+    expect(sentryBeforeSend(event)).toBeNull();
+  });
+
+  it('reports missing sessions as warnings instead of errors', () => {
+    const event = errorEvent({
+      level: 'error',
+      exception: {
+        values: [{ type: 'AuthError', value: 'Authentication required.' }],
+      },
+    });
+
+    expect(sentryBeforeSend(event)?.level).toBe('warning');
+  });
+
+  it.each([
+    'NetworkError: A network error occurred.',
+    'Load failed',
+    'Failed to fetch',
+    'network error',
+  ])('drops dropped-request noise: %s', (value) => {
+    const event = errorEvent({
+      exception: { values: [{ type: 'TypeError', value }] },
+    });
+
+    expect(sentryBeforeSend(event)).toBeNull();
+  });
 
   it.each([
     'chrome-extension://abc/inject.js',

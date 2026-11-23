@@ -67,7 +67,7 @@ export function AccessViewTable({
                 <TableHead>Name</TableHead>
                 <TableHead className='hidden md:table-cell'>Email</TableHead>
                 <TableHead>Rolle</TableHead>
-                <TableHead className='w-[72px]'></TableHead>
+                <TableHead className='w-[112px]'></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -87,7 +87,7 @@ export function AccessViewTable({
                       {getMemberBadge(member).title}
                     </Badge>
                   </TableCell>
-                  <TableCell className='w-[40px]'>
+                  <TableCell className='w-[112px]'>
                     {member.role !== 'disabled' && (
                       <AccessViewTableActions member={member} />
                     )}

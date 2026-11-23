@@ -19,26 +19,35 @@ export function UserDashboardGridSkeleton() {
 
       {/* Milestones */}
       <div className='order-2 col-span-12 md:order-3 md:col-span-2 lg:col-span-1'>
-        <Card className='h-full p-4'>
-          <Skeleton variant='onCard' className='h-6 rounded-md' />
-          <div className='mt-4 space-y-3'>
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className='flex flex-col items-center gap-2'>
-                <Skeleton variant='onCard' className='size-8 rounded-full' />
-                <Skeleton variant='onCard' className='h-4 w-full rounded-md' />
-              </div>
-            ))}
+        <Card className='h-max items-center gap-0 px-2 py-4'>
+          <Skeleton variant='onCard' className='h-4 w-20 rounded-md' />
+          <Skeleton variant='onCard' className='mt-2 h-3 w-14 rounded-md' />
+          <div className='mt-4 flex items-center justify-center gap-2 md:flex-col'>
+            <div className='flex'>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton
+                  key={i}
+                  variant='onCard'
+                  className='-ml-10 size-12 rounded-full border-2 border-white first:ml-0'
+                />
+              ))}
+            </div>
+            <Skeleton variant='onCard' className='size-12 rounded-full' />
           </div>
         </Card>
       </div>
 
       {/* Distribution Charts */}
       <div className='order-3 col-span-12 w-full md:order-2 md:col-span-10 lg:col-span-7'>
-        <Card className='h-full flex-col justify-between gap-4 rounded-lg bg-white p-4 md:gap-0'>
-          <Skeleton variant='onCard' className='h-36 w-full rounded-md' />
+        <Card className='h-full flex-col gap-4 rounded-lg bg-white px-4 md:gap-0 md:py-2'>
+          <div className='h-[263px] py-2 xs:h-[135px]'>
+            <Skeleton variant='onCard' className='size-full rounded-md' />
+          </div>
           <div className='hidden h-px w-full bg-border md:block' />
           <div className='h-full w-px bg-border md:hidden' />
-          <Skeleton variant='onCard' className='h-36 w-full rounded-md' />
+          <div className='h-[263px] py-2 xs:h-[135px]'>
+            <Skeleton variant='onCard' className='size-full rounded-md' />
+          </div>
         </Card>
       </div>
 

@@ -101,7 +101,7 @@ export function ContributionDetailsModal({
       }}
     >
       <DialogContent
-        className='flex h-max max-h-[calc(100vh-8rem)] w-full max-w-xl flex-col sm:max-h-[calc(100vh-2rem)]'
+        className='top-4 flex h-max max-h-[calc(100dvh-9rem)] w-full max-w-xl translate-y-0 flex-col sm:top-1/2 sm:max-h-[calc(100dvh-2rem)] sm:-translate-y-1/2'
         onEscapeKeyDown={(e) => {
           e.preventDefault();
           onClose();

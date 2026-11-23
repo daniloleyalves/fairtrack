@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vite-plus/test';
 import { renderHook } from '@testing-library/react';
 import * as Sentry from '@sentry/nextjs';
 import { useSentryUser } from '../use-sentry-user';

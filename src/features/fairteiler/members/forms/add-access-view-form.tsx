@@ -180,7 +180,7 @@ export function AddAccessViewForm({
 
 // --- CredentialDisplay (Helper Component - Unchanged) ---
 // This component remains separate as it's a generic display element.
-function CredentialDisplay({
+export function CredentialDisplay({
   label,
   value,
 }: {

@@ -8,6 +8,7 @@ import {
   pgSchema,
   pgTable,
   pgView,
+  primaryKey,
   real,
   smallint,
   text,
@@ -902,6 +903,98 @@ export const contributionVersionHistoryRelations = relations(
       references: [user.id],
     }),
   }),
+);
+
+export const fairteilerQrCode = pgTable(
+  'fairteiler_qr_code',
+  {
+    id: text('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    fairteilerId: text('fairteiler_id')
+      .notNull()
+      .references(() => fairteiler.id, { onDelete: 'cascade' }),
+    token: text('token').notNull(),
+    label: text('label'),
+    guestAccessViewId: text('guest_access_view_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at')
+      .notNull()
+      .default(sql`now()`),
+    revokedAt: timestamp('revoked_at'),
+  },
+  (table) => [
+    uniqueIndex('fairteiler_qr_code_token_idx').on(table.token),
+    index('fairteiler_qr_code_fairteiler_id_idx').on(table.fairteilerId),
+  ],
+);
+
+export const fairteilerQrCodeRelations = relations(
+  fairteilerQrCode,
+  ({ one }) => ({
+    fairteiler: one(fairteiler, {
+      fields: [fairteilerQrCode.fairteilerId],
+      references: [fairteiler.id],
+    }),
+    guestAccessView: one(user, {
+      fields: [fairteilerQrCode.guestAccessViewId],
+      references: [user.id],
+    }),
+  }),
+);
+
+export const announcementAudienceEnum = pgEnum('announcement_audience', [
+  'fairteiler',
+  'user',
+]);
+
+export const announcement = pgTable(
+  'announcement',
+  {
+    id: text('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    audience: announcementAudienceEnum('audience').notNull(),
+    roles: memberRoleEnum('roles').array(),
+    fairteilerId: text('fairteiler_id').references(() => fairteiler.id, {
+      onDelete: 'cascade',
+    }),
+    title: text('title').notNull(),
+    message: text('message').notNull(),
+    highlights: text('highlights').array(),
+    linkUrl: text('link_url'),
+    linkLabel: text('link_label'),
+    startsAt: timestamp('starts_at')
+      .notNull()
+      .default(sql`now()`),
+    endsAt: timestamp('ends_at'),
+    createdAt: timestamp('created_at')
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    index('announcement_audience_starts_at_idx').on(
+      table.audience,
+      table.startsAt,
+    ),
+  ],
+);
+
+export const announcementDismissal = pgTable(
+  'announcement_dismissal',
+  {
+    announcementId: text('announcement_id')
+      .notNull()
+      .references(() => announcement.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    dismissedAt: timestamp('dismissed_at')
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [primaryKey({ columns: [table.announcementId, table.userId] })],
 );
 
 export const vContributions = pgView('v_contributions', {

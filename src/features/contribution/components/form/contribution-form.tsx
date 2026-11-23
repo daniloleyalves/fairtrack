@@ -1,7 +1,11 @@
 'use client';
 
 import { Form } from '@components/ui/form';
-import { submitContributionAction } from '@server/contribution/actions';
+import {
+  submitContributionAction,
+  submitQrGuestContributionAction,
+} from '@server/contribution/actions';
+import { useContribution } from '../../context/contribution-context';
 import {
   contributionFormSchema,
   ContributionFormValues,
@@ -10,9 +14,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import React, { createContext, useContext } from 'react';
 import { DefaultValues, SubmitHandler, useForm } from 'react-hook-form';
 import { useFormAction } from '@/lib/hooks/use-form-action';
+import { useBlockIdleReload } from '@/lib/hooks/use-idle-reload';
 import { usePendingRedirect } from '@/lib/hooks/use-pending-redirect';
 import { fairteilerKeys } from '@/server/fairteiler/query-keys';
 import { userKeys } from '@/server/user/query-keys';
+import { contributionKeys } from '@/server/contribution/query-keys';
 import { useQueryClient } from '@tanstack/react-query';
 
 const ContributionFormPendingContext = createContext(false);
@@ -25,8 +31,9 @@ interface ContributionFormConfig {
   fairteilerId: string;
   successRedirect?: string;
   revalidatePaths?: string[];
-  context?: 'fairteiler' | 'user' | 'admin';
+  context?: 'fairteiler' | 'user' | 'admin' | 'guest';
   submitAsAccessViewId?: string | null;
+  contributionDate?: string | null;
 }
 
 export function ContributionForm({
@@ -39,6 +46,7 @@ export function ContributionForm({
   config: ContributionFormConfig;
 }) {
   const queryClient = useQueryClient();
+  const { coordinates, accuracy } = useContribution();
 
   const form = useForm<ContributionFormValues>({
     resolver: zodResolver(contributionFormSchema),
@@ -51,30 +59,44 @@ export function ContributionForm({
     submitContribution.reset();
   });
 
-  const submitContribution = useFormAction(submitContributionAction, form, {
-    successMessage: 'Lebensmittel erfolgreich beigetragen!',
-    onSuccess: (data) => {
-      void queryClient.invalidateQueries({
-        queryKey: fairteilerKeys.dashboard().queryKey,
-      });
-      void queryClient.invalidateQueries({
-        queryKey: userKeys.dashboard().queryKey,
-      });
+  const submitContribution = useFormAction(
+    config.context === 'guest'
+      ? submitQrGuestContributionAction
+      : submitContributionAction,
+    form,
+    {
+      successMessage: 'Lebensmittel erfolgreich beigetragen!',
+      onSuccess: (data) => {
+        void queryClient.invalidateQueries({
+          queryKey: fairteilerKeys.dashboard().queryKey,
+        });
+        void queryClient.invalidateQueries({
+          queryKey: userKeys.dashboard().queryKey,
+        });
+        void queryClient.invalidateQueries({
+          queryKey: userKeys.contributions().queryKey.slice(0, 2),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: contributionKeys.all().queryKey,
+        });
 
-      const redirectTo = data?.redirectTo;
-      if (redirectTo) {
-        redirect(redirectTo);
-      } else {
-        form.reset();
-        submitContribution.reset();
-      }
+        const redirectTo = data?.redirectTo;
+        if (redirectTo) {
+          redirect(redirectTo);
+        } else {
+          form.reset();
+          submitContribution.reset();
+        }
+      },
     },
-  });
+  );
 
   const isPending =
     submitContribution.isPending ||
     submitContribution.hasSucceeded ||
     isRedirectPending;
+
+  useBlockIdleReload(form.formState.isDirty || isPending);
 
   const onSubmit: SubmitHandler<ContributionFormValues> = (
     data: ContributionFormValues,
@@ -92,6 +114,8 @@ export function ContributionForm({
         revalidatePaths: config.revalidatePaths,
         context: config.context,
         submitAsAccessViewId: config.submitAsAccessViewId,
+        location: coordinates ? { ...coordinates, accuracy } : null,
+        contributionDate: config.contributionDate,
       },
     };
 

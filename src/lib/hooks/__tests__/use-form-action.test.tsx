@@ -1,5 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Mock } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vite-plus/test';
+import type { Mock } from 'vite-plus/test';
 import { act, renderHook } from '@testing-library/react';
 import { useForm } from 'react-hook-form';
 
@@ -76,9 +83,9 @@ function renderUseFormAction(
   return renderHook(() => {
     const form = useForm<{ name: string }>({ defaultValues: { name: '' } });
     return {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       hook: useFormAction<any, any, any>(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         noopAction as any,
         withForm ? form : undefined,
         options,

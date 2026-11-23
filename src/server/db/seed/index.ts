@@ -1,7 +1,6 @@
 /* eslint-disable */
 
 import * as schema from '../schema';
-import { devSeedData } from './data/dev';
 import { demoSeedData, DEMO_PASSWORD } from './data/demo';
 import { hashPassword } from 'better-auth/crypto';
 import {
@@ -24,7 +23,6 @@ dotenv.config({ path: '.vercel/.env.development.local' });
 const getSeedData = (environment: Environment): SeedData => {
   switch (environment) {
     case 'development':
-      return devSeedData;
     case 'demo':
       return demoSeedData;
     default:

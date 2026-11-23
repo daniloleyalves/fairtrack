@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  vi,
+} from 'vite-plus/test';
 import { calculateUserAllTimeStreaks } from '../streak-processor';
 
 const createWeek = (weekStart: string, overrides = {}) => ({

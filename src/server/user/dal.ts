@@ -14,6 +14,7 @@ import {
   sum,
 } from 'drizzle-orm';
 import { DateRange } from 'react-day-picker';
+import { hashPassword } from 'better-auth/crypto';
 import { attempt } from '@/lib/attempt';
 import { auth } from '@/lib/auth/auth';
 import { defaultDateRange } from '@/lib/config/site-config';
@@ -134,6 +135,31 @@ export async function banUserAndRevokeSessions(userId: string, reason: string) {
     ]),
   );
   if (error) handleDatabaseError(error, 'banUserAndRevokeSessions');
+}
+
+export async function setPasswordAndRevokeSessions(
+  userId: string,
+  newPassword: string,
+) {
+  const passwordHash = await hashPassword(newPassword);
+  const [error, data] = await attempt(
+    db
+      .update(account)
+      .set({ password: passwordHash, updatedAt: new Date() })
+      .where(
+        and(eq(account.userId, userId), eq(account.providerId, 'credential')),
+      )
+      .returning({ id: account.id }),
+  );
+  if (error) handleDatabaseError(error, 'setPasswordAndRevokeSessions');
+  if (!data?.length) return false;
+
+  const [sessionError] = await attempt(
+    db.delete(session).where(eq(session.userId, userId)),
+  );
+  if (sessionError)
+    handleDatabaseError(sessionError, 'setPasswordAndRevokeSessions');
+  return true;
 }
 
 // ------- USER DASHBOARD DATA ----------

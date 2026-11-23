@@ -42,3 +42,4 @@ skills-lock.json
 docs/
 
 .notes/
+.vitest/

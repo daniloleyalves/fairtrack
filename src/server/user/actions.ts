@@ -19,6 +19,9 @@ import { OnboardingStepData } from '@/features/user/onboarding/onboarding-flow-t
 import { sendFeedbackNotification } from '@/lib/services/resend/feedback-notification';
 import { feedbackSchema } from '@/features/feedback/schemas/feedack-schema';
 import { headers } from 'next/headers';
+import { readScanProof } from '../qr-code/scan-proof';
+import { loadFairteilerById } from '../fairteiler/dal';
+import { userContributionPath } from '../qr-code/constants';
 
 const stepFlowDataSchema = z.object({
   flowId: z.string(),
@@ -103,12 +106,24 @@ export const completeOnboardingAction = authedAction
     await updateFirstLogin(userId, false);
     await loadAuthenticatedSession(await headers(), true);
     revalidatePath('/hub');
+
+    let redirectTo = '/hub/user/dashboard';
+    const scanProof = await readScanProof();
+    if (scanProof) {
+      const scannedFairteiler = await loadFairteilerById(
+        scanProof.fairteilerId,
+      );
+      if (scannedFairteiler && !scannedFairteiler.disabled) {
+        redirectTo = userContributionPath(scannedFairteiler.slug);
+      }
+    }
+
     return {
       userId,
       savedLevel,
       savedPreferences,
       onboardingCompleted: true,
-      redirectTo: '/hub/user/dashboard',
+      redirectTo,
     };
   });
 

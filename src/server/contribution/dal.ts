@@ -6,6 +6,7 @@ import {
   desc,
   eq,
   gte,
+  inArray,
   lte,
   sql,
   sum,
@@ -22,6 +23,7 @@ import {
   fairteiler,
   food,
   invitation,
+  member,
   user,
   vContributions,
 } from '../db/schema';
@@ -46,6 +48,7 @@ export async function checkinContribution(
   fairteilerId: string,
   userId: string,
   payload: ContributionItem[],
+  createdAt?: Date,
 ) {
   const insertedFoods = [];
 
@@ -72,6 +75,7 @@ export async function checkinContribution(
         foodId: c.foodId,
         fairteilerId: fairteilerId,
         quantity: c.quantity,
+        ...(createdAt && { createdAt }),
       });
 
       insertedFoods.push(newFood);
@@ -89,9 +93,19 @@ export async function loadCheckinsWithinTimeframe(
   const [error, data] = await attempt(
     db.query.checkin.findMany({
       where: and(
-        gte(checkin.createdAt, options.from),
-        lte(checkin.createdAt, options.to),
         eq(checkin.userId, userId),
+        inArray(
+          checkin.foodId,
+          db
+            .select({ id: food.id })
+            .from(food)
+            .where(
+              and(
+                gte(food.createdAt, options.from),
+                lte(food.createdAt, options.to),
+              ),
+            ),
+        ),
       ),
       orderBy: [desc(checkin.createdAt)],
       with: { food: { with: { category: true } } },
@@ -287,10 +301,18 @@ export async function loadContributions({
       contributorEmail: vContributions.userEmail,
       contributorImage: vContributions.userImage,
       contributorIsAnonymous: vContributions.userIsAnonymous,
+      contributorRole: member.role,
       fairteilerId: vContributions.fairteilerId,
       fairteilerName: vContributions.fairteilerName,
     })
     .from(vContributions)
+    .leftJoin(
+      member,
+      and(
+        eq(member.userId, vContributions.userId),
+        eq(member.organizationId, vContributions.fairteilerId),
+      ),
+    )
     .orderBy(desc(vContributions.contributionDate));
 
   const queryWithConditions = conditions.length

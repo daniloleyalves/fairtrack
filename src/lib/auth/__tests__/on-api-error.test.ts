@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import * as Sentry from '@sentry/nextjs';
 import { APIError } from 'better-auth';
 import { handleAuthApiError } from '../on-api-error';

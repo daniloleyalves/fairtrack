@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vite-plus/test';
 import { render } from '@testing-library/react';
 import { MemberRolesEnum } from '@/lib/auth/auth-permissions';
 import type { ContributionContextValue } from '../../context/contribution-context';
@@ -39,7 +39,7 @@ function baseContext(
   overrides: Partial<ContributionContextValue> = {},
 ): ContributionContextValue {
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     fairteiler: { id: 'f1', name: 'Slug Fairteiler' } as any,
     origins: [],
     categories: [],
@@ -48,7 +48,9 @@ function baseContext(
     user: { id: 'u1' } as ContributionContextValue['user'],
     locationStatus: 'verified',
     coordinates: null,
+    accuracy: null,
     isLocationVerified: true,
+    isScanVerified: false,
     error: null,
     requestLocation: vi.fn(),
     ...overrides,
@@ -67,7 +69,7 @@ describe('ContributionContent', () => {
         id: 'f1',
         name: 'Hub Fairteiler',
         members: [{ user: { id: 'u1' }, role: MemberRolesEnum.OWNER }],
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       } as any,
     });
     expect(() => render(<ContributionContent />)).not.toThrow();

@@ -1,5 +1,6 @@
 import 'server-only';
 import { cache } from 'react';
+import { APIError } from 'better-auth';
 import { and, eq } from 'drizzle-orm';
 import z from 'zod';
 import { attempt } from '@/lib/attempt';
@@ -38,6 +39,17 @@ export async function loadFairteilerBySlug(fairteilerSlug: string) {
     db.query.fairteiler.findFirst({
       where: eq(fairteiler.slug, fairteilerSlug),
       with: { tags: true },
+    }),
+  );
+
+  if (error) handleDatabaseError(error, 'loadFairteilerById');
+  return data;
+}
+
+export async function loadFairteilerById(fairteilerId: string) {
+  const [error, data] = await attempt(
+    db.query.fairteiler.findFirst({
+      where: eq(fairteiler.id, fairteilerId),
     }),
   );
 
@@ -106,7 +118,12 @@ export const loadActiveOrganization = cache(async (headers: Headers) => {
 });
 
 export const loadActiveMembership = cache(async (headers: Headers) => {
-  return await auth.api.getActiveMember({ headers });
+  try {
+    return await auth.api.getActiveMember({ headers });
+  } catch (error) {
+    if (error instanceof APIError && error.statusCode < 500) return null;
+    throw error;
+  }
 });
 
 export async function updateFairteiler(

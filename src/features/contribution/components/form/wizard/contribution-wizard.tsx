@@ -203,7 +203,7 @@ export function ContributionWizard({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-          className='top-4 flex max-h-[calc(100vh-8rem)] translate-y-0 flex-col p-0 sm:top-1/2 sm:max-w-xl sm:-translate-y-1/2'
+          className='top-4 flex max-h-[calc(100dvh-9rem)] translate-y-0 flex-col p-0 sm:top-1/2 sm:max-h-[calc(100dvh-8rem)] sm:max-w-xl sm:-translate-y-1/2'
           onEscapeKeyDown={(e) => {
             e.preventDefault();
           }}

@@ -52,8 +52,10 @@ export function EditableContributionRow({
   formOptions,
 }: EditableContributionRowProps) {
   // --- FORM HOOKS ---
-  const { control, setValue } = useFormContext<ContributionFormValues>();
+  const { control, setValue, getValues } =
+    useFormContext<ContributionFormValues>();
   const categorySelectRef = useRef<HTMLButtonElement>(null);
+  const previousCategoryIdRef = useRef<string | undefined>(undefined);
   const [categoryId, originId, companyId, customCompanyName, quantity] =
     useWatch({
       control,
@@ -68,18 +70,34 @@ export function EditableContributionRow({
 
   // --- SIDE EFFECTS ---
   useEffect(() => {
+    const previousCategoryId = previousCategoryIdRef.current;
+    previousCategoryIdRef.current = categoryId;
+
     if (formOptions.fairteilerCategories && categoryId) {
       const selectedCategory = formOptions.fairteilerCategories.find(
         (item) => item.id === categoryId,
       );
-      if (selectedCategory) {
+      const previousCategory = formOptions.fairteilerCategories.find(
+        (item) => item.id === previousCategoryId,
+      );
+      const currentTitle = getValues(`contributions.${index}.title`);
+      const hasCustomTitle =
+        !!currentTitle?.trim() && currentTitle !== previousCategory?.name;
+
+      if (selectedCategory && !hasCustomTitle) {
         setValue(`contributions.${index}.title`, selectedCategory.name, {
           shouldValidate: true,
         });
       }
     }
     categorySelectRef.current?.focus();
-  }, [categoryId, formOptions.fairteilerCategories, index, setValue]);
+  }, [
+    categoryId,
+    formOptions.fairteilerCategories,
+    getValues,
+    index,
+    setValue,
+  ]);
 
   // --- DISPLAY LOGIC ---
   const category = formOptions.fairteilerCategories?.find(

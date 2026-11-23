@@ -45,3 +45,8 @@ export const disableAccessViewSchema = z.object({
   userId: z.string(),
   memberId: z.string(),
 });
+
+export const resetAccessViewPasswordSchema = z.object({
+  userId: z.string(),
+  memberId: z.string(),
+});
