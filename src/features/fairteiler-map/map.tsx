@@ -4,7 +4,6 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import Map, {
   GeolocateControl,
   GeolocateControlInstance,
-  GeolocateErrorEvent,
   GeolocateResultEvent,
   Marker,
   NavigationControl,
@@ -27,18 +26,21 @@ import { MapFairteilerPopup } from './components/map-fairteiler-popup';
 import { useIsMobile } from '@/lib/hooks/use-devices';
 import { useMapRepaintOnReveal } from '@/lib/hooks/use-map-repaint-on-reveal';
 
+type LocationError = 'denied' | 'unavailable';
+
 interface UserLocationState {
   coordinates: { latitude: number; longitude: number } | null;
-  error: string | null;
+  error: LocationError | null;
   loading: boolean;
-  permissionDenied: boolean;
 }
 
-interface RetryState {
-  retryCount: number;
-  maxRetries: number;
-  isRetrying: boolean;
-  canRetry: boolean;
+async function queryGeolocationPermission(): Promise<PermissionState | null> {
+  try {
+    const status = await navigator.permissions.query({ name: 'geolocation' });
+    return status.state;
+  } catch {
+    return null;
+  }
 }
 
 interface FairteilerMapProps {
@@ -72,7 +74,6 @@ export function FairteilerMap({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const geolocateControlRef = useRef<GeolocateControlInstance>(null);
   const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const retryTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [styleLoaded, setStyleLoaded] = useState(false);
   const [locationRequested, setLocationRequested] = useState(false);
@@ -86,16 +87,8 @@ export function FairteilerMap({
       coordinates: null,
       error: null,
       loading: false,
-      permissionDenied: false,
     },
   );
-
-  const [retryState, setRetryState] = useState<RetryState>({
-    retryCount: 0,
-    maxRetries: 3,
-    isRetrying: false,
-    canRetry: false,
-  });
 
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
 
@@ -178,119 +171,54 @@ export function FairteilerMap({
     [styleLoaded],
   );
 
+  const hideLoadingIndicator = useCallback(() => {
+    if (loadingTimerRef.current) {
+      clearTimeout(loadingTimerRef.current);
+      loadingTimerRef.current = null;
+    }
+    setShowLoadingIndicator(false);
+  }, []);
+
+  const lastSuccessRef = useRef(0);
+
   const handleGeolocateSuccess = useCallback(
     (position: GeolocateResultEvent) => {
+      lastSuccessRef.current = Date.now();
       const { latitude, longitude } = position.coords;
       setUserLocationState({
         coordinates: { latitude, longitude },
         error: null,
         loading: false,
-        permissionDenied: false,
       });
-      // Reset retry state on success
-      setRetryState({
-        retryCount: 0,
-        maxRetries: 3,
-        isRetrying: false,
-        canRetry: false,
-      });
-      // Clear timers and hide loading indicator on success
-      if (loadingTimerRef.current) {
-        clearTimeout(loadingTimerRef.current);
-        loadingTimerRef.current = null;
-      }
-      if (retryTimerRef.current) {
-        clearTimeout(retryTimerRef.current);
-        retryTimerRef.current = null;
-      }
-      setShowLoadingIndicator(false);
+      hideLoadingIndicator();
     },
-    [],
+    [hideLoadingIndicator],
   );
 
-  const retryGeolocation = useCallback(() => {
-    if (
-      geolocateControlRef.current &&
-      retryState.retryCount < retryState.maxRetries
-    ) {
-      setRetryState((prev) => ({
-        ...prev,
-        retryCount: prev.retryCount + 1,
-        isRetrying: true,
-      }));
+  // Mapbox copies the GeolocationPositionError into its event with
+  // Object.assign, which drops `code` and the PERMISSION_DENIED constant
+  // (prototype getters), so the event can't tell a denial from a timeout.
+  const handleGeolocateError = useCallback(async () => {
+    hideLoadingIndicator();
+    const lastSuccess = lastSuccessRef.current;
+    const permission = await queryGeolocationPermission();
+    if (lastSuccessRef.current !== lastSuccess) return;
+    setUserLocationState((prev) => ({
+      ...prev,
+      coordinates: null,
+      error: permission === 'denied' ? 'denied' : 'unavailable',
+      loading: false,
+    }));
+  }, [hideLoadingIndicator]);
 
-      const retryDelay = retryState.retryCount === 0 ? 2000 : 5000; // 2s for first retry, 5s for second
-
-      retryTimerRef.current = setTimeout(() => {
-        geolocateControlRef.current?.trigger();
-        setRetryState((prev) => ({ ...prev, isRetrying: false }));
-      }, retryDelay);
-    }
-  }, [retryState.retryCount, retryState.maxRetries]);
-
-  const handleGeolocateError = useCallback(
-    (error: GeolocateErrorEvent) => {
-      let errorMessage = 'Standortzugriff fehlgeschlagen';
-      let permissionDenied = false;
-      let canRetry = false;
-
-      switch (error.code) {
-        case error.PERMISSION_DENIED:
-          errorMessage = 'Standortzugriff vom Benutzer verweigert';
-          permissionDenied = true;
-          canRetry = false;
-          break;
-        case error.POSITION_UNAVAILABLE:
-          errorMessage = 'Standortinformationen nicht verfügbar';
-          canRetry = true;
-          break;
-        case error.TIMEOUT:
-          errorMessage = 'Standortbestimmung zeitüberschritten';
-          canRetry = true;
-          break;
-        default:
-          errorMessage = error.message || 'Unbekannter Standortfehler';
-          canRetry = true;
-          break;
-      }
-
-      // Check if we should retry
-      const shouldRetry =
-        canRetry && retryState.retryCount < retryState.maxRetries;
-
-      if (shouldRetry) {
-        // Don't set error state yet, just retry
-        retryGeolocation();
-        return;
-      }
-
-      // Final failure - set error state
-      setUserLocationState({
-        coordinates: null,
-        error: errorMessage,
-        loading: false,
-        permissionDenied,
-      });
-
-      setRetryState((prev) => ({
-        ...prev,
-        canRetry: canRetry && !permissionDenied,
-        isRetrying: false,
-      }));
-
-      // Clear timers and hide loading indicator on final error
-      if (loadingTimerRef.current) {
-        clearTimeout(loadingTimerRef.current);
-        loadingTimerRef.current = null;
-      }
-      if (retryTimerRef.current) {
-        clearTimeout(retryTimerRef.current);
-        retryTimerRef.current = null;
-      }
-      setShowLoadingIndicator(false);
-    },
-    [retryState.retryCount, retryState.maxRetries, retryGeolocation],
-  );
+  const restartGeolocation = useCallback(() => {
+    const control = geolocateControlRef.current;
+    if (!control) return;
+    setUserLocationState((prev) => ({ ...prev, error: null }));
+    // trigger() toggles tracking, so stop a running (errored) watch first
+    if (control._watchState !== 'OFF') control.trigger();
+    control.trigger();
+  }, []);
 
   // Auto-trigger location when map is ready (only once)
   useEffect(() => {
@@ -309,37 +237,25 @@ export function FairteilerMap({
     }
   }, [mapLoaded, styleLoaded, locationRequested]);
 
-  // Manual retry function for user-triggered retries
-  const handleManualRetry = useCallback(() => {
-    if (geolocateControlRef.current) {
-      setRetryState({
-        retryCount: 0,
-        maxRetries: 3,
-        isRetrying: false,
-        canRetry: false,
-      });
-      setUserLocationState((prev) => ({
-        ...prev,
-        error: null,
-        loading: true,
-      }));
-      geolocateControlRef.current.trigger();
-    }
-  }, []);
-
-  // Cleanup timers on unmount
+  // Restart tracking once the user grants access in the browser settings
+  const locationError = userLocationState.error;
   useEffect(() => {
-    return () => {
-      if (loadingTimerRef.current) {
-        clearTimeout(loadingTimerRef.current);
-        loadingTimerRef.current = null;
-      }
-      if (retryTimerRef.current) {
-        clearTimeout(retryTimerRef.current);
-        retryTimerRef.current = null;
-      }
+    if (locationError !== 'denied') return;
+    let status: PermissionStatus | null = null;
+    const onChange = () => {
+      if (status?.state !== 'denied') restartGeolocation();
     };
-  }, []);
+    navigator.permissions
+      ?.query({ name: 'geolocation' })
+      .then((s) => {
+        status = s;
+        s.addEventListener('change', onChange);
+      })
+      .catch(() => undefined);
+    return () => status?.removeEventListener('change', onChange);
+  }, [locationError, restartGeolocation]);
+
+  useEffect(() => hideLoadingIndicator, [hideLoadingIndicator]);
 
   // Validate mapbox token
   if (!mapboxToken) {
@@ -370,31 +286,32 @@ export function FairteilerMap({
       ref={wrapperRef}
       className='relative h-screen w-full bg-white md:h-[calc(100vh-100px)] md:rounded-lg'
     >
-      {/* Location Error Alert */}
-      {userLocationState.error && !userLocationState.permissionDenied && (
+      {/* Location Unavailable Alert */}
+      {userLocationState.error === 'unavailable' && (
         <div className='absolute top-16 right-12 left-2 z-10 md:top-2 md:left-auto md:w-96'>
           <Alert variant='destructive'>
             <AlertCircle className='size-4' />
-            <AlertDescription className='flex items-center justify-between'>
-              <span>{userLocationState.error}</span>
-              {retryState.canRetry && (
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={handleManualRetry}
-                  className='ml-2 h-6 px-2'
-                >
-                  <RotateCcw className='mr-1 size-3' />
-                  Erneut versuchen
-                </Button>
-              )}
+            <AlertDescription className='flex flex-col items-start gap-2'>
+              <span>
+                Dein Standort konnte nicht ermittelt werden. Prüfe, ob die
+                Ortungsdienste deines Geräts für den Browser aktiviert sind.
+              </span>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={restartGeolocation}
+                className='h-6 px-2'
+              >
+                <RotateCcw className='mr-1 size-3' />
+                Erneut versuchen
+              </Button>
             </AlertDescription>
           </Alert>
         </div>
       )}
 
       {/* Permission Denied Alert */}
-      {userLocationState.permissionDenied && (
+      {userLocationState.error === 'denied' && (
         <div className='absolute top-16 right-12 left-2 z-10 md:top-2 md:left-auto md:w-96'>
           <Alert className='border-orange-400'>
             <AlertTriangle className='size-4 text-orange-400!' />
@@ -412,9 +329,7 @@ export function FairteilerMap({
           <div className='flex flex-col items-center gap-3 rounded-lg bg-white p-6 shadow-lg'>
             <Loader2 className='size-8 animate-spin text-tertiary' />
             <p className='text-sm font-medium text-gray-700'>
-              {retryState.isRetrying
-                ? `Standort wird ermittelt... (Versuch ${retryState.retryCount + 1}/${retryState.maxRetries})`
-                : 'Standort wird ermittelt...'}
+              Standort wird ermittelt...
             </p>
           </div>
         </div>
@@ -464,8 +379,8 @@ export function FairteilerMap({
           showUserLocation={true}
           showAccuracyCircle={false}
           positionOptions={{
-            enableHighAccuracy: retryState.retryCount < 2, // Disable high accuracy on final retry
-            timeout: 10000 + retryState.retryCount * 5000, // Progressive timeout: 10s, 15s, 20s
+            enableHighAccuracy: true,
+            timeout: 15000,
             maximumAge: 5000,
           }}
           fitBoundsOptions={{
@@ -490,12 +405,7 @@ export function FairteilerMap({
               ...prev,
               loading: false,
             }));
-            // Clear the timer and hide loading indicator
-            if (loadingTimerRef.current) {
-              clearTimeout(loadingTimerRef.current);
-              loadingTimerRef.current = null;
-            }
-            setShowLoadingIndicator(false);
+            hideLoadingIndicator();
           }}
         />
 
